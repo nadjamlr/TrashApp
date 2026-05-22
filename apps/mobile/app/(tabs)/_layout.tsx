@@ -1,18 +1,19 @@
-import React from 'react';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs } from 'expo-router';
+import type { ComponentProps } from 'react';
 import { Pressable } from 'react-native';
 
+import { Icon } from '@/components/Icon';
 import Colors from '@/constants/Colors';
+import { Spacing } from '@/constants/Spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>['name'];
+  name: ComponentProps<typeof Icon>['name'];
   color: string;
 }) {
-  return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
+  return <Icon size={Spacing.xl - Spacing.xs} style={{ marginBottom: -Spacing.xs }} {...props} />;
 }
 
 export default function TabLayout() {
@@ -35,11 +36,11 @@ export default function TabLayout() {
             <Link href="/modal" asChild>
               <Pressable>
                 {({ pressed }) => (
-                  <FontAwesome
+                  <Icon
                     name="info-circle"
-                    size={25}
+                    size={Spacing.xl - Spacing.sm}
                     color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
+                    style={{ marginRight: Spacing.md, opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
               </Pressable>
