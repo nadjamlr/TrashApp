@@ -1,0 +1,65 @@
+services:
+  vision-agent:
+    build:
+      context: .
+      dockerfile: services/vision-agent/Dockerfile
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  rules-agent:
+    build:
+      context: .
+      dockerfile: services/rules-agent/Dockerfile
+    ports:
+      - "8002:8002"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  insight-agent:
+    build:
+      context: .
+      dockerfile: services/insight-agent/Dockerfile
+    ports:
+      - "8003:8003"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  chat-agent:
+    build:
+      context: .
+      dockerfile: services/chat-agent/Dockerfile
+    ports:
+      - "8004:8004"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  locations-service:
+    build:
+      context: .
+      dockerfile: services/locations-service/Dockerfile
+    ports:
+      - "8005:8005"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
