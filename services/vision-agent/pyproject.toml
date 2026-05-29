@@ -4,6 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "trashapp-shared",
+    "python-multipart>=0.0.9",
 ]
 
 [tool.uv.sources]
