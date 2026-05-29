@@ -1,0 +1,9 @@
+[tool.uv.workspace]
+members = [
+    "shared",
+    "vision-agent",
+    "rules-agent",
+    "insight-agent",
+    "chat-agent",
+    "locations-service",
+]
