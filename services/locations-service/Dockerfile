@@ -2,15 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install uv --no-cache-dir
-
-COPY services/ /app/services/
+COPY services/shared/ /app/services/shared/
+COPY services/locations-service/ /app/services/locations-service/
 COPY data/ /app/data/
 
-WORKDIR /app/services
-
-RUN uv sync --package locations-service --no-dev
+RUN pip install --no-cache-dir ./services/shared
+RUN pip install --no-cache-dir --no-deps ./services/locations-service
 
 EXPOSE 8005
 
-CMD ["uv", "run", "--package", "locations-service", "uvicorn", "locations_service.main:app", "--host", "0.0.0.0", "--port", "8005"]
+CMD ["uvicorn", "locations_service.main:app", "--host", "0.0.0.0", "--port", "8005"]
