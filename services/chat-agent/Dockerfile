@@ -6,6 +6,8 @@ COPY services/shared/ /app/services/shared/
 COPY services/chat-agent/ /app/services/chat-agent/
 COPY data/ /app/data/
 
+ENV RULES_PATH=/app/data/munich_rules.yaml
+
 RUN pip install --no-cache-dir ./services/shared
 RUN pip install --no-cache-dir "crewai>=0.80.0"
 RUN pip install --no-cache-dir --no-deps ./services/chat-agent
