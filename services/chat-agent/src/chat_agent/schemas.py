@@ -1,8 +1,10 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
 class ConversationMessage(BaseModel):
-    role: str = Field(description="'user' or 'assistant'")
+    role: Literal["user", "assistant"]
     content: str
 
 
