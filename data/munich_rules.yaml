@@ -1,3 +1,268 @@
-# Munich waste disposal rules — curated from AWM Abfall-ABC
-# This file is the knowledge base for the Rules, Insight, and Chat agents.
-# Structure to be defined in Sprint 1 issue.
+# Munich waste disposal rules curated from AWM Abfall-ABC.
+# This file is mounted into backend containers at /data/munich_rules.yaml.
+version: 1
+city: Munich
+country: Germany
+source:
+  name: AWM Abfall-ABC
+  url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon
+  last_reviewed: "2026-05-30"
+schema:
+  required_item_fields:
+    - name
+    - bin
+    - deposit
+    - alternatives
+    - notes
+    - source_url
+items:
+  - name: Paper and cardboard
+    bin: Papiertonne
+    deposit: none
+    alternatives:
+      - Wertstoffhof for larger quantities of cardboard
+      - Sperrmuellabholung for very large cardboard quantities
+    notes:
+      - Use the paper bin for clean paper, newspapers, envelopes, books without covers, folded cardboard, paper bags, and paper packaging.
+      - Dirty paper, wallpaper, backing paper from self-adhesive foils, and hygiene paper belong in Restmuelltonne.
+      - Beverage cartons and coated dairy cartons belong at Wertstoffinseln, not in the paper bin.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/papier-kartonagen
+
+  - name: Organic kitchen and garden waste
+    bin: Biotonne
+    deposit: none
+    alternatives:
+      - Wertstoffhof for larger quantities of tree and shrub cuttings
+      - Home composting where suitable
+    notes:
+      - Use the brown organic bin for fruit and vegetable scraps, cooked and raw food scraps, bread, coffee grounds, filters, flowers, small amounts of potting soil, leaves, grass, and small branches.
+      - Plastic bags and compostable plastic bio-bags must not go into the Biotonne.
+      - Dog feces, cat litter, and small animal litter do not belong in the Biotonne.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/bioabfall
+
+  - name: Glass packaging
+    bin: Wertstoffinseln
+    deposit: Pfand bottles must be returned to retailers or reverse vending machines.
+    alternatives:
+      - Return reusable or deposit glass bottles through the deposit system.
+      - Wertstoffhof only where accepted for special glass items listed by AWM.
+    notes:
+      - Use Wertstoffinseln for disposable glass packaging such as bottles and jars without deposit.
+      - Do not put ceramic glass, window glass, mirrors, or drinking glasses into glass packaging containers.
+      - Respect Wertstoffinsel insertion times, generally Monday to Saturday from 7:00 to 19:00.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abgabestellen/wertstoffinseln
+
+  - name: Plastic packaging
+    bin: Wertstoffinseln
+    deposit: Pfand applies to many beverage bottles; return those to retailers or reverse vending machines.
+    alternatives:
+      - Avoid single-use plastic and use reusable packaging where possible.
+      - Wertstoffhof for some non-packaging plastic items listed by AWM.
+    notes:
+      - Use Wertstoffinseln for plastic packaging such as foils, shopping bags, shampoo bottles, detergent containers, and yoghurt cups.
+      - Packaging should be empty; it does not need to be rinsed perfectly clean.
+      - Non-packaging plastic household items may have different disposal routes; check the Abfall-ABC entry.
+    source_url: https://www.awm-muenchen.de/entsorgen/abfall-trennen/verpackungsabfall
+
+  - name: Metal packaging
+    bin: Wertstoffinseln
+    deposit: Pfand applies to many beverage cans; return those to retailers or reverse vending machines.
+    alternatives:
+      - Wertstoffhof for larger metal household items such as pots, pans, or tools.
+    notes:
+      - Use Wertstoffinseln for metal packaging such as cans, aluminium trays, aluminium foil, and metal lids.
+      - Empty spray cans without hazardous residues can usually go with packaging; cans with hazardous residues belong with problem waste.
+      - Do not leave waste next to containers; this is considered illegal dumping.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abgabestellen/wertstoffinseln
+
+  - name: Beverage cartons and composite packaging
+    bin: Wertstoffinseln
+    deposit: none
+    alternatives:
+      - Avoid composite packaging where reusable alternatives are available.
+    notes:
+      - Milk cartons, beverage cartons, and coated cream or yoghurt containers belong at Wertstoffinseln.
+      - These packages do not belong in the Papiertonne because they are composite materials.
+      - Empty packaging before disposal.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/papier-kartonagen
+
+  - name: Residual household waste
+    bin: Restmuelltonne
+    deposit: none
+    alternatives:
+      - Use recycling, Biotonne, Papiertonne, Wertstoffinseln, Wertstoffhof, or Giftmobil first when an item has a dedicated route.
+    notes:
+      - Restmuelltonne is for waste that cannot be recycled through Munich's separate collection systems.
+      - Examples from AWM include dirty paper, hygiene products, backpaper, and many contaminated small household wastes.
+      - Batteries, electronics, problem waste, and recyclable packaging do not belong in Restmuelltonne.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon
+
+  - name: Batteries and button cells
+    bin: Retail battery collection boxes
+    deposit: none
+    alternatives:
+      - Wertstoffhof
+      - Giftmobil
+    notes:
+      - Batteries must not be thrown into nature or disposed of in Restmuelltonne.
+      - Shops that sell batteries usually provide collection boxes near the entrance.
+      - Prefer rechargeable batteries where possible.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/batterien-knopfzellen
+
+  - name: Rechargeable batteries and lithium batteries
+    bin: Wertstoffhof
+    deposit: none
+    alternatives:
+      - Retail take-back points
+      - Giftmobil
+      - Wertstoffmobil for small quantities where available
+    notes:
+      - Remove batteries and rechargeable batteries from unsuitable-for-reuse electronic devices before disposal where possible.
+      - Insulate lithium battery poles with tape or put them back into packaging before disposal because they can ignite.
+      - Defective lithium batteries are a fire risk and need careful handling.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/akkus
+
+  - name: Car batteries and lead batteries
+    bin: Wertstoffhof
+    deposit: Retailers may charge or refund a statutory battery deposit depending on purchase and return proof.
+    alternatives:
+      - Return to specialist retailers, who have a legal take-back obligation for battery types they sell.
+    notes:
+      - Up to two car batteries per person per day can be handed in at Munich Wertstoffhoefe.
+      - Transport carefully so that battery acid does not spill.
+      - Do not dispose of lead batteries in Restmuelltonne.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/autobatterien-bleiakku
+
+  - name: Small electronic devices
+    bin: Wertstoffhof
+    deposit: none
+    alternatives:
+      - Retail take-back where legally offered
+      - Wertstoffmobil for small devices where available
+      - Repair, donate, sell, or reuse if still functional
+    notes:
+      - Electrical and electronic devices must not be disposed of in Restmuelltonne.
+      - Delete personal data before handing in devices such as phones, tablets, laptops, or storage media.
+      - Remove accessible batteries and rechargeable batteries before disposal when the device is not intended for reuse.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/elektro-elektronikschrott
+
+  - name: Large electronic appliances
+    bin: Wertstoffhof
+    deposit: none
+    alternatives:
+      - Sperrmuellabholung for eligible large appliances
+      - Repair, donate, sell, or reuse if still functional
+    notes:
+      - Munich Wertstoffhoefe accept large electrical appliances in household quantities; AWM lists two large appliances per delivery for many categories.
+      - Cooling and freezing appliances are limited separately, usually one item per delivery.
+      - Large electronic appliances must not be placed in Restmuelltonne.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/elektro-elektronikschrott
+
+  - name: Clothing, shoes, and textiles
+    bin: AWM Altkleidercontainer
+    deposit: none
+    alternatives:
+      - Wertstoffhof for bagged wearable clothing and shoes
+      - Charity collections and second-hand shops
+      - Sperrmuellabholung for wearable clothing and shoes packed in sacks
+    notes:
+      - Only put well-preserved and clean textiles into clothing containers, packed in bags or sacks.
+      - Broken or heavily soiled textiles belong in Restmuelltonne.
+      - AWM notes that rags, bedding, curtains, and loose fabrics are not collected by Sperrmuellabholung.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/altkleider-schuhe-textilien
+
+  - name: Bulky waste
+    bin: Wertstoffhof
+    deposit: none
+    alternatives:
+      - Sperrmuellabholung
+      - Donate, sell, repair, or reuse usable furniture and household items
+    notes:
+      - Bulky waste means household items that do not fit into an 80-liter residual waste bin even after reasonable dismantling.
+      - Examples include furniture, lamps, stoves, washing machines, dishwashers, sewing machines, mattresses, carpets, and sports equipment.
+      - AWM allows one delivery per day of about 2 cubic meters at Wertstoffhoefe; larger quantities can incur fees at Wertstoffhof Plus.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/sperrmuell
+
+  - name: LED lamps
+    bin: Wertstoffhof
+    deposit: none
+    alternatives:
+      - Giftmobil for small quantities
+      - Wertstoffmobil for small quantities where available
+      - Retail take-back where offered
+    notes:
+      - LED lamps contain electronic components and must not go into Restmuelltonne.
+      - AWM accepts up to 50 LED lamps at Wertstoffhoefe and up to 5 at Giftmobil or Wertstoffmobil.
+      - Do not put LED lamps into glass packaging containers.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/led-lampen
+
+  - name: Fluorescent tubes and energy-saving lamps
+    bin: Wertstoffhof
+    deposit: none
+    alternatives:
+      - Giftmobil for up to 5 pieces
+      - Wertstoffmobil for up to 5 pieces
+      - Lightcycle collection points
+    notes:
+      - Fluorescent tubes, neon tubes, UV tubes, and energy-saving lamps can contain mercury.
+      - They must not be disposed of in Restmuelltonne or glass containers.
+      - AWM accepts up to 50 pieces at Wertstoffhoefe.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/leuchtstoffroehren-neonroehren-uv-roehren
+
+  - name: Cooking oil, cooking fat, and frying fat
+    bin: Restmuelltonne
+    deposit: none
+    alternatives:
+      - Biotonne for solid cooking fats and very small amounts of liquid cooking oil absorbed with kitchen paper
+    notes:
+      - Pour liquid cooking oil into a container before placing it in Restmuelltonne.
+      - Do not pour cooking oil into the sink, drain, or toilet.
+      - Small amounts of absorbed liquid oil and solid cooking fats may go into Biotonne according to AWM.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/speiseoel-fette-frittierfett
+
+  - name: Paint, wall paint, and varnish
+    bin: Wertstoffhof
+    deposit: Some natural paint suppliers offer reusable containers with deposit.
+    alternatives:
+      - Restmuelltonne for dried residues up to 2 kg
+      - Wertstoffhof Plus for quantities above 25 kg, subject to fees
+    notes:
+      - Private households can take quantities up to 25 kg to Wertstoffhoefe free of charge.
+      - Dried residues up to 2 kg may go into Restmuelltonne.
+      - Keep usable paint from spoiling by storing it properly; reuse before disposal.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/dispersionsfarben
+
+  - name: Chemicals and hazardous problem waste
+    bin: Giftmobil
+    deposit: none
+    alternatives:
+      - Wertstoffhof during problem-waste acceptance times
+      - Wertstoffhof Plus for larger accepted quantities, subject to AWM rules and fees
+    notes:
+      - Problem waste is harmful even in small quantities and must be handled through dedicated collection.
+      - Examples include solvents, pesticides, acids, alkalis, mercury thermometers, some gas cartridges, and spray cans with toxic residues.
+      - Bring hazardous waste well packed, preferably in original containers.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/problemabfaelle-chemikalien
+
+  - name: Medicines and pharmaceuticals
+    bin: Restmuelltonne
+    deposit: none
+    alternatives:
+      - Wertstoffhof during problem-waste acceptance times
+      - Giftmobil
+    notes:
+      - Do not flush medicines down the toilet or sink.
+      - Keep medicines safely packed so children or other people cannot access them before disposal.
+      - Follow pharmacy or medical guidance for special medication categories if applicable.
+    source_url: https://www.awm-muenchen.de/entsorgen/abfalllexikon/detailansicht-lexikoneintrag/arzneimittel-medikamente-impfstoffe
+
+  - name: Motor oil and lubricating oil
+    bin: Specialist retailer take-back
+    deposit: none
+    alternatives:
+      - Wertstoffhof during problem-waste acceptance times, subject to fee
+    notes:
+      - Motor oil and lubricating oil must be collected separately and must not enter groundwater.
+      - Retailers are required to take back motor oil; proof of purchase may be required.
+      - AWM lists a fee for accepting used oil at Wertstoffhoefe during problem-waste times.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/altoel-schmieroel
