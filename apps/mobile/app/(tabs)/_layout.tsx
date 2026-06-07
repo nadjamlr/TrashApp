@@ -10,7 +10,7 @@ import { Spacing } from '@/constants/Spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
-const ICON_SIZE = 24;
+const ICON_SIZE = 26;
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const colorScheme = useColorScheme() ?? 'light';
@@ -39,7 +39,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         right: Spacing.lg,
         height: 72,
         borderRadius: 100,
-        backgroundColor: theme.text,
+        backgroundColor: theme.surface,
         flexDirection: 'row',
         overflow: 'hidden',
       }}
@@ -50,7 +50,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           position: 'absolute',
           width: tabWidth,
           height: '100%',
-          backgroundColor: theme.surface,
+          backgroundColor: theme.text,
           borderRadius: 100,
           transform: [{ translateX: slideAnim }],
         }}
@@ -58,7 +58,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
         const isFocused = state.index === index;
-        const color = isFocused ? theme.primary : theme.surface;
+        const color = isFocused ? theme.background : theme.text;
 
         const onPress = () => {
           const event = navigation.emit({
