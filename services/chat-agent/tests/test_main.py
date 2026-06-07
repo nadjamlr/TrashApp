@@ -51,6 +51,26 @@ def test_chat_ask_passes_history_and_returns_schema(monkeypatch) -> None:
     ]
 
 
+def test_chat_ask_requires_message() -> None:
+    response = client.post("/chat/ask", json={})
+
+    assert response.status_code == 422
+
+
+def test_chat_ask_rejects_invalid_history_role() -> None:
+    response = client.post(
+        "/chat/ask",
+        json={
+            "message": "Was mache ich mit kaputten Kopfhoerern?",
+            "conversation_history": [
+                {"role": "system", "content": "Du bist ein hilfreicher Assistent."},
+            ],
+        },
+    )
+
+    assert response.status_code == 422
+
+
 def test_parse_agent_output_extracts_wrapped_json() -> None:
     response = _parse_agent_output(
         'Here is my response:\n{"response": "Use Wertstoffhof.", "suggested_location": null}\nReasoning...'
