@@ -79,6 +79,15 @@ def test_parse_agent_output_extracts_wrapped_json() -> None:
     assert response == ChatResponse(response="Use Wertstoffhof.", suggested_location=None)
 
 
+def test_parse_agent_output_falls_back_to_plain_text_for_non_json() -> None:
+    response = _parse_agent_output("Use AWM if the available rules do not specify the item.")
+
+    assert response == ChatResponse(
+        response="Use AWM if the available rules do not specify the item.",
+        suggested_location=None,
+    )
+
+
 def test_relevant_rules_text_uses_rules_content_without_item_specific_keywords(monkeypatch) -> None:
     monkeypatch.setattr(
         "chat_agent.agent.load_rules",
