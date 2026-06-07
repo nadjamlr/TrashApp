@@ -481,11 +481,19 @@ dependencies = [
     { name = "trashapp-shared" },
 ]
 
+[package.dev-dependencies]
+dev = [
+    { name = "pytest" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "crewai", specifier = ">=0.80.0" },
     { name = "trashapp-shared", editable = "shared" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest", specifier = ">=8.0.0" }]
 
 [[package]]
 name = "chromadb"

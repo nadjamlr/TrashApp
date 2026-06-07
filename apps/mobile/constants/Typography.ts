@@ -14,8 +14,20 @@ export const Typography = {
   },
   h3: {
     fontSize: 18,
+  display: {
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: '800' as TextStyle['fontWeight'],
+  },
+  heading: {
+    fontSize: 24,
     lineHeight: 32,
     fontWeight: '700' as TextStyle['fontWeight'],
+  },
+  bodyStrong: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '600' as TextStyle['fontWeight'],
   },
   body: {
     fontSize: 16,
@@ -23,6 +35,12 @@ export const Typography = {
     fontWeight: '400' as TextStyle['fontWeight'],
   },
   paragraph: {
+  captionStrong: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700' as TextStyle['fontWeight'],
+  },
+  caption: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400' as TextStyle['fontWeight'],
