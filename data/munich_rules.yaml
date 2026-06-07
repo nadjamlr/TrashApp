@@ -256,6 +256,20 @@ items:
       - Follow pharmacy or medical guidance for special medication categories if applicable.
     source_url: https://www.awm-muenchen.de/entsorgen/abfalllexikon/detailansicht-lexikoneintrag/arzneimittel-medikamente-impfstoffe
 
+  - name: E-cigarettes and vapes
+    bin: Wertstoffhof
+    deposit: none
+    alternatives:
+      - Wertstoffmobil for small quantities where available
+      - Retail take-back at electronics retailers with sales areas exceeding 400 square meters (no proof of purchase required)
+    notes:
+      - E-cigarettes are electronic waste and must not be disposed of in Restmuelltonne.
+      - They contain hazardous substances including lithium batteries, mercury, lead, and cadmium.
+      - Insulate the lithium battery poles with tape before disposal to prevent fire risk.
+      - Disposable e-cigarettes (Einweg-E-Zigaretten) such as Elfbar and similar brands fall under this category.
+      - Retailers with sales areas over 400 square meters must accept e-cigarettes regardless of where they were purchased.
+    source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/e-zigarette
+
   - name: Motor oil and lubricating oil
     bin: Specialist retailer take-back
     deposit: none
@@ -266,3 +280,28 @@ items:
       - Retailers are required to take back motor oil; proof of purchase may be required.
       - AWM lists a fee for accepting used oil at Wertstoffhoefe during problem-waste times.
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/altoel-schmieroel
+
+deposit_rules:
+  deposit_plastic:
+    amount: "0.25 EUR"
+    applies_to:
+      - PET bottles in between 0.1 to 3L with Pfand marking
+      - Aluminium cans with Pfand marking
+      - Only applies to bottles and cans sold in Germany
+  deposit_glass_nonalcoholic:
+    amount: "0.15 EUR"
+    applies_to:
+      - Reusable water and other non-alcoholic glass bottles
+  deposit_glass_beer:
+    amount: "0.08 EUR"
+    applies_to:
+      - Reusable beer glass bottles
+  deposit_tray:
+    amount: "1.50 EUR"
+  no_deposit:
+    applies_to:
+      - Milk and dairy bottles
+      - Wine and sparkling wine bottles
+      - Juice and nectar bottles
+      - Bottles without Pfand symbol
+
