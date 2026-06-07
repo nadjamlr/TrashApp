@@ -3,10 +3,10 @@ import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Spacing } from '@/constants/Spacing';
 
-export default function MapScreen() {
+export default function CameraScreen() {
   return (
     <View style={styles.container}>
-      <Text variant="heading">Map Tab</Text>
+      <Text variant="heading">Camera Tab</Text>
     </View>
   );
 }

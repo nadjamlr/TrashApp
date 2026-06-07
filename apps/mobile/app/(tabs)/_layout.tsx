@@ -1,6 +1,8 @@
 import { Link, Tabs } from 'expo-router';
-import type { ComponentProps } from 'react';
-import { Pressable } from 'react-native';
+import { useRef, useEffect, useState } from 'react';
+import { Animated, Pressable, TouchableOpacity, View } from 'react-native';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 import { Icon } from '@/components/Icon';
 import Colors from '@/constants/Colors';
@@ -8,12 +10,84 @@ import { Spacing } from '@/constants/Spacing';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: {
-  name: ComponentProps<typeof Icon>['name'];
-  color: string;
-}) {
-  return <Icon size={Spacing.xl - Spacing.xs} style={{ marginBottom: -Spacing.xs }} {...props} />;
+const ICON_SIZE = 24;
+
+function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme];
+  const [barWidth, setBarWidth] = useState(0);
+  const tabWidth = barWidth / state.routes.length;
+  const slideAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (tabWidth === 0) return;
+    Animated.spring(slideAnim, {
+      toValue: state.index * tabWidth,
+      useNativeDriver: true,
+      damping: 20,
+      mass: 1,
+      stiffness: 150,
+    }).start();
+  }, [state.index, tabWidth]);
+
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        bottom: Spacing.lg,
+        left: Spacing.lg,
+        right: Spacing.lg,
+        height: 72,
+        borderRadius: 100,
+        backgroundColor: theme.text,
+        flexDirection: 'row',
+        overflow: 'hidden',
+      }}
+      onLayout={(e) => setBarWidth(e.nativeEvent.layout.width)}
+    >
+      <Animated.View
+        style={{
+          position: 'absolute',
+          width: tabWidth,
+          height: '100%',
+          backgroundColor: theme.surface,
+          borderRadius: 100,
+          transform: [{ translateX: slideAnim }],
+        }}
+      />
+      {state.routes.map((route, index) => {
+        const { options } = descriptors[route.key];
+        const isFocused = state.index === index;
+        const color = isFocused ? theme.primary : theme.surface;
+
+        const onPress = () => {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: route.key,
+            canPreventDefault: true,
+          });
+          if (!isFocused && !event.defaultPrevented) {
+            navigation.navigate(route.name);
+          }
+        };
+
+        return (
+          <TouchableOpacity
+            key={route.key}
+            onPress={onPress}
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: Spacing.xs,
+            }}
+          >
+            {options.tabBarIcon?.({ focused: isFocused, color, size: ICON_SIZE })}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
 }
 
 export default function TabLayout() {
@@ -21,26 +95,28 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
         headerShown: useClientOnlyValue(false, true),
-      }}>
+        headerTitle: () => null,
+        headerTransparent: true,
+        headerShadowVisible: false,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Map',
+          tabBarIcon: ({ color }) => <Icon name="map" size={ICON_SIZE} color={color} />,
           headerRight: () => (
-            <Link href="/modal" asChild>
+            <Link href="/settings" asChild>
               <Pressable>
                 {({ pressed }) => (
                   <Icon
-                    name="info-circle"
-                    size={Spacing.xl - Spacing.sm}
+                    name="user"
+                    size={Spacing.lg}
                     color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: Spacing.md, opacity: pressed ? 0.5 : 1 }}
+                    style={{ marginRight: Spacing.lg, opacity: pressed ? 0.5 : 1 }}
                   />
                 )}
               </Pressable>
@@ -49,10 +125,45 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="camera"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Camera',
+          tabBarIcon: ({ color }) => <Icon name="camera" size={ICON_SIZE} color={color} />,
+          headerRight: () => (
+            <Link href="/settings" asChild>
+              <Pressable>
+                {({ pressed }) => (
+                  <Icon
+                    name="user"
+                    size={Spacing.xl - Spacing.sm}
+                    color={Colors[colorScheme ?? 'light'].text}
+                    style={{ marginRight: Spacing.lg, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </Link>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="chatbot"
+        options={{
+          title: 'Chatbot',
+          tabBarIcon: ({ color }) => <Ionicons name="chatbox-outline" size={ICON_SIZE} color={color} />,
+          headerRight: () => (
+            <Link href="/settings" asChild>
+              <Pressable>
+                {({ pressed }) => (
+                  <Icon
+                    name="user"
+                    size={Spacing.xl - Spacing.sm}
+                    color={Colors[colorScheme ?? 'light'].text}
+                    style={{ marginRight: Spacing.lg, opacity: pressed ? 0.5 : 1 }}
+                  />
+                )}
+              </Pressable>
+            </Link>
+          ),
         }}
       />
     </Tabs>
