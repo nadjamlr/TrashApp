@@ -2,7 +2,7 @@ const light = {
   primary: '#FEDA10',
   secondary: '#38632E',
   background: '#FFFFFF',
-  surface: '#F5F5F5',
+  surface: '#E6E6E6',
   text: '#21242C',
   muted: '#6B7280',
   tint: '#38632E',
