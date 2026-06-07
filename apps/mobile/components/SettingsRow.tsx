@@ -23,7 +23,7 @@ export function SettingsRow({ topic, details, href, hasToggle = false, isToggleA
         <View style={[styles.row, { backgroundColor: theme.surface }]}>
             <View lightColor="transparent" darkColor="transparent" style={styles.left}>
                 <Text variant="h3" style={{ color: theme.text }}>{topic}</Text>
-                <Text variant="paragraph" style={{ color: theme.muted }}>{details.join(', ')}</Text>
+                <Text variant="p1" style={{ color: theme.muted }}>{details.join(', ')}</Text>
             </View>
             {hasToggle
                 ? <Toggle size="sm" isActive={isToggleActive} onToggle={onToggle} />
