@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -41,8 +42,25 @@ const initialMessages: ChatMessage[] = [
 export default function ChatbotScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState('');
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
+
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSubscription = Keyboard.addListener(showEvent, (event) => {
+      setKeyboardHeight(event.endCoordinates.height);
+      requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, () => setKeyboardHeight(0));
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   const sendMessage = () => {
     const trimmedDraft = draft.trim();
@@ -131,7 +149,16 @@ export default function ChatbotScreen() {
           </DefaultView>
         </ScrollView>
 
-        <DefaultView style={styles.composerDock}>
+        <DefaultView
+          style={[
+            styles.composerDock,
+            {
+              bottom: keyboardHeight
+                ? keyboardHeight + Spacing.md
+                : Layout.chatComposerBottomOffset,
+            },
+          ]}
+        >
           <DefaultView style={styles.composerWrap}>
             <DefaultView style={styles.composer}>
               <TextInput
