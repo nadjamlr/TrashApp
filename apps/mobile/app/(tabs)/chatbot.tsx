@@ -6,7 +6,7 @@ import { Spacing } from '@/constants/Spacing';
 export default function ChatbotScreen() {
   return (
     <View style={styles.container}>
-      <Text variant="heading">Chatbot Tab</Text>
+      <Text variant="h1">Chatbot Tab</Text>
     </View>
   );
 }

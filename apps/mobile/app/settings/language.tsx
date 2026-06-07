@@ -1,10 +1,10 @@
 import { StyleSheet } from 'react-native';
 import { Text, View } from '@/components/Themed';
 
-export default function CameraScreen() {
+export default function LanguageScreen() {
   return (
     <View style={styles.container}>
-      <Text variant="h1">Camera Tab</Text>
+      <Text variant="h1">Language</Text>
     </View>
   );
 }

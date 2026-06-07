@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { AppThemeProvider } from '@/context/ThemeContext';
+import { Colors } from '@/constants/Colors';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -42,24 +44,31 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <AppThemeProvider>
+      <RootLayoutNav />
+    </AppThemeProvider>
+  );
 }
+
+const LightTheme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: Colors.light.background },
+};
+
+const CustomDarkTheme = {
+  ...DarkTheme,
+  colors: { ...DarkTheme.colors, background: Colors.dark.background },
+};
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
+    <ThemeProvider value={colorScheme === 'light' ? LightTheme : CustomDarkTheme}>
+      <Stack screenOptions={{ contentStyle: { backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="settings"
-          options={{
-            headerTitle: () => null,
-            headerTransparent: true,
-            headerShadowVisible: false,
-          }}
-        />
+        <Stack.Screen name="settings" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );

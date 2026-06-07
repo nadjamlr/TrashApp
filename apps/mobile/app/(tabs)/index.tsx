@@ -6,7 +6,7 @@ import { Spacing } from '@/constants/Spacing';
 export default function MapScreen() {
   return (
     <View style={styles.container}>
-      <Text variant="heading">Map Tab</Text>
+      <Text variant="h1">Map Tab</Text>
     </View>
   );
 }
