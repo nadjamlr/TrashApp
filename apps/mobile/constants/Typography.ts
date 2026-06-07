@@ -2,45 +2,41 @@ import type { TextStyle } from 'react-native';
 
 export const Typography = {
   h1: {
-    fontFamily: 'Poppins',
     fontSize: 32,
-    lineHeight: 32,
+    lineHeight: 40,
     fontWeight: '900' as TextStyle['fontWeight'],
   },
   h2: {
     fontSize: 20,
-    lineHeight: 32,
+    lineHeight: 28,
     fontWeight: '700' as TextStyle['fontWeight'],
   },
   h3: {
     fontSize: 18,
-  display: {
-    fontSize: 34,
-    lineHeight: 40,
-    fontWeight: '800' as TextStyle['fontWeight'],
+    lineHeight: 22,
+    fontWeight: '700' as TextStyle['fontWeight'],
   },
   heading: {
     fontSize: 24,
     lineHeight: 32,
     fontWeight: '700' as TextStyle['fontWeight'],
   },
-  bodyStrong: {
+  p1: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '600' as TextStyle['fontWeight'],
   },
-  body: {
+  p2: {
     fontSize: 16,
     lineHeight: 24,
     fontWeight: '400' as TextStyle['fontWeight'],
   },
-  paragraph: {
-  captionStrong: {
+  c1: {
     fontSize: 13,
     lineHeight: 18,
     fontWeight: '700' as TextStyle['fontWeight'],
   },
-  caption: {
+  c2: {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400' as TextStyle['fontWeight'],

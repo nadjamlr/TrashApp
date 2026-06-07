@@ -91,7 +91,7 @@ export default function ChatbotScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <Text variant="display" style={styles.title}>
+          <Text variant="h1" style={styles.title}>
             Chatbot
           </Text>
 
@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Spacing.sm,
   },
   messageText: {
-    ...Typography.bodyStrong,
+    ...Typography.p1,
   },
   assistantText: {
     color: Colors.light.text,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
   },
   bulletText: {
     flex: 1,
-    ...Typography.body,
+    ...Typography.p2,
   },
   actions: {
     flexDirection: 'row',
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.light.background,
   },
   actionText: {
-    ...Typography.captionStrong,
+    ...Typography.c1,
   },
   primaryActionText: {
     color: Colors.light.text,
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: Sizes.chat.composerHeight,
     color: Colors.light.text,
-    ...Typography.bodyStrong,
+    ...Typography.p1,
   },
   cameraButton: {
     width: Sizes.chat.avatar,
