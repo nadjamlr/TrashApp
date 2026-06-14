@@ -31,6 +31,11 @@ export const Typography = {
     lineHeight: 24,
     fontWeight: '400' as TextStyle['fontWeight'],
   },
+  body: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400' as TextStyle['fontWeight'],
+  },
   c1: {
     fontSize: 13,
     lineHeight: 18,
@@ -40,6 +45,16 @@ export const Typography = {
     fontSize: 12,
     lineHeight: 16,
     fontWeight: '400' as TextStyle['fontWeight'],
+  },
+  caption: {
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '400' as TextStyle['fontWeight'],
+  },
+  mono: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontFamily: 'SpaceMono',
   },
 };
 

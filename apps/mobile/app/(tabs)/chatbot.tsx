@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -30,6 +31,17 @@ type ChatMessage = {
   actions?: string[];
 };
 
+type ConversationMessage = Pick<ChatMessage, 'role' | 'content'>;
+
+type ChatAskResponse = {
+  response: string;
+  suggested_location: { lat: number; lng: number } | null;
+};
+
+const CHAT_API_BASE_URL =
+  process.env.EXPO_PUBLIC_CHAT_AGENT_URL ??
+  (Platform.OS === 'android' ? 'http://10.0.2.2:8004' : 'http://localhost:8004');
+
 const initialMessages: ChatMessage[] = [
   {
     id: 'welcome',
@@ -42,6 +54,8 @@ const initialMessages: ChatMessage[] = [
 export default function ChatbotScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
@@ -62,20 +76,61 @@ export default function ChatbotScreen() {
     };
   }, []);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const trimmedDraft = draft.trim();
-    if (!trimmedDraft) return;
+    if (!trimmedDraft || isLoading) return;
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      {
-        id: `${Date.now()}`,
-        role: 'user',
-        content: trimmedDraft,
-      },
-    ]);
+    const conversationHistory: ConversationMessage[] = messages
+      .filter((message) => message.id !== 'welcome')
+      .map(({ role, content }) => ({ role, content }));
+    const userMessage: ChatMessage = {
+      id: `${Date.now()}-user`,
+      role: 'user',
+      content: trimmedDraft,
+    };
+
+    setMessages((currentMessages) => [...currentMessages, userMessage]);
     setDraft('');
+    setErrorMessage(null);
+    setIsLoading(true);
     requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
+
+    try {
+      const response = await fetch(`${CHAT_API_BASE_URL}/chat/ask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: trimmedDraft,
+          conversation_history: conversationHistory,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Chat request failed with status ${response.status}`);
+      }
+
+      const data = (await response.json()) as ChatAskResponse;
+
+      if (!data.response) {
+        throw new Error('Chat response did not include a response message');
+      }
+
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `${Date.now()}-assistant`,
+          role: 'assistant',
+          content: data.response,
+        },
+      ]);
+      requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
+    } catch {
+      setErrorMessage('Could not reach the waste assistant. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -146,6 +201,22 @@ export default function ChatbotScreen() {
                 </DefaultView>
               </DefaultView>
             ))}
+
+            {isLoading ? (
+              <DefaultView style={styles.messageRow}>
+                <DefaultView style={styles.botAvatar}>
+                  <Ionicons
+                    name="chatbox-ellipses-outline"
+                    size={Sizes.icon.sm}
+                    color={Colors.light.background}
+                  />
+                </DefaultView>
+                <DefaultView style={[styles.bubble, styles.assistantBubble, styles.loadingBubble]}>
+                  <ActivityIndicator size="small" color={Colors.light.text} />
+                  <Text style={[styles.messageText, styles.assistantText]}>Thinking...</Text>
+                </DefaultView>
+              </DefaultView>
+            ) : null}
           </DefaultView>
         </ScrollView>
 
@@ -159,6 +230,12 @@ export default function ChatbotScreen() {
             },
           ]}
         >
+          {errorMessage ? (
+            <DefaultView style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </DefaultView>
+          ) : null}
+
           <DefaultView style={styles.composerWrap}>
             <DefaultView style={styles.composer}>
               <TextInput
@@ -168,6 +245,7 @@ export default function ChatbotScreen() {
                 placeholderTextColor={Colors.light.muted}
                 returnKeyType="send"
                 onSubmitEditing={sendMessage}
+                editable={!isLoading}
                 style={styles.input}
               />
               <Pressable style={styles.cameraButton}>
@@ -178,9 +256,9 @@ export default function ChatbotScreen() {
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Send message"
-              disabled={!draft.trim()}
+              disabled={!draft.trim() || isLoading}
               onPress={sendMessage}
-              style={[styles.sendButton, !draft.trim() && styles.sendButtonDisabled]}
+              style={[styles.sendButton, (!draft.trim() || isLoading) && styles.sendButtonDisabled]}
             >
               <Ionicons name="send" size={Sizes.icon.md} color={Colors.light.text} />
             </Pressable>
@@ -243,6 +321,11 @@ const styles = StyleSheet.create({
   userBubble: {
     backgroundColor: Colors.light.text,
     borderTopRightRadius: Spacing.sm,
+  },
+  loadingBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
   },
   messageText: {
     ...Typography.p1,
@@ -307,6 +390,7 @@ const styles = StyleSheet.create({
     bottom: Layout.chatComposerBottomOffset,
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
   },
   composerWrap: {
     width: '100%',
@@ -352,5 +436,17 @@ const styles = StyleSheet.create({
   },
   sendButtonDisabled: {
     opacity: Layout.disabledOpacity,
+  },
+  errorContainer: {
+    width: '100%',
+    maxWidth: Layout.contentMaxWidth,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.light.surface,
+  },
+  errorText: {
+    color: '#B42318',
+    ...Typography.c1,
   },
 });
