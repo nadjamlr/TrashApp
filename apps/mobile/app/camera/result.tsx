@@ -4,9 +4,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { ResultCard } from '@/components/camera/ResultCard';
+import { FactCard } from '@/components/camera/FactCard';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { classifyItem, type RulesResult } from '@/services/rulesService';
+import { generateInsight, type InsightResult } from '@/services/insightService';
 
 export default function ResultScreen() {
   const { label, material } = useLocalSearchParams<{
@@ -19,10 +21,14 @@ export default function ResultScreen() {
   const colors = Colors[scheme];
 
   const [rules, setRules] = useState<RulesResult | null>(null);
+  const [insight, setInsight] = useState<InsightResult | null>(null);
 
   useEffect(() => {
     if (!label || !material) return;
-    classifyItem(label, material).then(setRules);
+    classifyItem(label, material).then((r) => {
+      setRules(r);
+      generateInsight(label, material, r.bin).then(setInsight);
+    });
   }, [label, material]);
 
   if (!rules) {
@@ -43,10 +49,14 @@ export default function ResultScreen() {
         material={material ?? ''}
         rules={rules}
         onClose={() => router.back()}
-        onSave={() => {}}
         onShowOnMap={() => router.push('/(tabs)/')}
         onAskMore={() => router.push('/(tabs)/chatbot')}
       />
+      {insight && (
+        <View style={styles.factWrapper}>
+          <FactCard fact={insight.fact} />
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -60,6 +70,10 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     padding: Spacing.md,
+    gap: Spacing.md,
     justifyContent: 'center',
+  },
+  factWrapper: {
+    width: '100%',
   },
 });
