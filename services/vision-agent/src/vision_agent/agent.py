@@ -44,4 +44,5 @@ async def identify_item(image_bytes: bytes) -> VisionResult:
         prompt=PROMPT,
         image_bytes=image_bytes,
     )
+    print(f"RAW: {repr(response)}", flush=True)
     return await _parse_response(response)
