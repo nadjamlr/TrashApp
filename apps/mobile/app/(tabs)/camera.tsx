@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, Pressable, Linking } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { ScanOverlay } from '@/components/camera/ScanOverlay';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
@@ -36,6 +37,10 @@ export default function CameraScreen() {
   return (
     <View style={styles.fill}>
       <CameraView style={styles.fill} facing="back" />
+      <ScanOverlay
+        onImageSelected={(uri) => console.log('gallery:', uri)}
+        onCapture={() => console.log('capture')}
+      />
     </View>
   );
 }
