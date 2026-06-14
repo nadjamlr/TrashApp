@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { StyleSheet, View, Text, Pressable, Linking, ActivityIndicator, Image } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { CameraView as CameraViewType } from 'expo-camera';
+import { useRouter } from 'expo-router';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { ScanOverlay } from '@/components/camera/ScanOverlay';
@@ -9,7 +10,7 @@ import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { Radius } from '@/constants/Radius';
-import { identifyImage, type VisionResult } from '@/services/visionService';
+import { identifyImage } from '@/services/visionService';
 
 const LOADING_STEPS = [
   'Bild wird geladen...',
@@ -23,8 +24,8 @@ export default function CameraScreen() {
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
-  const [result, setResult] = useState<VisionResult | null>(null);
   const cameraRef = useRef<CameraViewType>(null);
+  const router = useRouter();
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
 
@@ -40,12 +41,20 @@ export default function CameraScreen() {
   async function handleImage(uri: string) {
     setCapturedUri(uri);
     setIsLoading(true);
-    setResult(null);
     try {
       const visionResult = await identifyImage(uri);
-      setResult(visionResult);
+      setCapturedUri(null);
+      router.push({
+        pathname: '/camera/result',
+        params: {
+          label: visionResult.label,
+          material: visionResult.material,
+          confidence: String(visionResult.confidence),
+        },
+      });
     } catch (e) {
       console.error(e);
+      setCapturedUri(null);
     } finally {
       setIsLoading(false);
     }

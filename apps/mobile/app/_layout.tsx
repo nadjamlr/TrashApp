@@ -72,6 +72,7 @@ function RootLayoutNav() {
       <Stack screenOptions={{ contentStyle: { backgroundColor: colorScheme === 'dark' ? Colors.dark.background : Colors.light.background } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
+        <Stack.Screen name="camera" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );
