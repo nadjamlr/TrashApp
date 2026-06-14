@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { AppThemeProvider } from '@/context/ThemeContext';
+import { LocationProvider } from '@/context/LocationContext';
 import { Colors } from '@/constants/Colors';
 
 export {
@@ -46,7 +47,9 @@ export default function RootLayout() {
 
   return (
     <AppThemeProvider>
-      <RootLayoutNav />
+      <LocationProvider>
+        <RootLayoutNav />
+      </LocationProvider>
     </AppThemeProvider>
   );
 }

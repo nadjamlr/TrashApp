@@ -1,6 +1,7 @@
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useState } from 'react';
+import MapView from 'react-native-maps';
 import Searchbar from '@/components/Searchbar';
 import Filter from '@/components/Filter';
 import { View } from '@/components/Themed';
@@ -8,14 +9,25 @@ import { ThemedText } from '@/components/ThemedText';
 import { Toggle } from '@/components/Toggle';
 import { Layout } from '@/constants/Layout';
 import { Spacing } from '@/constants/Spacing';
+import { useLocation } from '@/context/LocationContext';
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const [showProducts, setShowProducts] = useState(false);
+  const { lat, lng } = useLocation();
 
   return (
-    <View style={styles.container}>
-      {/* Map kommt hier rein */}
+    <View style={styles.container} lightColor="transparent" darkColor="transparent">
+      <MapView
+        style={StyleSheet.absoluteFill}
+        region={{
+          latitude: lat,
+          longitude: lng,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        }}
+        showsUserLocation
+      />
 
       <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} />
 
