@@ -13,12 +13,11 @@ type Props = {
   material: string;
   rules: RulesResult;
   onClose: () => void;
-  onSave: () => void;
   onShowOnMap: () => void;
   onAskMore: () => void;
 };
 
-export function ResultCard({ label, material, rules, onClose, onSave, onShowOnMap, onAskMore }: Props) {
+export function ResultCard({ label, material, rules, onClose, onShowOnMap, onAskMore }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
 
@@ -33,9 +32,6 @@ export function ResultCard({ label, material, rules, onClose, onSave, onShowOnMa
 
       <View style={[styles.card, { backgroundColor: colors.background }]}>
         <View style={styles.cardActions}>
-          <Pressable onPress={onSave} style={[styles.actionButton, { backgroundColor: colors.surface }]}>
-            <Feather name="bookmark" size={18} color={colors.text} />
-          </Pressable>
           <Pressable onPress={onClose} style={[styles.actionButton, { backgroundColor: colors.surface }]}>
             <Feather name="x" size={18} color={colors.text} />
           </Pressable>
@@ -44,7 +40,7 @@ export function ResultCard({ label, material, rules, onClose, onSave, onShowOnMa
         <View style={styles.rows}>
           <Row label="Müll:" value={rules.bin} colors={colors} />
           <Row label="Material:" value={material} colors={colors} />
-          {rules.deposit && <Row label="Rückgabe:" value={`Pfandautomat im Supermarkt`} colors={colors} />}
+          {rules.deposit && <Row label="Rückgabe:" value="Pfandautomat im Supermarkt" colors={colors} />}
           {rules.deposit && <Row label="Pfand:" value={rules.deposit} colors={colors} />}
           {rules.alternatives.length > 0 && (
             <Row label="Alternativ:" value={rules.alternatives.join(', ')} colors={colors} />
@@ -55,16 +51,10 @@ export function ResultCard({ label, material, rules, onClose, onSave, onShowOnMa
         </View>
 
         <View style={styles.buttons}>
-          <Pressable
-            onPress={onShowOnMap}
-            style={[styles.button, { backgroundColor: colors.text }]}
-          >
+          <Pressable onPress={onShowOnMap} style={[styles.button, { backgroundColor: colors.text }]}>
             <Text style={[Typography.p1, { color: colors.background }]}>Show on map</Text>
           </Pressable>
-          <Pressable
-            onPress={onAskMore}
-            style={[styles.button, { backgroundColor: colors.text }]}
-          >
+          <Pressable onPress={onAskMore} style={[styles.button, { backgroundColor: colors.text }]}>
             <Text style={[Typography.p1, { color: colors.background }]}>Ask more</Text>
           </Pressable>
         </View>
@@ -125,7 +115,6 @@ const styles = StyleSheet.create({
   cardActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: Spacing.sm,
   },
   actionButton: {
     width: 36,
