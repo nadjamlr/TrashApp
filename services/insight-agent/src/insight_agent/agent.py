@@ -6,6 +6,10 @@ from trashapp_shared.settings import settings
 
 
 async def run_agent(request: InsightRequest) -> InsightResult:
+    """
+    Run the CrewAI agent to generate a contextual recycling fact for a given item.
+    The fact is grounded in the Munich waste rules and categorized as Myth, Impact, or Future.
+    """
     llm = LLM(model=f"ollama/{settings.ollama_model_text}", base_url=settings.ollama_host)
 
     agent = Agent(
@@ -25,13 +29,13 @@ async def run_agent(request: InsightRequest) -> InsightResult:
     task = Task(
         description=(
             "Use ONLY the Munich waste disposal rules below as grounding.\n"
-            "Generate exactly one single sentence that is specific to the scanned item and the bin.\n"
-            "The sentence must be short, contextual, and non-generic.\n"
+            "Generate exactly one single sentence in German that is specific to the scanned item's material and bin.\n"
+            "The sentence must be short, contextual, and non-generic (avoid generic recycling trivia).\n"
             "Choose exactly one category from these three values: Myth, Impact, Future.\n"
-            "Category meanings:\n"
-            "- Myth: correct common misconceptions\n"
-            "- Impact: explain the ecological consequence\n"
-            "- Future: explain what the material can become\n\n"
+            "Category meanings and guidelines:\n"
+            "- Myth: Myth-buster that clears up common misconceptions (e.g. explaining why 'compostable plastic bags' are prohibited in Munich's organic waste bin / Biotonne)\n"
+            "- Impact: Ecological impact showing the consequence of correct or incorrect sorting (e.g. how a greasy pizza box ruins an entire load of waste paper)\n"
+            "- Future: Vision of the future explaining what the material can be recycled into (e.g. how aluminum foil is recycled into a bicycle frame)\n\n"
             "Return only valid JSON matching this exact shape:\n"
             '{"fact": "...", "category": "Myth|Impact|Future"}\n\n'
             "RULES:\n"
@@ -45,6 +49,7 @@ async def run_agent(request: InsightRequest) -> InsightResult:
         agent=agent,
         output_pydantic=InsightResult,
     )
+
 
     crew = Crew(agents=[agent], tasks=[task], verbose=False)
     result = await crew.kickoff_async(
