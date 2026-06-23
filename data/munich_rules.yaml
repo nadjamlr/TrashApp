@@ -15,6 +15,8 @@ schema:
     - alternatives
     - notes
     - source_url
+  optional_item_fields:
+    - keywords
 items:
   - name: Paper and cardboard
     bin: Papiertonne
@@ -62,6 +64,15 @@ items:
       - Use Wertstoffinseln for plastic packaging such as foils, shopping bags, shampoo bottles, detergent containers, and yoghurt cups.
       - Packaging should be empty; it does not need to be rinsed perfectly clean.
       - Non-packaging plastic household items may have different disposal routes; check the Abfall-ABC entry.
+    keywords:
+      - Plastikflasche
+      - PET-Flasche
+      - plastic bottle
+      - Kunststoffverpackung
+      - Shampoo bottle
+      - detergent container
+      - yoghurt cup
+      - Verpackungsfolie
     source_url: https://www.awm-muenchen.de/entsorgen/abfall-trennen/verpackungsabfall
 
   - name: Metal packaging
@@ -107,6 +118,15 @@ items:
       - Batteries must not be thrown into nature or disposed of in Restmuelltonne.
       - Shops that sell batteries usually provide collection boxes near the entrance.
       - Prefer rechargeable batteries where possible.
+    keywords:
+      - Batterie
+      - Batterien
+      - Knopfzelle
+      - Knopfzellen
+      - AA battery
+      - AAA battery
+      - button cell
+      - Fernbedienungsbatterie
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/batterien-knopfzellen
 
   - name: Rechargeable batteries and lithium batteries
@@ -144,6 +164,25 @@ items:
       - Electrical and electronic devices must not be disposed of in Restmuelltonne.
       - Delete personal data before handing in devices such as phones, tablets, laptops, or storage media.
       - Remove accessible batteries and rechargeable batteries before disposal when the device is not intended for reuse.
+    keywords:
+      - Elektrogeraet
+      - Elektrogerät
+      - Elektroschrott
+      - electronic device
+      - small electronic device
+      - Kopfhoerer
+      - Kopfhörer
+      - headphones
+      - earbuds
+      - Fernbedienung
+      - remote control
+      - Handy
+      - Smartphone
+      - tablet
+      - laptop
+      - charger
+      - Ladekabel
+      - Kabel
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/elektro-elektronikschrott
 
   - name: Large electronic appliances
@@ -304,4 +343,3 @@ deposit_rules:
       - Wine and sparkling wine bottles
       - Juice and nectar bottles
       - Bottles without Pfand symbol
-

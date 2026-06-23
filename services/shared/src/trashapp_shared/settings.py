@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     ollama_host: str = "http://host.docker.internal:11434"
     ollama_model_text: str = "llama3"
     ollama_model_vision: str = "llava"
+    groq_api_key: str = ""
     ors_api_key: str = ""
     rules_path: str = "/data/munich_rules.yaml"
 

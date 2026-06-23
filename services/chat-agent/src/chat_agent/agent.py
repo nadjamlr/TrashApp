@@ -9,12 +9,6 @@ from chat_agent.schemas import ChatResponse, ConversationMessage, SuggestedLocat
 
 MIN_SEARCH_TOKEN_LENGTH = 4
 MAX_RELEVANT_RULES = 3
-QUERY_ALIASES = {
-    "kopfhoerer": "small electronic devices electrical electronic devices elektro elektronikschrott",
-    "kopfhörer": "small electronic devices electrical electronic devices elektro elektronikschrott",
-    "headphones": "small electronic devices electrical electronic devices electronics",
-    "earbuds": "small electronic devices electrical electronic devices electronics",
-}
 
 
 def _format_history(conversation_history: list[ConversationMessage]) -> str:
@@ -27,9 +21,6 @@ def _format_history(conversation_history: list[ConversationMessage]) -> str:
 def _relevant_rules_text(message: str, conversation_history: list[ConversationMessage]) -> str:
     query_text = " ".join([message, *[item.content for item in conversation_history]])
     query_tokens = _search_tokens(query_text)
-    for alias, expansion in QUERY_ALIASES.items():
-        if alias in query_text.casefold():
-            query_tokens.update(_search_tokens(expansion))
 
     if not query_tokens:
         return "No lexical rule matches."
@@ -131,7 +122,11 @@ async def ask_waste_question(message: str, conversation_history: list[Conversati
 def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
     from crewai import Agent, Crew, LLM, Task
 
-    llm = LLM(model=f"ollama/{settings.ollama_model_text}", base_url=settings.ollama_host)
+    llm = LLM(
+        model="groq/llama-3.3-70b-versatile",
+        api_key=settings.groq_api_key,
+        temperature=0.2,
+    )
 
     advisor_agent = Agent(
         role="Munich waste disposal advisor",
