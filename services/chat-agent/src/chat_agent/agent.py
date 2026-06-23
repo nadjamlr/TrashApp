@@ -3,7 +3,6 @@ import json
 import re
 
 from trashapp_shared.rules import load_rules
-from trashapp_shared.rules import get_rules_text
 from trashapp_shared.settings import settings
 
 from chat_agent.schemas import ChatResponse, ConversationMessage, SuggestedLocation
@@ -20,7 +19,9 @@ def _format_history(conversation_history: list[ConversationMessage]) -> str:
 
 
 def _relevant_rules_text(message: str, conversation_history: list[ConversationMessage]) -> str:
-    query_tokens = _search_tokens(" ".join([message, *[item.content for item in conversation_history]]))
+    query_text = " ".join([message, *[item.content for item in conversation_history]])
+    query_tokens = _search_tokens(query_text)
+
     if not query_tokens:
         return "No lexical rule matches."
 
@@ -89,106 +90,67 @@ def _extract_json_payload(output: str) -> dict | None:
     return None
 
 
-def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
-    from crewai import Agent, Crew, LLM, Task
-
-    rules_text = get_rules_text()
+def _build_prompt(message: str, conversation_history: list[ConversationMessage]) -> str:
+    rules = load_rules()
     relevant_rules_text = _relevant_rules_text(message, conversation_history)
-    llm = LLM(model=f"ollama/{settings.ollama_model_text}", base_url=settings.ollama_host)
+    deposit_rules_text = json.dumps(rules.get("deposit_rules", {}), ensure_ascii=False)
 
-    retriever_agent = Agent(
-        role="Munich waste rule retriever",
-        goal="Select the Munich waste disposal rules that best match the user's question and conversation context.",
-        backstory=(
-            "You are precise at matching household items to AWM disposal rule entries. "
-            "You do not answer the user directly; you only identify the most relevant supplied rules."
-        ),
-        llm=llm,
-        verbose=False,
+    return (
+        "You are a Munich waste disposal advisor.\n"
+        "Use only the supplied selected rules and deposit rules. If the rules do not cover the item, "
+        "say that the available rules do not specify it and suggest checking AWM.\n"
+        "Never invent street names, station names, shops, districts, collection points, or exact locations.\n"
+        "Only mention a concrete place if it appears verbatim in the selected rules.\n"
+        "For deposit bottles or cans, say they should be returned to retailers or reverse vending machines.\n"
+        "For plastic packaging without deposit, say it goes to Wertstoffinseln.\n"
+        "Answer in the same language as the current user question. Keep the answer direct.\n"
+        "Do not include markdown or text outside JSON.\n"
+        "Return only valid JSON matching this shape: "
+        '{"response":"...", "suggested_location": null}\n'
+        "Set suggested_location to null unless exact coordinates are supplied by the rules.\n\n"
+        f"Conversation history:\n{_format_history(conversation_history)}\n\n"
+        f"Current user question:\n{message}\n\n"
+        f"Selected rules:\n{relevant_rules_text}\n\n"
+        f"Deposit rules:\n{deposit_rules_text}"
     )
-
-    advisor_agent = Agent(
-        role="Munich waste disposal advisor",
-        goal="Write a concise disposal answer using only the selected Munich waste rules.",
-        backstory=(
-            "You help Munich residents decide how to dispose of waste. "
-            "You are careful, direct, and never invent disposal routes that are not present in the selected rules."
-        ),
-        llm=llm,
-        verbose=False,
-    )
-
-    validator_agent = Agent(
-        role="Munich waste answer validator",
-        goal="Check that the final chatbot answer is valid JSON and consistent with the selected Munich waste rules.",
-        backstory=(
-            "You review disposal advice before it is returned to users. "
-            "You remove unsupported claims and ensure the output matches the API response schema."
-        ),
-        llm=llm,
-        verbose=False,
-    )
-
-    retrieval_task = Task(
-        description=(
-            "Select the closest matching Munich waste disposal rule entries for the current question.\n"
-            "Use the lexical matches as a strong hint, but verify the match against the full YAML rules.\n"
-            "If there is no covered item, say that no matching rule is available.\n"
-            "Return only a concise JSON array of selected rule objects or an empty array.\n\n"
-            f"Conversation history:\n{_format_history(conversation_history)}\n\n"
-            f"Current user question:\n{message}\n\n"
-            f"Lexical rule matches:\n{relevant_rules_text}\n\n"
-            f"Munich rules YAML:\n{rules_text}"
-        ),
-        expected_output="A JSON array containing the selected Munich waste rule entries.",
-        agent=retriever_agent,
-    )
-
-    advisor_task = Task(
-        description=(
-            "Write the user-facing waste disposal answer from the selected rules.\n"
-            "Preserve the user's multi-turn context from the conversation history.\n"
-            "If the selected rules do not cover the item, say that the available rules do not specify it and suggest checking AWM.\n"
-            "Do not contradict any note in the selected rules.\n"
-            "Do not introduce materials, item descriptions, or disposal reasons that are absent from the user's question and selected rules.\n"
-            "Answer in the same language as the current user question and keep the answer direct.\n"
-            "Set suggested_location to null unless your answer clearly refers to one specific disposal site with known coordinates.\n"
-            "Return draft JSON matching this shape: "
-            '{"response":"...", "suggested_location": null}\n'
-            "If a specific disposal site is known, suggested_location may instead be "
-            '{"lat":48.0,"lng":11.0}.\n\n'
-            f"Conversation history:\n{_format_history(conversation_history)}\n\n"
-            f"Current user question:\n{message}"
-        ),
-        expected_output="A draft JSON object with response and suggested_location fields.",
-        agent=advisor_agent,
-        context=[retrieval_task],
-    )
-
-    validation_task = Task(
-        description=(
-            "Validate the draft answer against the selected rules.\n"
-            "If the draft contains unsupported disposal advice, remove it or replace it with a statement that the available rules do not specify the item.\n"
-            "Ensure suggested_location is null unless exact coordinates were supplied by the selected rules.\n"
-            "Do not include reasoning, markdown, explanations outside the answer, or text before or after the JSON.\n"
-            "Return only valid JSON matching this shape: "
-            '{"response":"...", "suggested_location": null}\n'
-            "If a specific disposal site is known, suggested_location may instead be "
-            '{"lat":48.0,"lng":11.0}.'
-        ),
-        expected_output="A final valid JSON object with response and suggested_location fields.",
-        agent=validator_agent,
-        context=[retrieval_task, advisor_task],
-    )
-
-    crew = Crew(
-        agents=[retriever_agent, advisor_agent, validator_agent],
-        tasks=[retrieval_task, advisor_task, validation_task],
-        verbose=False,
-    )
-    result = crew.kickoff()
-    return _parse_agent_output(str(result))
 
 
 async def ask_waste_question(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
     return await asyncio.to_thread(_run_crew, message, conversation_history)
+
+
+def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
+    from crewai import Agent, Crew, LLM, Task
+
+    llm = LLM(
+        model="groq/llama-3.3-70b-versatile",
+        api_key=settings.groq_api_key,
+        temperature=0.2,
+    )
+
+    advisor_agent = Agent(
+        role="Munich waste disposal advisor",
+        goal="Answer waste disposal questions using only the selected Munich AWM rules.",
+        backstory=(
+            "You advise Munich residents about waste disposal. You are strict about using only "
+            "the supplied rules and you never invent collection points, addresses, or shop names."
+        ),
+        llm=llm,
+        verbose=False,
+        allow_delegation=False,
+        respect_context_window=False,
+    )
+
+    task = Task(
+        description=_build_prompt(message, conversation_history),
+        expected_output='Only valid JSON: {"response":"...", "suggested_location": null}',
+        agent=advisor_agent,
+    )
+
+    crew = Crew(
+        agents=[advisor_agent],
+        tasks=[task],
+        verbose=False,
+    )
+    result = crew.kickoff()
+    return _parse_agent_output(str(result))

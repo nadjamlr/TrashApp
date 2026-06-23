@@ -4,7 +4,7 @@ version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
     "trashapp-shared",
-    "crewai>=0.80.0",
+    "crewai[litellm]>=0.80.0",
 ]
 
 [dependency-groups]
