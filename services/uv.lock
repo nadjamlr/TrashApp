@@ -1155,11 +1155,20 @@ dependencies = [
     { name = "trashapp-shared" },
 ]
 
+[package.optional-dependencies]
+dev = [
+    { name = "httpx" },
+    { name = "pytest" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "crewai", specifier = ">=0.80.0" },
+    { name = "httpx", marker = "extra == 'dev'" },
+    { name = "pytest", marker = "extra == 'dev'" },
     { name = "trashapp-shared", editable = "shared" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "instructor"
