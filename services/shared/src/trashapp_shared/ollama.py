@@ -27,7 +27,16 @@ async def generate_vision(model: str, prompt: str, image_bytes: bytes) -> str:
                 "prompt": prompt,
                 "images": [image_b64],
                 "stream": False,
+                "format": {
+    "type": "object",
+    "properties": {
+        "label":      {"type": "string"},
+        "material":   {"type": "string"},
+        "confidence": {"type": "number"}
+    },
+    "required": ["label", "material", "confidence"]
+}
             },
-        )
+        ) #force json output more reliable than system prompt formatting
         response.raise_for_status()
         return response.json()["response"]
