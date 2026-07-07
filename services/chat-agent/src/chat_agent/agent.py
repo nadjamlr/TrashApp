@@ -119,6 +119,24 @@ async def ask_waste_question(message: str, conversation_history: list[Conversati
     return await asyncio.to_thread(_run_crew, message, conversation_history)
 
 
+def _patch_litellm_for_groq() -> None:
+    import litellm
+
+    _original = litellm.completion
+
+    def _patched(*args, **kwargs):
+        for msg in kwargs.get("messages", []):
+            if isinstance(msg, dict):
+                msg.pop("cache_breakpoint", None)
+                msg.pop("cache_control", None)
+        return _original(*args, **kwargs)
+
+    litellm.completion = _patched
+
+
+_patch_litellm_for_groq()
+
+
 def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
     from crewai import Agent, Crew, LLM, Task
 
