@@ -14,9 +14,18 @@ export async function generateInsight(
   material: string,
   bin: string,
 ): Promise<InsightResult> {
-  // TODO: replace with real call once Insight Agent is deployed (see issue #16)
-  return {
-    fact: 'Recycling Aluminium spart bis zu 95% Energie im Vergleich zur Neuproduktion.',
-    category: 'energy',
-  };
+  const response = await fetch(`${BASE_URL}/insights/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ label, material, bin }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Insight agent error: ${response.status}`);
+  }
+
+  return response.json() as Promise<InsightResult>;
 }
+
