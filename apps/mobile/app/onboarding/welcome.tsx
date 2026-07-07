@@ -1,53 +1,53 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Dimensions, Image, ImageSourcePropType, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, Filter, FeTurbulence, FeColorMatrix, Rect } from 'react-native-svg';
 import { useUser } from '@/context/UserContext';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 type Slide = {
   id: string;
   bgColor: string;
   textColor: string;
-  icon: React.ComponentProps<typeof FontAwesome>['name'];
-  iconColor: string;
+  gradient: readonly [string, string, ...string[]];
+  image?: ImageSourcePropType;
+  imageOffsetX?: number;
+  icon?: React.ComponentProps<typeof FontAwesome>['name'];
+  iconColor?: string;
   title: string;
   description: string;
-  stat?: string;
-  statLabel?: string;
 };
 
 const slides: Slide[] = [
   {
     id: '1',
-    bgColor: '#FEDA10',
-    textColor: '#21242C',
-    icon: 'recycle',
-    iconColor: '#21242C',
+    bgColor: '#fde76a',
+    textColor: '#060709',
+    gradient: ['#f3f08a', '#f1dc66', '#e9e257'],
+    image: require('@/assets/images/scan.png'),
     title: 'Richtig trennen,\nleicht gemacht',
     description: 'Scanne deinen Müll und finde sofort heraus, in welche Tonne er gehört – in Sekunden.',
-    stat: '60 %',
-    statLabel: 'des Hausmülls wäre recycelbar, landet aber im Restmüll',
   },
   {
     id: '2',
-    bgColor: '#38632E',
-    textColor: '#FFFFFF',
-    icon: 'leaf',
-    iconColor: '#FEDA10',
+    bgColor: '#7edf69',
+    textColor: '#060709',
+    gradient: ['#3ee059', '#83ca87'],
+    image: require('@/assets/images/recycle.png'),
+    imageOffsetX: -10,
     title: 'Dein Beitrag\nzählt wirklich',
     description: 'Richtiges Recycling spart Energie, schont Rohstoffe und schützt das Klima.',
-    stat: '95 %',
-    statLabel: 'weniger Energie braucht recyceltes Aluminium gegenüber Neuproduktion',
   },
   {
     id: '3',
-    bgColor: '#21242C',
-    textColor: '#FFFFFF',
-    icon: 'map-marker',
-    iconColor: '#FEDA10',
+    bgColor: '#ffffff',
+    textColor: '#060709',
+    gradient: ['#14a5e9', '#9dabc0'],
+    image: require('@/assets/images/location.png'),
     title: 'Deine Stadt,\ndeine Regeln',
     description: 'TrashApp kennt die aktuellen Trennungsregeln deiner Stadt – immer dabei.',
   },
@@ -85,6 +85,33 @@ export default function WelcomeScreen() {
 
   return (
     <Animated.View style={[styles.container, { backgroundColor: bgColor }]}>
+      {/* Full-screen gradient per slide, cross-fades on scroll */}
+      {slides.map((item, index) => {
+        const gradOpacity = scrollX.interpolate({
+          inputRange: [
+            (index - 1) * SCREEN_WIDTH,
+            index * SCREEN_WIDTH,
+            (index + 1) * SCREEN_WIDTH,
+          ],
+          outputRange: [0, 1, 0],
+          extrapolate: 'clamp',
+        });
+        return (
+          <Animated.View
+            key={`grad-${item.id}`}
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, { opacity: gradOpacity }]}
+          >
+            <LinearGradient
+              colors={item.gradient}
+              start={{ x: 0.15, y: 0 }}
+              end={{ x: 0.85, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
+        );
+      })}
+
       <Pressable
         style={[styles.skipButton, { top: insets.top + 16 }]}
         onPress={handleSkip}
@@ -131,9 +158,15 @@ export default function WelcomeScreen() {
               <Animated.View
                 style={[styles.iconArea, { paddingTop: insets.top + 60, opacity, transform: [{ translateY }] }]}
               >
-                <View style={styles.iconCircle}>
-                  <FontAwesome name={item.icon} size={80} color={item.iconColor} />
-                </View>
+                {item.image ? (
+                  <Image
+                    source={item.image}
+                    style={[styles.slideImage, item.imageOffsetX ? { transform: [{ translateX: item.imageOffsetX }] } : undefined]}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <FontAwesome name={item.icon!} size={80} color={item.iconColor} />
+                )}
               </Animated.View>
 
               <Animated.View style={[styles.textArea, { opacity, transform: [{ translateY }] }]}>
@@ -141,14 +174,6 @@ export default function WelcomeScreen() {
                 <Text style={[styles.description, { color: item.textColor, opacity: 0.8 }]}>
                   {item.description}
                 </Text>
-                {item.stat && (
-                  <View style={[styles.statBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-                    <Text style={[styles.statNumber, { color: item.textColor }]}>{item.stat}</Text>
-                    <Text style={[styles.statLabel, { color: item.textColor, opacity: 0.75 }]}>
-                      {item.statLabel}
-                    </Text>
-                  </View>
-                )}
               </Animated.View>
             </View>
           );
@@ -186,6 +211,25 @@ export default function WelcomeScreen() {
           </Text>
         </Pressable>
       </View>
+
+      {/* Global grain overlay – non-interactive, sits on top */}
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <Svg width={SCREEN_WIDTH} height={SCREEN_HEIGHT}>
+          <Defs>
+            <Filter id="grain-global">
+              <FeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
+              <FeColorMatrix type="saturate" values="0" />
+            </Filter>
+          </Defs>
+          <Rect
+            width={SCREEN_WIDTH}
+            height={SCREEN_HEIGHT}
+            fill="white"
+            filter="url(#grain-global)"
+            opacity={0.1}
+          />
+        </Svg>
+      </View>
     </Animated.View>
   );
 }
@@ -211,13 +255,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  slideImage: {
+    width: 220,
+    height: 220,
   },
   textArea: {
     paddingHorizontal: 32,
@@ -256,19 +296,5 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '700',
-  },
-  statBadge: {
-    marginTop: 4,
-    borderRadius: 12,
-    padding: 12,
-    gap: 2,
-  },
-  statNumber: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  statLabel: {
-    fontSize: 13,
-    lineHeight: 18,
   },
 });
