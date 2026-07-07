@@ -1,7 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Dimensions, FlatList, Pressable, StyleSheet, Text, View, ViewToken } from 'react-native';
+import { Animated, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@/context/UserContext';
 
@@ -57,14 +57,14 @@ export default function WelcomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { completeOnboarding } = useUser();
-  const flatListRef = useRef<FlatList<Slide>>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const scrollRef = useRef<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollX = useRef(new Animated.Value(0)).current;
 
-  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 50 });
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: ViewToken[] }) => {
-    if (viewableItems.length > 0 && viewableItems[0].index != null) {
-      setCurrentIndex(viewableItems[0].index);
-    }
+  const bgColor = scrollX.interpolate({
+    inputRange: slides.map((_, i) => i * SCREEN_WIDTH),
+    outputRange: slides.map((s) => s.bgColor),
   });
 
   async function handleSkip() {
@@ -74,7 +74,7 @@ export default function WelcomeScreen() {
 
   function handleNext() {
     if (currentIndex < slides.length - 1) {
-      flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+      scrollRef.current?.scrollTo({ x: (currentIndex + 1) * SCREEN_WIDTH, animated: true });
     } else {
       router.push('/onboarding/city-selection');
     }
@@ -84,54 +84,97 @@ export default function WelcomeScreen() {
   const isLastSlide = currentIndex === slides.length - 1;
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        ref={flatListRef}
-        data={slides}
-        keyExtractor={(item) => item.id}
+    <Animated.View style={[styles.container, { backgroundColor: bgColor }]}>
+      <Pressable
+        style={[styles.skipButton, { top: insets.top + 16 }]}
+        onPress={handleSkip}
+        hitSlop={12}
+      >
+        <Text style={[styles.skipText, { color: currentSlide.textColor }]}>Skip</Text>
+      </Pressable>
+
+      <Animated.ScrollView
+        ref={scrollRef}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         bounces={false}
-        onViewableItemsChanged={onViewableItemsChanged.current}
-        viewabilityConfig={viewabilityConfig.current}
-        renderItem={({ item }) => (
-          <View style={[styles.slide, { backgroundColor: item.bgColor, width: SCREEN_WIDTH }]}>
-            <View style={[styles.iconArea, { paddingTop: insets.top + 60 }]}>
-              <View style={styles.iconCircle}>
-                <FontAwesome name={item.icon} size={80} color={item.iconColor} />
-              </View>
-            </View>
-            <View style={styles.textArea}>
-              <Text style={[styles.title, { color: item.textColor }]}>{item.title}</Text>
-              <Text style={[styles.description, { color: item.textColor, opacity: 0.8 }]}>
-                {item.description}
-              </Text>
-              {item.stat && (
-                <View style={[styles.statBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-                  <Text style={[styles.statNumber, { color: item.textColor }]}>{item.stat}</Text>
-                  <Text style={[styles.statLabel, { color: item.textColor, opacity: 0.75 }]}>
-                    {item.statLabel}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </View>
+        scrollEventThrottle={16}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+          { useNativeDriver: false }
         )}
-      />
+        onMomentumScrollEnd={(e) => {
+          const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+          setCurrentIndex(index);
+        }}
+      >
+        {slides.map((item, index) => {
+          const inputRange = [
+            (index - 1) * SCREEN_WIDTH,
+            index * SCREEN_WIDTH,
+            (index + 1) * SCREEN_WIDTH,
+          ];
+          const opacity = scrollX.interpolate({
+            inputRange,
+            outputRange: [0, 1, 0],
+            extrapolate: 'clamp',
+          });
+          const translateY = scrollX.interpolate({
+            inputRange,
+            outputRange: [28, 0, 28],
+            extrapolate: 'clamp',
+          });
 
-      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 24, backgroundColor: currentSlide.bgColor }]}>
+          return (
+            <View key={item.id} style={[styles.slide, { width: SCREEN_WIDTH }]}>
+              <Animated.View
+                style={[styles.iconArea, { paddingTop: insets.top + 60, opacity, transform: [{ translateY }] }]}
+              >
+                <View style={styles.iconCircle}>
+                  <FontAwesome name={item.icon} size={80} color={item.iconColor} />
+                </View>
+              </Animated.View>
+
+              <Animated.View style={[styles.textArea, { opacity, transform: [{ translateY }] }]}>
+                <Text style={[styles.title, { color: item.textColor }]}>{item.title}</Text>
+                <Text style={[styles.description, { color: item.textColor, opacity: 0.8 }]}>
+                  {item.description}
+                </Text>
+                {item.stat && (
+                  <View style={[styles.statBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+                    <Text style={[styles.statNumber, { color: item.textColor }]}>{item.stat}</Text>
+                    <Text style={[styles.statLabel, { color: item.textColor, opacity: 0.75 }]}>
+                      {item.statLabel}
+                    </Text>
+                  </View>
+                )}
+              </Animated.View>
+            </View>
+          );
+        })}
+      </Animated.ScrollView>
+
+      <View style={[styles.bottomBar, { paddingBottom: insets.bottom + 24 }]}>
         <View style={styles.dots}>
-          {slides.map((_, i) => (
-            <View
-              key={i}
-              style={[
-                styles.dot,
-                { backgroundColor: currentSlide.textColor },
-                i === currentIndex ? styles.dotActive : styles.dotInactive,
-              ]}
-            />
-          ))}
+          {slides.map((_, i) => {
+            const dotWidth = scrollX.interpolate({
+              inputRange: [(i - 1) * SCREEN_WIDTH, i * SCREEN_WIDTH, (i + 1) * SCREEN_WIDTH],
+              outputRange: [8, 24, 8],
+              extrapolate: 'clamp',
+            });
+            const dotOpacity = scrollX.interpolate({
+              inputRange: [(i - 1) * SCREEN_WIDTH, i * SCREEN_WIDTH, (i + 1) * SCREEN_WIDTH],
+              outputRange: [0.3, 1, 0.3],
+              extrapolate: 'clamp',
+            });
+            return (
+              <Animated.View
+                key={i}
+                style={[styles.dot, { backgroundColor: currentSlide.textColor, width: dotWidth, opacity: dotOpacity }]}
+              />
+            );
+          })}
         </View>
 
         <Pressable
@@ -142,20 +185,23 @@ export default function WelcomeScreen() {
             {isLastSlide ? "Los geht's" : 'Weiter'}
           </Text>
         </Pressable>
-
-        <Pressable style={styles.skipButton} onPress={handleSkip}>
-          <Text style={[styles.skipText, { color: currentSlide.textColor, opacity: 0.5 }]}>
-            Überspringen
-          </Text>
-        </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  skipButton: {
+    position: 'absolute',
+    right: 24,
+    zIndex: 10,
+  },
+  skipText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
   slide: {
     flex: 1,
@@ -201,14 +247,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  dotActive: {
-    width: 24,
-    opacity: 1,
-  },
-  dotInactive: {
-    width: 8,
-    opacity: 0.3,
-  },
   button: {
     height: 52,
     borderRadius: 26,
@@ -232,12 +270,5 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 13,
     lineHeight: 18,
-  },
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  skipText: {
-    fontSize: 14,
   },
 });
