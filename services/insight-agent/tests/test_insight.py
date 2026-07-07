@@ -34,7 +34,6 @@ def test_health_endpoint(client):
 
 
 def test_generate_endpoint_success(client):
-    # Test that /insights/generate generates an insight and conforms to the Pydantic schema
     with patch("insight_agent.main.run_agent", new=AsyncMock(return_value=MOCK_RESULT)) as mock_run:
         response = client.post(
             "/insights/generate",
@@ -48,23 +47,32 @@ def test_generate_endpoint_success(client):
 
 
 def test_generate_endpoint_cache_hit(client):
-    # Test that the cache normalizes keys and returns cached results on duplicate requests
     with patch("insight_agent.main.run_agent", new=AsyncMock(return_value=MOCK_RESULT)) as mock_run:
-        # First request (cache miss)
-        response_first = client.post(
+        client.post(
             "/insights/generate",
             json={"label": "Alufolie", "material": "Aluminium", "bin": "Wertstoffinseln"}
         )
-        assert response_first.status_code == 200
         assert mock_run.call_count == 1
 
-        # Second request with differing whitespace and case (cache hit due to normalization)
+        # Same label+material+bin with different casing/whitespace → cache hit
         response_second = client.post(
             "/insights/generate",
             json={"label": "  ALUFOLIE  ", "material": "Aluminium", "bin": "Wertstoffinseln"}
         )
         assert response_second.status_code == 200
         assert response_second.json()["fact"] == MOCK_RESULT.fact
-        
-        # CrewAI/Ollama agent should not have been called a second time
         assert mock_run.call_count == 1
+
+
+def test_cache_miss_on_different_material(client):
+    with patch("insight_agent.main.run_agent", new=AsyncMock(return_value=MOCK_RESULT)) as mock_run:
+        client.post(
+            "/insights/generate",
+            json={"label": "Flasche", "material": "Glas", "bin": "Altglas"}
+        )
+        client.post(
+            "/insights/generate",
+            json={"label": "Flasche", "material": "Plastik", "bin": "Gelbe Tonne"}
+        )
+        # Different material/bin → two separate agent calls
+        assert mock_run.call_count == 2
