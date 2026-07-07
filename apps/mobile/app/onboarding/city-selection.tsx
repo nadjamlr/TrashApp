@@ -1,4 +1,3 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
@@ -45,90 +44,69 @@ export default function CitySelectionScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-    <View style={[styles.container, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Wähle deine Stadt</Text>
-        <Text style={styles.subtitle}>
-          TrashApp kennt die Trennungsregeln in deiner Stadt.
-        </Text>
-      </View>
+      <View style={[styles.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 }]}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Wähle deine Stadt.</Text>
+          <Text style={styles.subtitle}>TrashApp kennt die Trennungsregeln in deiner Stadt.</Text>
+        </View>
 
-      <View style={styles.searchContainer}>
-        <FontAwesome name="search" size={16} color="#9CA3AF" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Stadt suchen…"
-          placeholderTextColor="#9CA3AF"
-          value={query}
-          onChangeText={setQuery}
-          autoCorrect={false}
-          clearButtonMode="while-editing"
-        />
-      </View>
+        <View style={styles.searchRow}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Stadt suchen…"
+            placeholderTextColor="#ADADAD"
+            value={query}
+            onChangeText={setQuery}
+            autoCorrect={false}
+            clearButtonMode="while-editing"
+          />
+        </View>
 
-      <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {filteredCities.length === 0 ? (
-          <View style={styles.emptyState}>
+        <ScrollView
+          style={styles.list}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {filteredCities.length === 0 ? (
             <Text style={styles.emptyText}>Keine Stadt gefunden</Text>
-          </View>
-        ) : (
-          filteredCities.map((city) => (
-            <Pressable
-              key={city.id}
-              style={[
-                styles.cityCard,
-                !city.available && styles.cityCardDisabled,
-                city.available && selectedCity === city.id && styles.cityCardSelected,
-              ]}
-              onPress={() => city.available && setSelectedCity(city.id)}
-              disabled={!city.available}
-            >
-              <View style={styles.cityCardLeft}>
-                <View style={[
-                  styles.cityIcon,
-                  !city.available && styles.cityIconDisabled,
-                  city.available && selectedCity === city.id && styles.cityIconSelected,
+          ) : (
+            filteredCities.map((city) => (
+              <Pressable
+                key={city.id}
+                style={({ pressed }) => [
+                  styles.cityRow,
+                  !city.available && styles.cityRowDisabled,
+                  pressed && city.available && styles.cityRowPressed,
+                ]}
+                onPress={() => city.available && setSelectedCity(city.id)}
+                disabled={!city.available}
+              >
+                <Text style={[
+                  styles.cityName,
+                  !city.available && styles.cityNameDisabled,
+                  city.available && selectedCity === city.id && styles.cityNameSelected,
                 ]}>
-                  <FontAwesome
-                    name="map-marker"
-                    size={18}
-                    color={
-                      !city.available
-                        ? '#9CA3AF'
-                        : selectedCity === city.id
-                        ? '#FFFFFF'
-                        : '#38632E'
-                    }
-                  />
+                  {city.name}
+                </Text>
+                <View style={styles.cityRowRight}>
+                  {!city.available && <Text style={styles.comingSoon}>Bald</Text>}
+                  {city.available && selectedCity === city.id && <View style={styles.selectedDot} />}
                 </View>
-                <View>
-                  <Text style={[styles.cityName, !city.available && styles.cityNameDisabled]}>
-                    {city.name}
-                  </Text>
-                  {!city.available && (
-                    <Text style={styles.comingSoon}>Bald verfügbar</Text>
-                  )}
-                </View>
-              </View>
+              </Pressable>
+            ))
+          )}
+        </ScrollView>
 
-              {city.available && selectedCity === city.id && (
-                <FontAwesome name="check-circle" size={22} color="#38632E" />
-              )}
-            </Pressable>
-          ))
-        )}
-      </ScrollView>
-
-      <View style={styles.actions}>
-        <Pressable style={styles.confirmButton} onPress={handleConfirm}>
-          <Text style={styles.confirmButtonText}>Stadt auswählen</Text>
-        </Pressable>
-
-        <Pressable style={styles.skipButton} onPress={handleSkip}>
-          <Text style={styles.skipButtonText}>Später</Text>
-        </Pressable>
+        <View style={styles.actions}>
+          <Pressable style={styles.confirmButton} onPress={handleConfirm}>
+            <Text style={styles.confirmButtonText}>Los geht's</Text>
+          </Pressable>
+          <Pressable onPress={handleSkip} style={styles.skipButton}>
+            <Text style={styles.skipText}>Später</Text>
+          </Pressable>
+        </View>
       </View>
-    </View>
     </TouchableWithoutFeedback>
   );
 }
@@ -136,128 +114,109 @@ export default function CitySelectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 24,
+    backgroundColor: '#F5F4F0',
+    paddingHorizontal: 28,
   },
   header: {
-    marginBottom: 16,
-    gap: 8,
+    marginBottom: 28,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: '800',
     color: '#21242C',
+    lineHeight: 38,
+    marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: '#6B7280',
+    color: '#ADADAD',
     lineHeight: 22,
   },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    marginBottom: 16,
-    height: 46,
-  },
-  searchIcon: {
-    marginRight: 10,
+  searchRow: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#21242C',
+    marginBottom: 8,
+    paddingBottom: 10,
   },
   searchInput: {
-    flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     color: '#21242C',
   },
   list: {
     flex: 1,
   },
   listContent: {
-    gap: 12,
-    paddingBottom: 8,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingTop: 32,
+    paddingTop: 4,
   },
   emptyText: {
     fontSize: 15,
-    color: '#9CA3AF',
+    color: '#ADADAD',
+    paddingTop: 24,
   },
-  cityCard: {
+  cityRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8E7E3',
   },
-  cityCardDisabled: {
-    backgroundColor: '#F9FAFB',
-    borderColor: '#F3F4F6',
+  cityRowDisabled: {
+    opacity: 0.4,
   },
-  cityCardSelected: {
-    borderColor: '#38632E',
-    backgroundColor: '#F0F7EE',
+  cityRowPressed: {
+    opacity: 0.6,
   },
-  cityCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
+  cityName: {
+    fontSize: 20,
+    fontWeight: '400',
+    color: '#21242C',
   },
-  cityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F0F7EE',
+  cityNameSelected: {
+    fontWeight: '700',
+  },
+  cityNameDisabled: {
+    color: '#21242C',
+  },
+  cityRowRight: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cityIconDisabled: {
-    backgroundColor: '#F3F4F6',
-  },
-  cityIconSelected: {
-    backgroundColor: '#38632E',
-  },
-  cityName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#21242C',
-  },
-  cityNameDisabled: {
-    color: '#9CA3AF',
+  selectedDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#FEDA10',
   },
   comingSoon: {
     fontSize: 12,
-    color: '#9CA3AF',
-    marginTop: 2,
+    color: '#ADADAD',
+    fontWeight: '500',
+    letterSpacing: 0.5,
   },
   actions: {
-    gap: 12,
+    gap: 8,
     marginTop: 24,
   },
   confirmButton: {
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#38632E',
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#21242C',
     alignItems: 'center',
     justifyContent: 'center',
   },
   confirmButtonText: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: '#FEDA10',
   },
   skipButton: {
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  skipButtonText: {
+  skipText: {
     fontSize: 15,
-    color: '#6B7280',
+    color: '#ADADAD',
   },
 });
