@@ -1,7 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '@/context/UserContext';
 
@@ -16,6 +16,10 @@ const CITIES: City[] = [
   { id: 'berlin', name: 'Berlin', available: false },
   { id: 'hamburg', name: 'Hamburg', available: false },
   { id: 'köln', name: 'Köln', available: false },
+  { id: 'frankfurt', name: 'Frankfurt', available: false },
+  { id: 'stuttgart', name: 'Stuttgart', available: false },
+  { id: 'düsseldorf', name: 'Düsseldorf', available: false },
+  { id: 'leipzig', name: 'Leipzig', available: false },
 ];
 
 export default function CitySelectionScreen() {
@@ -23,6 +27,11 @@ export default function CitySelectionScreen() {
   const insets = useSafeAreaInsets();
   const { completeOnboarding } = useUser();
   const [selectedCity, setSelectedCity] = useState<string>('münchen');
+  const [query, setQuery] = useState('');
+
+  const filteredCities = CITIES.filter((c) =>
+    c.name.toLowerCase().includes(query.toLowerCase())
+  );
 
   async function handleConfirm() {
     await completeOnboarding(selectedCity);
@@ -35,6 +44,7 @@ export default function CitySelectionScreen() {
   }
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
     <View style={[styles.container, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}>
       <View style={styles.header}>
         <Text style={styles.title}>Wähle deine Stadt</Text>
@@ -43,51 +53,70 @@ export default function CitySelectionScreen() {
         </Text>
       </View>
 
-      <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {CITIES.map((city) => (
-          <Pressable
-            key={city.id}
-            style={[
-              styles.cityCard,
-              !city.available && styles.cityCardDisabled,
-              city.available && selectedCity === city.id && styles.cityCardSelected,
-            ]}
-            onPress={() => city.available && setSelectedCity(city.id)}
-            disabled={!city.available}
-          >
-            <View style={styles.cityCardLeft}>
-              <View style={[
-                styles.cityIcon,
-                !city.available && styles.cityIconDisabled,
-                city.available && selectedCity === city.id && styles.cityIconSelected,
-              ]}>
-                <FontAwesome
-                  name="map-marker"
-                  size={18}
-                  color={
-                    !city.available
-                      ? '#9CA3AF'
-                      : selectedCity === city.id
-                      ? '#FFFFFF'
-                      : '#38632E'
-                  }
-                />
-              </View>
-              <View>
-                <Text style={[styles.cityName, !city.available && styles.cityNameDisabled]}>
-                  {city.name}
-                </Text>
-                {!city.available && (
-                  <Text style={styles.comingSoon}>Bald verfügbar</Text>
-                )}
-              </View>
-            </View>
+      <View style={styles.searchContainer}>
+        <FontAwesome name="search" size={16} color="#9CA3AF" style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Stadt suchen…"
+          placeholderTextColor="#9CA3AF"
+          value={query}
+          onChangeText={setQuery}
+          autoCorrect={false}
+          clearButtonMode="while-editing"
+        />
+      </View>
 
-            {city.available && selectedCity === city.id && (
-              <FontAwesome name="check-circle" size={22} color="#38632E" />
-            )}
-          </Pressable>
-        ))}
+      <ScrollView style={styles.list} contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        {filteredCities.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>Keine Stadt gefunden</Text>
+          </View>
+        ) : (
+          filteredCities.map((city) => (
+            <Pressable
+              key={city.id}
+              style={[
+                styles.cityCard,
+                !city.available && styles.cityCardDisabled,
+                city.available && selectedCity === city.id && styles.cityCardSelected,
+              ]}
+              onPress={() => city.available && setSelectedCity(city.id)}
+              disabled={!city.available}
+            >
+              <View style={styles.cityCardLeft}>
+                <View style={[
+                  styles.cityIcon,
+                  !city.available && styles.cityIconDisabled,
+                  city.available && selectedCity === city.id && styles.cityIconSelected,
+                ]}>
+                  <FontAwesome
+                    name="map-marker"
+                    size={18}
+                    color={
+                      !city.available
+                        ? '#9CA3AF'
+                        : selectedCity === city.id
+                        ? '#FFFFFF'
+                        : '#38632E'
+                    }
+                  />
+                </View>
+                <View>
+                  <Text style={[styles.cityName, !city.available && styles.cityNameDisabled]}>
+                    {city.name}
+                  </Text>
+                  {!city.available && (
+                    <Text style={styles.comingSoon}>Bald verfügbar</Text>
+                  )}
+                </View>
+              </View>
+
+              {city.available && selectedCity === city.id && (
+                <FontAwesome name="check-circle" size={22} color="#38632E" />
+              )}
+            </Pressable>
+          ))
+        )}
       </ScrollView>
 
       <View style={styles.actions}>
@@ -100,6 +129,7 @@ export default function CitySelectionScreen() {
         </Pressable>
       </View>
     </View>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -110,7 +140,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   header: {
-    marginBottom: 32,
+    marginBottom: 16,
     gap: 8,
   },
   title: {
@@ -123,11 +153,37 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     lineHeight: 22,
   },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+    height: 46,
+  },
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    color: '#21242C',
+  },
   list: {
     flex: 1,
   },
   listContent: {
     gap: 12,
+    paddingBottom: 8,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingTop: 32,
+  },
+  emptyText: {
+    fontSize: 15,
+    color: '#9CA3AF',
   },
   cityCard: {
     flexDirection: 'row',
