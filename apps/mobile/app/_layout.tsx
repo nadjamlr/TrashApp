@@ -1,7 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
@@ -9,6 +9,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/components/useColorScheme';
 import { AppThemeProvider } from '@/context/ThemeContext';
 import { LocationProvider } from '@/context/LocationContext';
+import { UserProvider, useUser } from '@/context/UserContext';
 import { Colors } from '@/constants/Colors';
 
 export {
@@ -48,7 +49,9 @@ export default function RootLayout() {
   return (
     <AppThemeProvider>
       <LocationProvider>
-        <RootLayoutNav />
+        <UserProvider>
+          <RootLayoutNav />
+        </UserProvider>
       </LocationProvider>
     </AppThemeProvider>
   );
@@ -66,6 +69,16 @@ const CustomDarkTheme = {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { hasCompletedOnboarding, isLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && (!hasCompletedOnboarding || __DEV__)) {
+      router.replace('/onboarding/welcome');
+    }
+  }, [isLoading, hasCompletedOnboarding]);
+
+  if (isLoading) return null;
 
   return (
     <ThemeProvider value={colorScheme === 'light' ? LightTheme : CustomDarkTheme}>
@@ -73,6 +86,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen name="camera" options={{ headerShown: false }} />
+        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       </Stack>
     </ThemeProvider>
   );
