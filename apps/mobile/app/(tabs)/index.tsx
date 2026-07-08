@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 import Searchbar from '@/components/Searchbar';
 import Filter from '@/components/Filter';
+import { LocationDetailCard } from '@/components/LocationDetailCard';
 import { LocationMarker } from '@/components/LocationMarker';
 import { View } from '@/components/Themed';
 import { ThemedText } from '@/components/ThemedText';
@@ -48,10 +49,10 @@ export default function MapScreen() {
           const isSelected = selectedLocation?.id === loc.id;
           return (
             <Marker
-              key={`${loc.id}-${isSelected}`}
+              key={loc.id}
               coordinate={{ latitude: loc.lat, longitude: loc.lng }}
+              tracksViewChanges
               onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
-              tracksViewChanges={false}
             >
               <LocationMarker type={loc.type} selected={isSelected} />
             </Marker>
@@ -90,9 +91,16 @@ export default function MapScreen() {
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
+
+      {selectedLocation && (
+        <LocationDetailCard location={selectedLocation} style={styles.detailCard} />
+      )}
     </View>
   );
 }
+
+// Keep the card above the floating tab bar (bottom: Spacing.lg, height 72 in (tabs)/_layout.tsx)
+const TAB_BAR_OFFSET = Spacing.lg + 72;
 
 const styles = StyleSheet.create({
   container: {
@@ -125,5 +133,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.sm,
     paddingHorizontal: Spacing.md,
+  },
+  detailCard: {
+    position: 'absolute',
+    left: Spacing.md,
+    right: Spacing.md,
+    bottom: TAB_BAR_OFFSET + Spacing.md,
   },
 });
