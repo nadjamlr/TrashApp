@@ -14,6 +14,7 @@ Returns nearby Munich recycling sites filtered by material, sorted by distance. 
 | lng | float | yes | User longitude |
 | radius | int | no | Search radius in metres, default 3000 |
 | routing | bool | no | Include route polyline, default false |
+| profile | string | no | Routing profile when `routing=true`: `foot-walking` or `cycling-regular`, default `foot-walking` |
 
 ## Response
 
