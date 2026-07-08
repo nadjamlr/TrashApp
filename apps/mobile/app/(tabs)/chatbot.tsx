@@ -59,6 +59,8 @@ export default function ChatbotScreen() {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
+  const composerBottom = keyboardHeight ? keyboardHeight + Spacing.md : Layout.chatComposerBottomOffset;
+  const scrollBottomPadding = composerBottom + Sizes.chat.composerHeight + Spacing.xl;
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -75,6 +77,10 @@ export default function ChatbotScreen() {
       hideSubscription.remove();
     };
   }, []);
+
+  useEffect(() => {
+    requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
+  }, [messages, isLoading, keyboardHeight]);
 
   const sendMessage = async () => {
     const trimmedDraft = draft.trim();
@@ -136,13 +142,17 @@ export default function ChatbotScreen() {
   return (
     <View style={styles.screen}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? Layout.keyboardVerticalOffset : 0}
         style={styles.keyboardView}
       >
         <ScrollView
           ref={scrollViewRef}
-          contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + Spacing.lg }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            {
+              paddingTop: insets.top + Spacing.lg,
+              paddingBottom: scrollBottomPadding,
+            },
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -224,9 +234,7 @@ export default function ChatbotScreen() {
           style={[
             styles.composerDock,
             {
-              bottom: keyboardHeight
-                ? keyboardHeight + Spacing.md
-                : Layout.chatComposerBottomOffset,
+              bottom: composerBottom,
             },
           ]}
         >
@@ -238,16 +246,23 @@ export default function ChatbotScreen() {
 
           <DefaultView style={styles.composerWrap}>
             <DefaultView style={styles.composer}>
-              <TextInput
-                value={draft}
-                onChangeText={setDraft}
-                placeholder="Nachricht schreiben..."
-                placeholderTextColor={Colors.light.muted}
-                returnKeyType="send"
-                onSubmitEditing={sendMessage}
-                editable={!isLoading}
-                style={styles.input}
-              />
+              <DefaultView style={styles.inputSlot}>
+                {!draft ? (
+                  <Text pointerEvents="none" style={styles.inputPlaceholder}>
+                    Nachricht schreiben...
+                  </Text>
+                ) : null}
+                <TextInput
+                  value={draft}
+                  onChangeText={setDraft}
+                  placeholder=""
+                  multiline={false}
+                  returnKeyType="send"
+                  onSubmitEditing={sendMessage}
+                  editable={!isLoading}
+                  style={styles.input}
+                />
+              </DefaultView>
               <Pressable style={styles.cameraButton}>
                 <Icon name="camera" size={Sizes.icon.md} color={Colors.light.muted} />
               </Pressable>
@@ -281,7 +296,6 @@ const styles = StyleSheet.create({
     maxWidth: Layout.contentMaxWidth,
     alignSelf: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Layout.chatScrollBottomPadding,
   },
   title: {
     marginBottom: Spacing.lg,
@@ -310,9 +324,11 @@ const styles = StyleSheet.create({
   },
   bubble: {
     maxWidth: Layout.chatBubbleMaxWidth,
+    minHeight: Sizes.chat.avatar,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
+    justifyContent: 'center',
   },
   assistantBubble: {
     backgroundColor: Colors.light.surface,
@@ -329,6 +345,7 @@ const styles = StyleSheet.create({
   },
   messageText: {
     ...Typography.p1,
+    includeFontPadding: false,
   },
   assistantText: {
     color: Colors.light.text,
@@ -411,11 +428,35 @@ const styles = StyleSheet.create({
     shadowColor: Colors.light.text,
     ...Shadows.composer,
   },
-  input: {
+  inputSlot: {
     flex: 1,
-    minHeight: Sizes.chat.composerHeight,
-    color: Colors.light.text,
+    height: Sizes.chat.composerHeight,
+  },
+  inputPlaceholder: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: (Sizes.chat.composerHeight - Typography.p1.lineHeight) / 2,
+    height: Typography.p1.lineHeight,
+    color: Colors.light.muted,
     ...Typography.p1,
+    lineHeight: Typography.p1.lineHeight,
+    includeFontPadding: false,
+  },
+  input: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: Sizes.chat.composerHeight,
+    paddingTop: 0,
+    paddingBottom: 0,
+    margin: 0,
+    color: Colors.light.text,
+    textAlignVertical: Platform.OS === 'android' ? 'center' : undefined,
+    fontSize: Typography.p1.fontSize,
+    fontWeight: Typography.p1.fontWeight,
+    includeFontPadding: false,
   },
   cameraButton: {
     width: Sizes.chat.avatar,
