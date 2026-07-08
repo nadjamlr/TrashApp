@@ -147,7 +147,7 @@ def test_parse_agent_output_falls_back_to_plain_text_for_non_json() -> None:
 
 def test_build_prompt_includes_all_category_names_without_full_unselected_rules(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -193,7 +193,7 @@ def test_preferred_language_uses_first_user_message() -> None:
 
 def test_preferred_language_defaults_to_german_when_unclear(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {"items": [], "deposit_rules": {}},
     )
 
@@ -253,7 +253,7 @@ def test_polish_messages_use_system_prompt() -> None:
 
 def test_direct_rule_response_uses_electronics_rule_for_headphones(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -283,7 +283,7 @@ def test_direct_rule_response_uses_electronics_rule_for_headphones(monkeypatch) 
 
 def test_direct_rule_response_handles_headphones_typo(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -312,7 +312,7 @@ def test_direct_rule_response_handles_headphones_typo(monkeypatch) -> None:
 
 def test_direct_rule_response_maps_sandwich_to_organic_without_rule_keyword(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -339,7 +339,7 @@ def test_direct_rule_response_maps_sandwich_to_organic_without_rule_keyword(monk
 
 def test_relevant_rules_text_current_item_beats_food_history(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -377,7 +377,7 @@ def test_relevant_rules_text_current_item_beats_food_history(monkeypatch) -> Non
 
 def test_relevant_rules_text_typo_current_item_beats_food_history(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -414,7 +414,7 @@ def test_relevant_rules_text_typo_current_item_beats_food_history(monkeypatch) -
 
 def test_relevant_rules_text_uses_history_for_vague_follow_up(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -444,7 +444,7 @@ def test_relevant_rules_text_uses_history_for_vague_follow_up(monkeypatch) -> No
 
 def test_relevant_rules_text_uses_rules_content_without_item_specific_keywords(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -471,7 +471,7 @@ def test_relevant_rules_text_uses_rules_content_without_item_specific_keywords(m
 
 def test_direct_rule_response_does_not_treat_question_can_as_beverage_can(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -503,7 +503,7 @@ def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
-    monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", _common_test_rules)
 
     cases = [
         ("Where do I throw away a pizza box?", ["Papiertonne", "Restmuelltonne"]),
@@ -539,7 +539,7 @@ def test_standard_local_answer_is_sent_through_polish_step(monkeypatch) -> None:
 
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", fake_polish)
-    monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", _common_test_rules)
 
     response = asyncio.run(ask_waste_question("Wo entsorge ich ein Sandwich?", []))
 
@@ -565,7 +565,7 @@ def test_chat_uses_rules_agent_response_before_local_fallback(monkeypatch) -> No
 
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", fake_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
-    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", lambda: {"items": [], "deposit_rules": {}})
 
     response = asyncio.run(ask_waste_question("Where does a yogurt cup go?", []))
 
@@ -587,7 +587,7 @@ def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) ->
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
-    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", lambda: {"items": [], "deposit_rules": {}})
 
     with caplog.at_level(logging.WARNING, logger="chat_agent.agent"):
         response = asyncio.run(ask_waste_question("Where do I throw away a mystery blob?", []))
