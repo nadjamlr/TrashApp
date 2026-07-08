@@ -22,6 +22,7 @@ import { Shadows } from '@/constants/Shadows';
 import { Sizes } from '@/constants/Sizes';
 import { Spacing } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
+import { askChatAgent, ConversationMessage } from '@/services/chatService';
 
 type ChatMessage = {
   id: string;
@@ -30,17 +31,6 @@ type ChatMessage = {
   bullets?: string[];
   actions?: string[];
 };
-
-type ConversationMessage = Pick<ChatMessage, 'role' | 'content'>;
-
-type ChatAskResponse = {
-  response: string;
-  suggested_location: { lat: number; lng: number } | null;
-};
-
-const CHAT_API_BASE_URL =
-  process.env.EXPO_PUBLIC_CHAT_AGENT_URL ??
-  (Platform.OS === 'android' ? 'http://10.0.2.2:8004' : 'http://localhost:8004');
 
 const initialMessages: ChatMessage[] = [
   {
@@ -102,27 +92,7 @@ export default function ChatbotScreen() {
     requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
 
     try {
-      const response = await fetch(`${CHAT_API_BASE_URL}/chat/ask`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: trimmedDraft,
-          conversation_history: conversationHistory,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Chat request failed with status ${response.status}`);
-      }
-
-      const data = (await response.json()) as ChatAskResponse;
-
-      if (!data.response) {
-        throw new Error('Chat response did not include a response message');
-      }
-
+      const data = await askChatAgent(trimmedDraft, conversationHistory);
       setMessages((currentMessages) => [
         ...currentMessages,
         {
