@@ -16,11 +16,16 @@ export async function generateInsight(
 ): Promise<InsightResult> {
   const response = await fetch(`${BASE_URL}/insights/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ label, material, bin }),
   });
+
   if (!response.ok) {
     throw new Error(`Insight agent error: ${response.status}`);
   }
-  return response.json();
+
+  return response.json() as Promise<InsightResult>;
 }
+

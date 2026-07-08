@@ -9,4 +9,4 @@ class InsightRequest(BaseModel):
 
 class InsightResult(BaseModel):
     fact: str = Field(description="A single contextual fact about recycling this item")
-    category: str = Field(description="Fact category, e.g. 'energy', 'co2', 'material', 'water'")
+    category: str = Field(description="Fact category, e.g. 'Myth', 'Impact', or 'Future'")
