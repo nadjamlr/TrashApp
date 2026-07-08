@@ -1,6 +1,6 @@
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MapView from 'react-native-maps';
 import Searchbar from '@/components/Searchbar';
 import Filter from '@/components/Filter';
@@ -10,11 +10,20 @@ import { Toggle } from '@/components/Toggle';
 import { Layout } from '@/constants/Layout';
 import { Spacing } from '@/constants/Spacing';
 import { useLocation } from '@/context/LocationContext';
+import { fetchLocations, Location } from '@/services/locationsService';
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const [showProducts, setShowProducts] = useState(false);
   const { lat, lng } = useLocation();
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [locationsError, setLocationsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchLocations({ lat, lng })
+      .then(setLocations)
+      .catch((e) => setLocationsError(e.message));
+  }, [lat, lng]);
 
   return (
     <View style={styles.container} lightColor="transparent" darkColor="transparent">
