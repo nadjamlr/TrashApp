@@ -1,6 +1,6 @@
 import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 import Searchbar from '@/components/Searchbar';
 import Filter from '@/components/Filter';
@@ -19,6 +19,7 @@ export default function MapScreen() {
   const { lat, lng } = useLocation();
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const markerTappedRef = useRef(false);
 
   useEffect(() => {
     fetchLocations({ lat, lng })
@@ -38,23 +39,24 @@ export default function MapScreen() {
         }}
         showsUserLocation
         onPress={() => {
+          if (markerTappedRef.current) { markerTappedRef.current = false; return; }
           Keyboard.dismiss();
           setSelectedLocation(null);
         }}
       >
-        {locations.map((loc) => (
-          <Marker
-            key={loc.id}
-            coordinate={{ latitude: loc.lat, longitude: loc.lng }}
-            onPress={() => setSelectedLocation(loc)}
-            tracksViewChanges={selectedLocation?.id === loc.id}
-          >
-            <LocationMarker
-              type={loc.type}
-              selected={selectedLocation?.id === loc.id}
-            />
-          </Marker>
-        ))}
+        {locations.map((loc) => {
+          const isSelected = selectedLocation?.id === loc.id;
+          return (
+            <Marker
+              key={`${loc.id}-${isSelected}`}
+              coordinate={{ latitude: loc.lat, longitude: loc.lng }}
+              onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
+              tracksViewChanges={false}
+            >
+              <LocationMarker type={loc.type} selected={isSelected} />
+            </Marker>
+          );
+        })}
       </MapView>
 
       <KeyboardAvoidingView
