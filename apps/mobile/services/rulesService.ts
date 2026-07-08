@@ -16,12 +16,13 @@ export async function classifyItem(
   label: string,
   material: string,
 ): Promise<RulesResult> {
-  // TODO: replace with real call once Rules Agent is deployed (see issue #15)
-  return {
-    bin: 'Pfand',
-    reasoning: 'Aluminium-Dosen mit Pfandzeichen gehören zum Pfandsystem.',
-    deposit: '0,25 €',
-    alternatives: ['Gelber Sack (ohne Pfand)'],
-    important_notes: ['Vor Entsorgung ausleeren', 'Nicht zerdrücken'],
-  };
+  const response = await fetch(`${BASE_URL}/rules/classify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label, material, city: 'munich' }),
+  });
+  if (!response.ok) {
+    throw new Error(`Rules agent error: ${response.status}`);
+  }
+  return response.json();
 }
