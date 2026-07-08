@@ -26,8 +26,8 @@ async def _fetch_and_parse() -> list:
         hof_resp = await client.get(WERTSTOFFHOF_URL)
         insel_resp = await client.get(WERTSTOFFINSELN_URL)
 
-    hoefe = _parse_hoefe(hof_resp.text)
-    inseln = _parse_inseln(insel_resp.text)
+    hoefe = _parse_hoefe(hof_resp.content.decode("utf-8"))
+    inseln = _parse_inseln(insel_resp.content.decode("utf-8"))
     return hoefe + inseln
 
 
