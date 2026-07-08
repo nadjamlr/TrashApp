@@ -47,7 +47,7 @@ const initialMessages: ChatMessage[] = [
     id: 'welcome',
     role: 'assistant',
     content:
-      "Hello! I'm your waste management assistant. Ask me anything about waste sorting, recycling, or our services.",
+      'Hallo! Ich bin dein Abfall-Assistent. Frag mich alles zur Muelltrennung, zum Recycling oder zur richtigen Entsorgung.',
   },
 ];
 
@@ -241,7 +241,7 @@ export default function ChatbotScreen() {
               <TextInput
                 value={draft}
                 onChangeText={setDraft}
-                placeholder="Type your message..."
+                placeholder="Nachricht schreiben..."
                 placeholderTextColor={Colors.light.muted}
                 returnKeyType="send"
                 onSubmitEditing={sendMessage}

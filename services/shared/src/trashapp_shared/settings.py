@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     ors_api_key: str = ""
     rules_path: str = "/data/munich_rules.yaml"
+    rules_agent_url: str = "http://rules-agent:8002"
 
 
 settings = Settings()
