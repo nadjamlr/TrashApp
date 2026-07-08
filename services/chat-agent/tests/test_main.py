@@ -420,7 +420,11 @@ def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None
     def fail_if_llm_runs(message, conversation_history):
         raise AssertionError(f"LLM should not run for common disposal question: {message}")
 
+    async def no_rules_agent_response(message):
+        return None
+
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
+    monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
 
     cases = [
@@ -442,11 +446,34 @@ def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None
             assert expected_part in response.response
 
 
+def test_chat_uses_rules_agent_response_before_local_fallback(monkeypatch) -> None:
+    async def fake_rules_agent_response(message):
+        return ChatResponse(
+            response="According to Munich rules, it belongs in Wertstoffinseln.",
+            suggested_location=None,
+        )
+
+    def fail_if_llm_runs(message, conversation_history):
+        raise AssertionError("LLM should not run when rules-agent provides an answer")
+
+    monkeypatch.setattr("chat_agent.agent._rules_agent_response", fake_rules_agent_response)
+    monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
+    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+
+    response = asyncio.run(ask_waste_question("Where does a yogurt cup go?", []))
+
+    assert response.response == "According to Munich rules, it belongs in Wertstoffinseln."
+
+
 def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) -> None:
     def fail_if_llm_runs(message, conversation_history):
         raise AssertionError("LLM should not run for an unknown low-confidence item")
 
+    async def no_rules_agent_response(message):
+        return None
+
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
+    monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
 
     with caplog.at_level(logging.WARNING, logger="chat_agent.agent"):

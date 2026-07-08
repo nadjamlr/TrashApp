@@ -3,6 +3,8 @@ import json
 import logging
 import re
 
+import httpx
+
 from trashapp_shared.rules import load_rules
 from trashapp_shared.settings import settings
 
@@ -554,6 +556,10 @@ async def ask_waste_question(message: str, conversation_history: list[Conversati
     if direct_response is not None:
         return direct_response
 
+    rules_agent_response = await _rules_agent_response(message)
+    if rules_agent_response is not None:
+        return rules_agent_response
+
     fallback_response = _fallback_rule_response(message)
     if fallback_response is not None:
         logger.info(
@@ -577,6 +583,71 @@ async def ask_waste_question(message: str, conversation_history: list[Conversati
         )
 
     return await asyncio.to_thread(_run_crew, message, conversation_history)
+
+
+async def _rules_agent_response(message: str) -> ChatResponse | None:
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.post(
+                f"{settings.rules_agent_url.rstrip('/')}/rules/classify",
+                json={"label": message, "material": "", "city": "munich"},
+            )
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.info(
+            "chat_agent_rules_agent_unavailable",
+            extra={"user_message": message, "error": str(exc)},
+        )
+        return None
+
+    payload = response.json()
+    confidence = _numeric_confidence(payload.get("confidence"))
+    source = str(payload.get("source", "llm"))
+    bin_name = str(payload.get("bin", "")).strip()
+    if confidence < 0.7 or not bin_name or bin_name.casefold() == "unknown":
+        logger.info(
+            "chat_agent_rules_agent_low_confidence",
+            extra={"user_message": message, "source": source, "confidence": confidence},
+        )
+        return None
+
+    return ChatResponse(
+        response=_format_rules_agent_response(message, payload),
+        suggested_location=None,
+    )
+
+
+def _format_rules_agent_response(message: str, payload: dict) -> str:
+    bin_name = str(payload.get("bin", "")).strip()
+    reasoning = str(payload.get("reasoning", "")).strip()
+    alternatives = [str(item) for item in payload.get("alternatives", []) if item]
+    notes = [str(item) for item in payload.get("important_notes", []) if item]
+
+    if _looks_german(message):
+        response = f"Laut Münchner Regeln gehört das zu {bin_name}."
+        if reasoning:
+            response += f" {reasoning}"
+        if notes:
+            response += f" Wichtig: {notes[0]}"
+        if alternatives:
+            response += f" Alternative: {alternatives[0]}."
+        return response
+
+    response = f"According to Munich rules, it belongs in {bin_name}."
+    if reasoning:
+        response += f" {reasoning}"
+    if notes:
+        response += f" Important: {notes[0]}"
+    if alternatives:
+        response += f" Alternative: {alternatives[0]}."
+    return response
+
+
+def _numeric_confidence(value: object) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def _direct_rule_response(message: str) -> ChatResponse | None:
