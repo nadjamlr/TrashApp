@@ -6,9 +6,13 @@ from fastapi.testclient import TestClient
 
 from chat_agent.agent import (
     ask_waste_question,
+    _build_polish_messages,
+    _build_polish_prompt,
+    _build_polish_system_prompt,
     _build_prompt,
     _direct_rule_response,
     _parse_agent_output,
+    _preferred_language,
     _relevant_rules_text,
 )
 from chat_agent.main import app
@@ -175,6 +179,76 @@ def test_build_prompt_includes_all_category_names_without_full_unselected_rules(
     assert "Wertstoffhof: use for Electronics" in prompt
     assert "less than 70 percent confident" in prompt
     assert "ask one concise clarifying question" in prompt
+    assert "answer in English" in prompt
+
+
+def test_preferred_language_uses_first_user_message() -> None:
+    history = [
+        ConversationMessage(role="user", content="Where do batteries go?"),
+        ConversationMessage(role="assistant", content="Batteries go to collection boxes."),
+    ]
+
+    assert _preferred_language("Und Gurken?", history) == "en"
+
+
+def test_preferred_language_defaults_to_german_when_unclear(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "chat_agent.agent.load_rules",
+        lambda: {"items": [], "deposit_rules": {}},
+    )
+
+    assert _preferred_language("???", []) == "de"
+    assert "answer in German" in _build_prompt("???", [])
+
+
+def test_polish_prompt_preserves_facts_and_requires_explanation() -> None:
+    prompt = _build_polish_prompt(
+        "Wo entsorge ich Gurkenscheiben?",
+        [],
+        "de",
+        ChatResponse(
+            response="According to Munich rules, cucumber slices belong in Biotonne.",
+            suggested_location=None,
+        ),
+        "rules_agent",
+        {
+            "bin": "Biotonne",
+            "reasoning": "Fruit and vegetable scraps are organic kitchen waste.",
+        },
+    )
+
+    assert "editing and translation task" in prompt
+    assert "Include a short explanation" in prompt
+    assert "Never mix languages" in prompt
+    assert "Answer in German" in prompt
+    assert "Biotonne" in prompt
+    assert "Fruit and vegetable scraps are organic kitchen waste." in prompt
+
+
+def test_polish_system_prompt_requires_translation_without_reclassification() -> None:
+    prompt = _build_polish_system_prompt("de")
+
+    assert "Do not classify the item again" in prompt
+    assert "Do not change the bin" in prompt
+    assert "Translate all source facts" in prompt
+    assert "Never mix languages" in prompt
+    assert "Answer in German" in prompt
+
+
+def test_polish_messages_use_system_prompt() -> None:
+    messages = _build_polish_messages(
+        "Wo entsorge ich ein Sandwich?",
+        [],
+        "de",
+        ChatResponse(response="Organic kitchen and garden waste belongs in Biotonne.", suggested_location=None),
+        "local_rules",
+        None,
+    )
+
+    assert messages[0]["role"] == "system"
+    assert "Never mix languages" in messages[0]["content"]
+    assert messages[1]["role"] == "user"
+    assert "Organic kitchen and garden waste belongs in Biotonne." in messages[1]["content"]
 
 
 def test_direct_rule_response_uses_electronics_rule_for_headphones(monkeypatch) -> None:
@@ -420,11 +494,15 @@ def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None
     def fail_if_llm_runs(message, conversation_history):
         raise AssertionError(f"LLM should not run for common disposal question: {message}")
 
-    async def no_rules_agent_response(message):
+    async def no_rules_agent_response(message, conversation_history, response_language=None):
         return None
+
+    def no_polish(message, conversation_history, response_language, source_response, source_name, source_payload=None):
+        return source_response
 
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
+    monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
     monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
 
     cases = [
@@ -446,8 +524,37 @@ def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None
             assert expected_part in response.response
 
 
+def test_standard_local_answer_is_sent_through_polish_step(monkeypatch) -> None:
+    captured = {}
+
+    async def no_rules_agent_response(message, conversation_history, response_language=None):
+        return None
+
+    def fake_polish(message, conversation_history, response_language, source_response, source_name, source_payload=None):
+        captured["message"] = message
+        captured["response_language"] = response_language
+        captured["source_response"] = source_response.response
+        captured["source_name"] = source_name
+        return ChatResponse(response="Polished German Groq answer.", suggested_location=None)
+
+    monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
+    monkeypatch.setattr("chat_agent.agent._polish_standardized_response", fake_polish)
+    monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
+
+    response = asyncio.run(ask_waste_question("Wo entsorge ich ein Sandwich?", []))
+
+    assert response.response == "Polished German Groq answer."
+    assert captured["response_language"] == "de"
+    assert captured["source_name"] == "local_rules"
+    assert "Biotonne" in captured["source_response"]
+
+
 def test_chat_uses_rules_agent_response_before_local_fallback(monkeypatch) -> None:
-    async def fake_rules_agent_response(message):
+    captured = {}
+
+    async def fake_rules_agent_response(message, conversation_history, response_language=None):
+        captured["response_language"] = response_language
+        captured["conversation_history"] = conversation_history
         return ChatResponse(
             response="According to Munich rules, it belongs in Wertstoffinseln.",
             suggested_location=None,
@@ -463,17 +570,23 @@ def test_chat_uses_rules_agent_response_before_local_fallback(monkeypatch) -> No
     response = asyncio.run(ask_waste_question("Where does a yogurt cup go?", []))
 
     assert response.response == "According to Munich rules, it belongs in Wertstoffinseln."
+    assert captured["response_language"] == "en"
+    assert captured["conversation_history"] == []
 
 
 def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) -> None:
     def fail_if_llm_runs(message, conversation_history):
         raise AssertionError("LLM should not run for an unknown low-confidence item")
 
-    async def no_rules_agent_response(message):
+    async def no_rules_agent_response(message, conversation_history, response_language=None):
         return None
+
+    def no_polish(message, conversation_history, response_language, source_response, source_name, source_payload=None):
+        return source_response
 
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
+    monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
     monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
 
     with caplog.at_level(logging.WARNING, logger="chat_agent.agent"):
