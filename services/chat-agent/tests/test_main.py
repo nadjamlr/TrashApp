@@ -1,8 +1,11 @@
+import asyncio
 import json
+import logging
 
 from fastapi.testclient import TestClient
 
 from chat_agent.agent import (
+    ask_waste_question,
     _build_prompt,
     _direct_rule_response,
     _parse_agent_output,
@@ -13,6 +16,49 @@ from chat_agent.schemas import ChatResponse, ConversationMessage
 
 
 client = TestClient(app)
+
+
+def _common_test_rules() -> dict:
+    return {
+        "items": [
+            {
+                "name": "Organic kitchen and garden waste",
+                "bin": "Biotonne",
+                "alternatives": ["Home composting where suitable"],
+                "notes": ["Use the brown organic bin for fruit and vegetable scraps, bread, and coffee grounds."],
+                "keywords": ["food scraps", "coffee grounds", "bread"],
+            },
+            {
+                "name": "Batteries and button cells",
+                "bin": "Retail battery collection boxes",
+                "alternatives": ["Wertstoffhof", "Giftmobil"],
+                "notes": ["Batteries must not be disposed of in Restmuelltonne."],
+                "keywords": ["batteries", "battery"],
+            },
+            {
+                "name": "Clothing, shoes, and textiles",
+                "bin": "AWM Altkleidercontainer",
+                "alternatives": ["Wertstoffhof"],
+                "notes": ["Only put well-preserved and clean textiles into clothing containers."],
+                "keywords": ["clothes", "clothing", "textiles"],
+            },
+            {
+                "name": "Small electronic devices",
+                "bin": "Wertstoffhof",
+                "alternatives": ["Retail take-back where legally offered"],
+                "notes": ["Electrical and electronic devices must not be disposed of in Restmuelltonne."],
+                "keywords": ["electronics", "electronic device", "headphones"],
+            },
+            {
+                "name": "Paint, wall paint, and varnish",
+                "bin": "Wertstoffhof",
+                "alternatives": ["Restmuelltonne for dried residues up to 2 kg"],
+                "notes": ["Private households can take quantities up to 25 kg to Wertstoffhoefe free of charge."],
+                "keywords": ["paint", "varnish"],
+            },
+        ],
+        "deposit_rules": {},
+    }
 
 
 def test_health_returns_ok() -> None:
@@ -347,3 +393,65 @@ def test_relevant_rules_text_uses_rules_content_without_item_specific_keywords(m
 
     assert "Clothing, shoes, and textiles" in relevant_rules
     assert "Batteries and button cells" not in relevant_rules
+
+
+def test_direct_rule_response_does_not_treat_question_can_as_beverage_can(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "chat_agent.agent.load_rules",
+        lambda: {
+            "items": [
+                {
+                    "name": "Clothing, shoes, and textiles",
+                    "bin": "AWM Altkleidercontainer",
+                    "alternatives": ["Wertstoffhof"],
+                    "notes": ["Only put well-preserved and clean textiles into clothing containers."],
+                },
+            ]
+        },
+    )
+
+    response = _direct_rule_response("Can I throw old clothes in Restmuell?")
+
+    assert response is not None
+    assert "AWM Altkleidercontainer" in response.response
+
+
+def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None:
+    def fail_if_llm_runs(message, conversation_history):
+        raise AssertionError(f"LLM should not run for common disposal question: {message}")
+
+    monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
+    monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
+
+    cases = [
+        ("Where do I throw away a pizza box?", ["Papiertonne", "Restmuelltonne"]),
+        ("How do I dispose of batteries?", ["Retail battery collection boxes", "Wertstoffhof"]),
+        ("What bin for broken glass?", ["Restmuelltonne", "Wertstoffhof"]),
+        ("Where does a yogurt cup go?", ["Wertstoffinseln"]),
+        ("Can I throw old clothes in Restmuell?", ["AWM Altkleidercontainer"]),
+        ("What should I do with electronics?", ["Wertstoffhof"]),
+        ("Where do LED bulbs go?", ["Wertstoffhof"]),
+        ("How should I dispose of medicine?", ["Restmuelltonne"]),
+        ("Where does a milk carton go?", ["Wertstoffinseln"]),
+        ("Where do coffee grounds go?", ["Biotonne"]),
+    ]
+
+    for question, expected_parts in cases:
+        response = asyncio.run(ask_waste_question(question, []))
+        for expected_part in expected_parts:
+            assert expected_part in response.response
+
+
+def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) -> None:
+    def fail_if_llm_runs(message, conversation_history):
+        raise AssertionError("LLM should not run for an unknown low-confidence item")
+
+    monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
+    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+
+    with caplog.at_level(logging.WARNING, logger="chat_agent.agent"):
+        response = asyncio.run(ask_waste_question("Where do I throw away a mystery blob?", []))
+
+    assert "do not have enough Munich-specific rule information" in response.response
+    assert "what it is made of" in response.response
+    assert "chat_agent_unanswered_low_confidence" in caplog.text

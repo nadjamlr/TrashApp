@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import re
 
 from trashapp_shared.rules import load_rules
@@ -15,6 +16,8 @@ ALIAS_MATCH_SCORE = 12
 DIRECT_MATCH_THRESHOLD = 8
 FUZZY_ALIAS_SCORE = 8
 MIN_FUZZY_TOKEN_LENGTH = 6
+
+logger = logging.getLogger(__name__)
 
 DISPOSAL_METHOD_GUIDE = [
     {
@@ -80,6 +83,121 @@ DISPOSAL_METHOD_GUIDE = [
             "paint-related hazardous residues, and damaged high-risk batteries when accepted."
         ),
         "do_not_use_for": "Normal residual waste, packaging, paper, or organic waste.",
+    },
+]
+
+FALLBACK_SCENARIOS = [
+    {
+        "name": "pizza box",
+        "patterns": [r"\bpizza\s+(box|carton|cardboard)\b", r"\bpizzakarton\b"],
+        "response_en": (
+            "For a pizza box in Munich: put clean or only slightly soiled cardboard in Papiertonne. "
+            "If it is greasy or food-stained, use Restmuelltonne. Put leftover food in Biotonne."
+        ),
+        "response_de": (
+            "Ein Pizzakarton gehört in München sauber oder nur leicht verschmutzt in die Papiertonne. "
+            "Wenn er fettig oder mit Essensresten verschmutzt ist, gehört er in die Restmuelltonne. "
+            "Essensreste gehören in die Biotonne."
+        ),
+    },
+    {
+        "name": "broken glass",
+        "patterns": [
+            r"\bbroken\s+(glass|drinking\s+glass|cup|mirror)\b",
+            r"\bshattered\s+glass\b",
+            r"\bkaputtes\s+glas\b",
+            r"\bscherben\b",
+        ],
+        "response_en": (
+            "Broken glass is not automatically glass packaging. In Munich, empty glass bottles and jars without "
+            "deposit go to Wertstoffinseln, but broken drinking glasses, mirrors, ceramics, and window glass do "
+            "not. Small broken drinking glass usually belongs in Restmuelltonne; window glass, mirrors, or larger "
+            "special glass should go to Wertstoffhof."
+        ),
+        "response_de": (
+            "Kaputtes Glas ist nicht automatisch Verpackungsglas. In München gehören leere Glasflaschen und "
+            "Gläser ohne Pfand zu den Wertstoffinseln, aber Trinkgläser, Spiegel, Keramik und Fensterglas nicht. "
+            "Kleine Trinkglasscherben gehören meist in die Restmuelltonne; Fensterglas, Spiegel oder größere "
+            "Spezialgläser zum Wertstoffhof."
+        ),
+    },
+    {
+        "name": "plastic cup packaging",
+        "patterns": [
+            r"\b(yoghurt|yogurt|joghurt)\s+(cup|container|becher)\b",
+            r"\bplastic\s+(cup|container|packaging)\b",
+        ],
+        "response_en": (
+            "A yogurt cup is plastic packaging. In Munich, empty plastic packaging goes to Wertstoffinseln. "
+            "It should be empty, but it does not need to be perfectly rinsed."
+        ),
+        "response_de": (
+            "Ein Joghurtbecher ist Kunststoffverpackung. In München gehört leere Kunststoffverpackung zu den "
+            "Wertstoffinseln. Sie sollte leer sein, muss aber nicht perfekt ausgespült werden."
+        ),
+    },
+    {
+        "name": "old clothes",
+        "patterns": [r"\bold\s+(clothes|clothing|shoes|textiles)\b", r"\baltkleider\b", r"\balte\s+kleidung\b"],
+        "response_en": (
+            "Old clothes should not go in Restmuelltonne if they are clean and still wearable. In Munich, use "
+            "AWM Altkleidercontainer, Wertstoffhof, charity collections, or second-hand options. Only broken or "
+            "heavily soiled textiles belong in Restmuelltonne."
+        ),
+        "response_de": (
+            "Alte Kleidung gehört nicht in die Restmuelltonne, wenn sie sauber und noch tragbar ist. In München "
+            "nutzt du AWM Altkleidercontainer, Wertstoffhof, soziale Sammlungen oder Second-Hand. Nur kaputte "
+            "oder stark verschmutzte Textilien gehören in die Restmuelltonne."
+        ),
+    },
+    {
+        "name": "led bulb",
+        "patterns": [
+            r"\bled\s+(bulb|bulbs|lamp|lamps|light|lights)\b",
+            r"\benergy[-\s]?saving\s+(lamp|lamps|bulb|bulbs)\b",
+            r"\bled[-\s]?lampe\b",
+        ],
+        "response_en": (
+            "LED lamps and energy-saving lamps must not go in Restmuelltonne or glass containers. In Munich, "
+            "take them to Wertstoffhof; small quantities may also be accepted by Giftmobil, Wertstoffmobil, or "
+            "retail take-back points."
+        ),
+        "response_de": (
+            "LED-Lampen und Energiesparlampen gehören nicht in die Restmuelltonne und nicht in Glascontainer. "
+            "In München gehören sie zum Wertstoffhof; kleine Mengen können auch bei Giftmobil, Wertstoffmobil "
+            "oder passenden Rücknahmestellen abgegeben werden."
+        ),
+    },
+    {
+        "name": "medicine",
+        "patterns": [r"\b(medicine|medication|pills|tablets)\b", r"\bmedikamente\b", r"\barzneimittel\b"],
+        "response_en": (
+            "Medicines belong in Restmuelltonne in Munich. Do not flush them down the toilet or sink. Keep them "
+            "safely packed; for special or hazardous medicines, use pharmacy or medical guidance."
+        ),
+        "response_de": (
+            "Medikamente gehören in München in die Restmuelltonne. Bitte nicht in Toilette oder Waschbecken "
+            "schütten. Sicher verpacken; bei besonderen oder gefährlichen Medikamenten Apotheke oder "
+            "medizinische Hinweise beachten."
+        ),
+    },
+    {
+        "name": "beverage carton",
+        "patterns": [
+            r"\b(milk|juice|beverage)\s+carton\b",
+            r"\btetra\s?pak\b",
+            r"\bmilchkarton\b",
+            r"\bgetraenkekarton\b",
+            r"\bgetränkekarton\b",
+        ],
+        "response_en": (
+            "Milk cartons, beverage cartons, and other composite packaging belong at Wertstoffinseln in Munich, "
+            "not in Papiertonne. Empty the packaging before disposal."
+        ),
+        "response_de": (
+            "Milchkartons, Getränkekartons und andere Verbundverpackungen gehören in München zu den "
+            "Wertstoffinseln, nicht in die Papiertonne. Vorher leeren."
+        ),
     },
 ]
 
@@ -436,12 +554,34 @@ async def ask_waste_question(message: str, conversation_history: list[Conversati
     if direct_response is not None:
         return direct_response
 
+    fallback_response = _fallback_rule_response(message)
+    if fallback_response is not None:
+        logger.info(
+            "chat_agent_fallback_response",
+            extra={"user_message": message, "fallback_response": fallback_response.response},
+        )
+        return fallback_response
+
+    if _relevant_rules_text(message, conversation_history) == "No lexical rule matches.":
+        logger.warning(
+            "chat_agent_unanswered_low_confidence",
+            extra={"user_message": message},
+        )
+        return ChatResponse(
+            response=(
+                "I do not have enough Munich-specific rule information for that item. "
+                "Can you describe what it is made of, whether it is packaging, electronic, hazardous, "
+                "or contaminated with food?"
+            ),
+            suggested_location=None,
+        )
+
     return await asyncio.to_thread(_run_crew, message, conversation_history)
 
 
 def _direct_rule_response(message: str) -> ChatResponse | None:
     query = message.casefold()
-    if any(term in query for term in ("bottle", "can", "flasche", "dose", "pfand")):
+    if _mentions_deposit_sensitive_container(query):
         return None
 
     matches = []
@@ -458,6 +598,28 @@ def _direct_rule_response(message: str) -> ChatResponse | None:
         )
 
     return None
+
+
+def _fallback_rule_response(message: str) -> ChatResponse | None:
+    query = message.casefold()
+    for scenario in FALLBACK_SCENARIOS:
+        if any(re.search(pattern, query) for pattern in scenario["patterns"]):
+            response_key = "response_de" if _looks_german(message) else "response_en"
+            return ChatResponse(response=scenario[response_key], suggested_location=None)
+
+    return None
+
+
+def _mentions_deposit_sensitive_container(query: str) -> bool:
+    return bool(
+        re.search(
+            r"\b("
+            r"bottle|bottles|flasche|flaschen|dose|dosen|pfand|"
+            r"cans|tin can|aluminium can|aluminum can|drink can|beverage can"
+            r")\b",
+            query,
+        )
+    )
 
 
 def _direct_rule_score(query: str, item: dict) -> int:
