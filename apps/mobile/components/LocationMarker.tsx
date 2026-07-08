@@ -11,7 +11,7 @@ export function LocationMarker({ type, selected = false }: Props) {
   const isHof = type === 'wertstoffhof';
 
   return (
-    <View style={[styles.pin, isHof ? styles.pinHof : styles.pinInsel, selected && styles.pinSelected]}>
+    <View pointerEvents="none" style={[styles.pin, isHof ? styles.pinHof : styles.pinInsel, selected && styles.pinSelected]}>
       <Icon
         name={isHof ? 'trash-2' : 'refresh-cw'}
         size={selected ? 20 : 16}

@@ -47,7 +47,7 @@ export default function MapScreen() {
             key={loc.id}
             coordinate={{ latitude: loc.lat, longitude: loc.lng }}
             onPress={() => setSelectedLocation(loc)}
-            tracksViewChanges={false}
+            tracksViewChanges={selectedLocation?.id === loc.id}
           >
             <LocationMarker
               type={loc.type}
