@@ -21,8 +21,14 @@ export default function MapScreen() {
 
   useEffect(() => {
     fetchLocations({ lat, lng })
-      .then(setLocations)
-      .catch((e) => setLocationsError(e.message));
+      .then((data) => {
+        console.log(`[Locations] ${data.length} geladen`, data[0]);
+        setLocations(data);
+      })
+      .catch((e) => {
+        console.error('[Locations] Fehler:', e.message);
+        setLocationsError(e.message);
+      });
   }, [lat, lng]);
 
   return (
