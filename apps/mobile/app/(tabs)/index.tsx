@@ -1,9 +1,10 @@
-import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useState } from 'react';
-import MapView from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import Searchbar from '@/components/Searchbar';
 import Filter from '@/components/Filter';
+import { LocationMarker } from '@/components/LocationMarker';
 import { View } from '@/components/Themed';
 import { ThemedText } from '@/components/ThemedText';
 import { Toggle } from '@/components/Toggle';
@@ -17,18 +18,12 @@ export default function MapScreen() {
   const [showProducts, setShowProducts] = useState(false);
   const { lat, lng } = useLocation();
   const [locations, setLocations] = useState<Location[]>([]);
-  const [locationsError, setLocationsError] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   useEffect(() => {
     fetchLocations({ lat, lng })
-      .then((data) => {
-        console.log(`[Locations] ${data.length} geladen`, data[0]);
-        setLocations(data);
-      })
-      .catch((e) => {
-        console.error('[Locations] Fehler:', e.message);
-        setLocationsError(e.message);
-      });
+      .then(setLocations)
+      .catch((e) => console.error('[Locations] Fehler:', e.message));
   }, [lat, lng]);
 
   return (
@@ -42,9 +37,25 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         }}
         showsUserLocation
-      />
-
-      <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} />
+        onPress={() => {
+          Keyboard.dismiss();
+          setSelectedLocation(null);
+        }}
+      >
+        {locations.map((loc) => (
+          <Marker
+            key={loc.id}
+            coordinate={{ latitude: loc.lat, longitude: loc.lng }}
+            onPress={() => setSelectedLocation(loc)}
+            tracksViewChanges={false}
+          >
+            <LocationMarker
+              type={loc.type}
+              selected={selectedLocation?.id === loc.id}
+            />
+          </Marker>
+        ))}
+      </MapView>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
