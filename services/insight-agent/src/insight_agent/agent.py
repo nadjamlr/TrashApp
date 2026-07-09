@@ -42,21 +42,23 @@ async def run_agent(request: InsightRequest) -> InsightResult:
     task = Task(
         description=(
             "WICHTIG: Antworte ausschließlich auf DEUTSCH.\n\n"
-            "Verwende NUR die untenstehenden Regelinformationen als Grundlage.\n"
-            "Generiere genau einen einzigen deutschen Satz, der DIREKT über das gescannte Objekt handelt.\n"
-            "Der Satz muss das gescannte Objekt namentlich erwähnen und konkret auf seine Entsorgung eingehen.\n"
-            "Der Satz muss kurz, kontextbezogen und nicht generisch sein (vermeide allgemeine Recycling-Floskeln).\n"
-            "Wähle genau eine Kategorie aus diesen drei Werten: Myth, Impact, Future.\n"
-            "Kategoriebedeutungen:\n"
-            "- Myth: Entlarvt einen weit verbreiteten Irrtum (z.B. warum kompostierbare Plastiktüten NICHT in die Biotonne dürfen)\n"
-            "- Impact: Ökologische Auswirkung von richtiger oder falscher Trennung (z.B. wie ein öliger Pizzakarton eine ganze Charge Altpapier unbrauchbar macht)\n"
-            "- Future: Was aus dem Material recycelt werden kann (z.B. wie Aluminiumfolie zu einem Fahrradrahmen wird)\n\n"
-            "Gib NUR gültiges JSON zurück, das genau dieser Form entspricht:\n"
+            "Aufgabe: Schreibe genau EINEN kurzen deutschen Satz (max. 20 Wörter) über das gescannte Objekt.\n"
+            "Verwende NUR die untenstehenden Regelinformationen.\n"
+            "Der Satz muss das Objekt beim Namen nennen und auf seine korrekte Entsorgung eingehen.\n\n"
+            "Kategorie – wähle genau einen Wert:\n"
+            "- Myth: Korrigiert einen häufigen Irrtum\n"
+            "- Impact: Ökologische Wirkung\n"
+            "- Future: Wiederverwendung des Materials\n\n"
+            "Beispiele für gute Antworten:\n"
+            '{"fact": "Leere Konservendosen gehören in den Gelben Sack, nicht in die Restmülltonne.", "category": "Myth"}\n'
+            '{"fact": "Eine recycelte Glasflasche spart bis zu 30 % Energie gegenüber neuer Produktion.", "category": "Impact"}\n'
+            '{"fact": "Aus alten Zeitungen wird neues Zeitungspapier hergestellt.", "category": "Future"}\n\n'
+            "Gib NUR gültiges JSON zurück:\n"
             '{"fact": "...", "category": "Myth|Impact|Future"}\n\n'
             "REGELWERK FÜR DIESEN GEGENSTAND:\n"
             "{rule_context}"
         ),
-        expected_output='JSON object: {"fact": "<deutscher Satz>", "category": "Myth|Impact|Future"}',
+        expected_output='JSON object: {"fact": "<kurzer deutscher Satz>", "category": "Myth|Impact|Future"}',
         agent=agent,
         output_pydantic=InsightResult,
     )
