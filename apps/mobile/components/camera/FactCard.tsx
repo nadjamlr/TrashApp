@@ -1,4 +1,5 @@
-import { ActivityIndicator, View, Text, StyleSheet } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, View, Text, StyleSheet } from 'react-native';
 import Feather from '@expo/vector-icons/Feather';
 
 import { useColorScheme } from '@/services/useColorScheme';
@@ -9,6 +10,16 @@ import { Radius } from '@/constants/Radius';
 
 const FALLBACK_FACT = 'Richtiges Trennen schont Ressourcen und hilft der Umwelt.';
 
+function SkeletonLine({ width, opacity }: { width: string | number; opacity: Animated.Value }) {
+  const scheme = useColorScheme() ?? 'light';
+  const colors = Colors[scheme];
+  return (
+    <Animated.View
+      style={[styles.skeletonLine, { width, backgroundColor: colors.muted, opacity }]}
+    />
+  );
+}
+
 type Props = {
   fact: string | null;
   loading?: boolean;
@@ -18,6 +29,19 @@ type Props = {
 export function FactCard({ fact, loading = false, error = false }: Props) {
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const pulse = useRef(new Animated.Value(0.3)).current;
+
+  useEffect(() => {
+    if (!loading) return;
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 0.3, duration: 700, useNativeDriver: true }),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [loading, pulse]);
 
   const displayFact = fact ?? (error ? FALLBACK_FACT : null);
 
@@ -31,10 +55,14 @@ export function FactCard({ fact, loading = false, error = false }: Props) {
           Wusstest du?
         </Text>
       </View>
-      {loading
-        ? <ActivityIndicator size="small" color={colors.muted} style={styles.loader} />
-        : <Text style={[Typography.p2, { color: colors.muted }]}>{displayFact}</Text>
-      }
+      {loading ? (
+        <View style={styles.skeleton}>
+          <SkeletonLine width="90%" opacity={pulse} />
+          <SkeletonLine width="75%" opacity={pulse} />
+        </View>
+      ) : (
+        <Text style={[Typography.p2, { color: colors.muted }]}>{displayFact}</Text>
+      )}
     </View>
   );
 }
@@ -54,7 +82,11 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: '600',
   },
-  loader: {
-    alignSelf: 'flex-start',
+  skeleton: {
+    gap: Spacing.xs,
+  },
+  skeletonLine: {
+    height: 14,
+    borderRadius: Radius.sm,
   },
 });
