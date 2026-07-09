@@ -11,6 +11,7 @@ from chat_agent.agent import (
     _build_polish_system_prompt,
     _build_prompt,
     _direct_rule_response,
+    _greeting_response,
     _parse_agent_output,
     _preferred_language,
     _relevant_rules_text,
@@ -581,13 +582,10 @@ def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) ->
     async def no_rules_agent_response(message, conversation_history, response_language=None):
         return None
 
-    def no_polish(message, conversation_history, response_language, source_response, source_name, source_payload=None):
-        return source_response
-
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
-    monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
     monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+    monkeypatch.setattr("chat_agent.agent.settings.groq_api_key", "")
 
     with caplog.at_level(logging.WARNING, logger="chat_agent.agent"):
         response = asyncio.run(ask_waste_question("Where do I throw away a mystery blob?", []))
@@ -595,3 +593,64 @@ def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) ->
     assert "do not have enough Munich-specific rule information" in response.response
     assert "what it is made of" in response.response
     assert "chat_agent_unanswered_low_confidence" in caplog.text
+
+
+def test_greeting_reply_short_and_friendly_in_german() -> None:
+    response = _greeting_response("Hallo", "de")
+
+    assert response is not None
+    assert "Hallo" in response.response
+    assert "München" in response.response
+
+
+def test_greeting_reply_short_and_friendly_in_english() -> None:
+    response = _greeting_response("Hi there!", "en")
+
+    assert response is not None
+    assert response.response.startswith("Hi")
+    assert "Munich" in response.response
+
+
+def test_greeting_handles_curly_apostrophe_in_wie_gehts() -> None:
+    response = _greeting_response("Wie geht’s?", "de")
+
+    assert response is not None
+    assert response.response.startswith("Mir geht")
+
+
+def test_greeting_ignored_when_message_is_a_question() -> None:
+    assert _greeting_response("Where do I throw away a battery?", "en") is None
+
+
+def test_ask_returns_greeting_without_running_rules(monkeypatch) -> None:
+    async def fail_if_rules_agent_runs(message, conversation_history, response_language=None):
+        raise AssertionError("Rules agent should not run for a greeting")
+
+    monkeypatch.setattr("chat_agent.agent._rules_agent_response", fail_if_rules_agent_runs)
+    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+
+    response = asyncio.run(ask_waste_question("Hallo!", []))
+
+    assert "München" in response.response
+
+
+def test_smalltalk_uses_groq_when_available(monkeypatch) -> None:
+    captured = {}
+
+    async def no_rules_agent_response(message, conversation_history, response_language=None):
+        return None
+
+    def fake_run_smalltalk(message, conversation_history, response_language):
+        captured["message"] = message
+        captured["response_language"] = response_language
+        return ChatResponse(response="Alles gut, danke! Was möchtest du entsorgen?", suggested_location=None)
+
+    monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
+    monkeypatch.setattr("chat_agent.agent._run_smalltalk_with_groq", fake_run_smalltalk)
+    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+    monkeypatch.setattr("chat_agent.agent.settings.groq_api_key", "fake-key")
+
+    response = asyncio.run(ask_waste_question("Was denkst du gerade?", []))
+
+    assert response.response == "Alles gut, danke! Was möchtest du entsorgen?"
+    assert captured["response_language"] == "de"
