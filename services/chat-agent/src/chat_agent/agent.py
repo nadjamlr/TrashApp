@@ -18,6 +18,7 @@ ALIAS_MATCH_SCORE = 12
 DIRECT_MATCH_THRESHOLD = 8
 FUZZY_ALIAS_SCORE = 8
 MIN_FUZZY_TOKEN_LENGTH = 6
+RULES_AGENT_TIMEOUT_SECONDS = 180.0
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,10 @@ DISPOSAL_METHOD_GUIDE = [
 FALLBACK_SCENARIOS = [
     {
         "name": "pizza box",
-        "patterns": [r"\bpizza\s+(box|carton|cardboard)\b", r"\bpizzakarton\b"],
+        "patterns": [
+            r"\bpizza\s+(box|boxes|boxen|carton|cartons|cardboard)\b",
+            r"\bpizzakarton(s|e|en)?\b",
+        ],
         "response_en": (
             "For a pizza box in Munich: put clean or only slightly soiled cardboard in Papiertonne. "
             "If it is greasy or food-stained, use Restmuelltonne. Put leftover food in Biotonne."
@@ -724,19 +728,28 @@ def _run_smalltalk_with_groq(
 
 
 def _build_smalltalk_system_prompt(response_language: str) -> str:
-    language_name = "English" if response_language == "en" else "German"
+    language_hint = "English" if response_language == "en" else "German"
     return (
         "You are a friendly Munich waste disposal chatbot. "
-        "For this message, no Munich rule matched the user's input. "
-        "Reply in one or two short sentences.\n"
-        "- If it is small talk or a greeting, answer briefly like a person would and offer to "
-        "help with waste disposal.\n"
-        "- If it is off-topic (weather, personal questions, unrelated topics), answer briefly "
-        "and steer back to waste disposal.\n"
-        "- If it looks like an item you cannot classify with confidence, ask one short "
-        "clarifying question about material, packaging, electronics, hazardous or food-soiled.\n"
-        "Never invent a Munich bin decision. Never invent addresses, shops, or collection points. "
-        f"Answer in {language_name}. Do not include markdown or text outside JSON. "
+        "For this message, no Munich rule matched the user's input by keyword. You still have "
+        "the simplified Munich disposal rules and category names in the user message; use them "
+        "to reason about the item's category. Pick exactly one response mode and reply in one "
+        "or two short sentences.\n"
+        "1. SMALL TALK OR GREETING (hi, thanks, how are you, off-topic questions) -> answer "
+        "briefly like a person would and offer to help. Do NOT mention any bin.\n"
+        "2. ITEM WHOSE CATEGORY YOU CAN INFER FROM THE SIMPLIFIED RULES -> name the correct "
+        "bin from the simplified rules and give one short reason. Do NOT enumerate item names; "
+        "reason from the category (what it is made of and what it is for), then map to the bin. "
+        "Prefer the most specific applicable rule.\n"
+        "3. ITEM WHOSE CATEGORY IS GENUINELY UNCLEAR FROM THE SIMPLIFIED RULES -> ask ONE "
+        "targeted clarifying question about the ONE detail that would change the bin. Do NOT "
+        "ask about a detail that would not change the bin (for example, if two conditions of "
+        "the item map to the same bin according to the rules, do not ask which condition it is).\n"
+        "Never invent addresses, shops, districts, collection points, or exact locations. "
+        "Never mention bins that don't appear in the simplified rules below.\n"
+        "LANGUAGE: Detect the language of the user's most recent message and reply in the SAME "
+        f"language. If it is genuinely ambiguous, fall back to {language_hint}.\n"
+        "Do not include markdown or text outside JSON. "
         'Return only valid JSON: {"response":"...", "suggested_location": null}'
     )
 
@@ -744,10 +757,16 @@ def _build_smalltalk_system_prompt(response_language: str) -> str:
 def _build_smalltalk_user_prompt(
     message: str, conversation_history: list[ConversationMessage]
 ) -> str:
+    rules = load_rules()
+    category_names_text = _category_names_text(rules)
+    disposal_method_guide_text = _disposal_method_guide_text()
     return (
+        f"Simplified Munich disposal rules:\n{disposal_method_guide_text}\n\n"
+        f"Available rule category names:\n{category_names_text}\n\n"
         f"Conversation history:\n{_format_history(conversation_history)}\n\n"
         f"Current user message:\n{message}\n\n"
-        "Reply in one or two short sentences and return only the JSON described in the system prompt."
+        "Pick exactly one of the three response modes and reply in one or two short sentences. "
+        "Return only the JSON described in the system prompt."
     )
 
 
@@ -770,7 +789,7 @@ async def _rules_agent_response(
     response_language: str | None = None,
 ) -> ChatResponse | None:
     try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
+        async with httpx.AsyncClient(timeout=RULES_AGENT_TIMEOUT_SECONDS) as client:
             response = await client.post(
                 f"{settings.rules_agent_url.rstrip('/')}/rules/classify",
                 json={"label": message, "material": "", "city": "munich"},
@@ -907,18 +926,19 @@ def _build_polish_messages(
 
 
 def _build_polish_system_prompt(response_language: str) -> str:
-    language_name = "English" if response_language == "en" else "German"
+    language_hint = "English" if response_language == "en" else "German"
     return (
         "You are a Munich waste disposal answer editor. "
         "Your task is to rewrite verified disposal facts into one clear chat answer. "
         "Do not classify the item again. Do not change the bin, disposal route, warnings, alternatives, "
         "or uncertainty supplied by the source facts. "
         "Include the user's item when possible and include a short explanation using only source facts. "
-        "Translate all source facts into the requested language. "
         "Never mix languages, except for official disposal names such as Biotonne, Papiertonne, "
         "Restmuelltonne, Wertstoffinseln, Wertstoffhof, Giftmobil, Pfand, and AWM. "
         "Never invent street names, station names, shops, districts, collection points, or exact locations. "
-        f"Answer in {language_name}. "
+        "LANGUAGE: Detect the language of the user's most recent message and reply in the SAME "
+        f"language, fully translating any source facts. If the user's message is genuinely ambiguous, "
+        f"fall back to {language_hint}. "
         'Return only valid JSON: {"response":"...", "suggested_location": null}'
     )
 
@@ -947,7 +967,8 @@ def _build_polish_prompt(
         "Restmuelltonne, Wertstoffinseln, Wertstoffhof, Giftmobil, Pfand, and AWM.\n"
         "If the source answer asks for clarification, keep it as one concise clarifying question.\n"
         "Never invent street names, station names, shops, districts, collection points, or exact locations.\n"
-        f"Answer in {language_name}. Keep the tone friendly, consistent, and direct.\n"
+        f"Reply in the same language as the user's most recent message; if it is genuinely "
+        f"ambiguous, fall back to {language_name}. Keep the tone friendly, consistent, and direct.\n"
         "Do not include markdown or text outside JSON.\n"
         "Return only valid JSON matching this shape: "
         '{"response":"...", "suggested_location": null}\n'
@@ -1187,7 +1208,9 @@ def _format_direct_rule_response(message: str, item: dict, response_language: st
 def _looks_german(message: str) -> bool:
     return bool(
         re.search(
-            r"\b(was|wohin|muss|gehört|gehoert|entsorge|entsorgen|müll|muell|kopfhoerer|kopfhörer)\b",
+            r"\b(was|wohin|kommen|kommt|muss|gehört|gehoert|gehören|gehoeren|"
+            r"entsorge|entsorgen|müll|muell|kopfhoerer|kopfhörer|"
+            r"mit|einem|einer|welche|wie|ist|sind)\b",
             message.casefold(),
         )
     )
@@ -1216,6 +1239,8 @@ def _preferred_language(message: str, conversation_history: list[ConversationMes
         "",
     )
     language_source = first_user_message or message
+    if _looks_german(language_source):
+        return "de"
     if _looks_english(language_source):
         return "en"
     return "de"

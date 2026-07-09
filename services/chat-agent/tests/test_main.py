@@ -10,6 +10,8 @@ from chat_agent.agent import (
     _build_polish_prompt,
     _build_polish_system_prompt,
     _build_prompt,
+    _build_smalltalk_system_prompt,
+    _build_smalltalk_user_prompt,
     _direct_rule_response,
     _greeting_response,
     _parse_agent_output,
@@ -202,6 +204,11 @@ def test_preferred_language_defaults_to_german_when_unclear(monkeypatch) -> None
     assert "answer in German" in _build_prompt("???", [])
 
 
+def test_preferred_language_prefers_german_when_english_loanwords_appear() -> None:
+    assert _preferred_language("Wohin kommen Pizza Boxen", []) == "de"
+    assert _preferred_language("Was ist mit einem Yogurt Becher?", []) == "de"
+
+
 def test_polish_prompt_preserves_facts_and_requires_explanation() -> None:
     prompt = _build_polish_prompt(
         "Wo entsorge ich Gurkenscheiben?",
@@ -221,7 +228,8 @@ def test_polish_prompt_preserves_facts_and_requires_explanation() -> None:
     assert "editing and translation task" in prompt
     assert "Include a short explanation" in prompt
     assert "Never mix languages" in prompt
-    assert "Answer in German" in prompt
+    assert "same language as the user's most recent message" in prompt
+    assert "fall back to German" in prompt
     assert "Biotonne" in prompt
     assert "Fruit and vegetable scraps are organic kitchen waste." in prompt
 
@@ -231,9 +239,11 @@ def test_polish_system_prompt_requires_translation_without_reclassification() ->
 
     assert "Do not classify the item again" in prompt
     assert "Do not change the bin" in prompt
-    assert "Translate all source facts" in prompt
     assert "Never mix languages" in prompt
-    assert "Answer in German" in prompt
+    assert "same language as the user's most recent message" in prompt.lower() or (
+        "SAME" in prompt and "user's most recent message" in prompt
+    )
+    assert "fall back to German" in prompt
 
 
 def test_polish_messages_use_system_prompt() -> None:
@@ -632,6 +642,28 @@ def test_ask_returns_greeting_without_running_rules(monkeypatch) -> None:
     response = asyncio.run(ask_waste_question("Hallo!", []))
 
     assert "München" in response.response
+
+
+def test_smalltalk_user_prompt_includes_simplified_rules(monkeypatch) -> None:
+    monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
+
+    prompt = _build_smalltalk_user_prompt("Wohin kommt ein Computer?", [])
+
+    assert "Simplified Munich disposal rules" in prompt
+    assert "Biotonne" in prompt
+    assert "Wertstoffhof" in prompt
+    assert "Small electronic devices" in prompt
+
+
+def test_smalltalk_system_prompt_allows_classifying_from_simplified_rules() -> None:
+    prompt = _build_smalltalk_system_prompt("de")
+
+    assert "reason from the category" in prompt.lower()
+    assert "do not enumerate item names" in prompt.lower()
+    assert "would not change the bin" in prompt.lower()
+    assert "same language as the user's most recent message" in prompt.lower() or (
+        "SAME" in prompt and "user's most recent message" in prompt
+    )
 
 
 def test_smalltalk_uses_groq_when_available(monkeypatch) -> None:
