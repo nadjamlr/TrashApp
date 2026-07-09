@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
-import { Text, View } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Text, View } from '@/components/themes/Themed';
+import { useColorScheme } from '@/services/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 

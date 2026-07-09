@@ -12,7 +12,7 @@ export const ThemeContext = createContext<ThemeContextType>({
     setColorScheme: () => {},
 });
 
-export function AppThemeProvider({ children }: { children: ReactNode }) {
+export function AppThemeProvider({ children }: { children: ReactNode }) {       // Wrapper im Layout für Theme
     const [colorScheme, setColorScheme] = useState<ColorScheme>('light');
     return (
         <ThemeContext.Provider value={{ colorScheme, setColorScheme }}>

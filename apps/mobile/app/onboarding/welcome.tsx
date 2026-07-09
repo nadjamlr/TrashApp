@@ -27,7 +27,7 @@ const slides: Slide[] = [
     id: '1',
     bgColor: '#fde76a',
     textColor: '#060709',
-    gradient: ['#f3f08a', '#f1dc66', '#e9e257'],
+    gradient: ['#f0d03d', '#f1dc66', '#e9e257'],
     image: require('@/assets/images/scan.png'),
     title: 'Richtig trennen,\nleicht gemacht',
     description: 'Scanne deinen Müll und finde sofort heraus, in welche Tonne er gehört – in Sekunden.',

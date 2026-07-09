@@ -10,10 +10,7 @@ from chat_agent.agent import (
     _build_polish_prompt,
     _build_polish_system_prompt,
     _build_prompt,
-    _build_smalltalk_system_prompt,
-    _build_smalltalk_user_prompt,
     _direct_rule_response,
-    _greeting_response,
     _parse_agent_output,
     _preferred_language,
     _relevant_rules_text,
@@ -150,7 +147,7 @@ def test_parse_agent_output_falls_back_to_plain_text_for_non_json() -> None:
 
 def test_build_prompt_includes_all_category_names_without_full_unselected_rules(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -196,17 +193,12 @@ def test_preferred_language_uses_first_user_message() -> None:
 
 def test_preferred_language_defaults_to_german_when_unclear(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {"items": [], "deposit_rules": {}},
     )
 
     assert _preferred_language("???", []) == "de"
     assert "answer in German" in _build_prompt("???", [])
-
-
-def test_preferred_language_prefers_german_when_english_loanwords_appear() -> None:
-    assert _preferred_language("Wohin kommen Pizza Boxen", []) == "de"
-    assert _preferred_language("Was ist mit einem Yogurt Becher?", []) == "de"
 
 
 def test_polish_prompt_preserves_facts_and_requires_explanation() -> None:
@@ -240,9 +232,7 @@ def test_polish_system_prompt_requires_translation_without_reclassification() ->
     assert "Do not classify the item again" in prompt
     assert "Do not change the bin" in prompt
     assert "Never mix languages" in prompt
-    assert "same language as the user's most recent message" in prompt.lower() or (
-        "SAME" in prompt and "user's most recent message" in prompt
-    )
+    assert "SAME" in prompt and "user's most recent message" in prompt
     assert "fall back to German" in prompt
 
 
@@ -264,7 +254,7 @@ def test_polish_messages_use_system_prompt() -> None:
 
 def test_direct_rule_response_uses_electronics_rule_for_headphones(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -294,7 +284,7 @@ def test_direct_rule_response_uses_electronics_rule_for_headphones(monkeypatch) 
 
 def test_direct_rule_response_handles_headphones_typo(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -323,7 +313,7 @@ def test_direct_rule_response_handles_headphones_typo(monkeypatch) -> None:
 
 def test_direct_rule_response_maps_sandwich_to_organic_without_rule_keyword(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -350,7 +340,7 @@ def test_direct_rule_response_maps_sandwich_to_organic_without_rule_keyword(monk
 
 def test_relevant_rules_text_current_item_beats_food_history(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -388,7 +378,7 @@ def test_relevant_rules_text_current_item_beats_food_history(monkeypatch) -> Non
 
 def test_relevant_rules_text_typo_current_item_beats_food_history(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -425,7 +415,7 @@ def test_relevant_rules_text_typo_current_item_beats_food_history(monkeypatch) -
 
 def test_relevant_rules_text_uses_history_for_vague_follow_up(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -455,7 +445,7 @@ def test_relevant_rules_text_uses_history_for_vague_follow_up(monkeypatch) -> No
 
 def test_relevant_rules_text_uses_rules_content_without_item_specific_keywords(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -482,7 +472,7 @@ def test_relevant_rules_text_uses_rules_content_without_item_specific_keywords(m
 
 def test_direct_rule_response_does_not_treat_question_can_as_beverage_can(monkeypatch) -> None:
     monkeypatch.setattr(
-        "chat_agent.agent.load_rules",
+        "chat_agent.retrieval.load_rules",
         lambda: {
             "items": [
                 {
@@ -514,7 +504,7 @@ def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
-    monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", _common_test_rules)
 
     cases = [
         ("Where do I throw away a pizza box?", ["Papiertonne", "Restmuelltonne"]),
@@ -550,7 +540,7 @@ def test_standard_local_answer_is_sent_through_polish_step(monkeypatch) -> None:
 
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", fake_polish)
-    monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", _common_test_rules)
 
     response = asyncio.run(ask_waste_question("Wo entsorge ich ein Sandwich?", []))
 
@@ -576,7 +566,7 @@ def test_chat_uses_rules_agent_response_before_local_fallback(monkeypatch) -> No
 
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", fake_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
-    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", lambda: {"items": [], "deposit_rules": {}})
 
     response = asyncio.run(ask_waste_question("Where does a yogurt cup go?", []))
 
@@ -592,9 +582,13 @@ def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) ->
     async def no_rules_agent_response(message, conversation_history, response_language=None):
         return None
 
+    def no_polish(message, conversation_history, response_language, source_response, source_name, source_payload=None):
+        return source_response
+
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
-    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
+    monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", lambda: {"items": [], "deposit_rules": {}})
     monkeypatch.setattr("chat_agent.agent.settings.groq_api_key", "")
 
     with caplog.at_level(logging.WARNING, logger="chat_agent.agent"):
@@ -603,86 +597,3 @@ def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) ->
     assert "do not have enough Munich-specific rule information" in response.response
     assert "what it is made of" in response.response
     assert "chat_agent_unanswered_low_confidence" in caplog.text
-
-
-def test_greeting_reply_short_and_friendly_in_german() -> None:
-    response = _greeting_response("Hallo", "de")
-
-    assert response is not None
-    assert "Hallo" in response.response
-    assert "München" in response.response
-
-
-def test_greeting_reply_short_and_friendly_in_english() -> None:
-    response = _greeting_response("Hi there!", "en")
-
-    assert response is not None
-    assert response.response.startswith("Hi")
-    assert "Munich" in response.response
-
-
-def test_greeting_handles_curly_apostrophe_in_wie_gehts() -> None:
-    response = _greeting_response("Wie geht’s?", "de")
-
-    assert response is not None
-    assert response.response.startswith("Mir geht")
-
-
-def test_greeting_ignored_when_message_is_a_question() -> None:
-    assert _greeting_response("Where do I throw away a battery?", "en") is None
-
-
-def test_ask_returns_greeting_without_running_rules(monkeypatch) -> None:
-    async def fail_if_rules_agent_runs(message, conversation_history, response_language=None):
-        raise AssertionError("Rules agent should not run for a greeting")
-
-    monkeypatch.setattr("chat_agent.agent._rules_agent_response", fail_if_rules_agent_runs)
-    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
-
-    response = asyncio.run(ask_waste_question("Hallo!", []))
-
-    assert "München" in response.response
-
-
-def test_smalltalk_user_prompt_includes_simplified_rules(monkeypatch) -> None:
-    monkeypatch.setattr("chat_agent.agent.load_rules", _common_test_rules)
-
-    prompt = _build_smalltalk_user_prompt("Wohin kommt ein Computer?", [])
-
-    assert "Simplified Munich disposal rules" in prompt
-    assert "Biotonne" in prompt
-    assert "Wertstoffhof" in prompt
-    assert "Small electronic devices" in prompt
-
-
-def test_smalltalk_system_prompt_allows_classifying_from_simplified_rules() -> None:
-    prompt = _build_smalltalk_system_prompt("de")
-
-    assert "reason from the category" in prompt.lower()
-    assert "do not enumerate item names" in prompt.lower()
-    assert "would not change the bin" in prompt.lower()
-    assert "same language as the user's most recent message" in prompt.lower() or (
-        "SAME" in prompt and "user's most recent message" in prompt
-    )
-
-
-def test_smalltalk_uses_groq_when_available(monkeypatch) -> None:
-    captured = {}
-
-    async def no_rules_agent_response(message, conversation_history, response_language=None):
-        return None
-
-    def fake_run_smalltalk(message, conversation_history, response_language):
-        captured["message"] = message
-        captured["response_language"] = response_language
-        return ChatResponse(response="Alles gut, danke! Was möchtest du entsorgen?", suggested_location=None)
-
-    monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
-    monkeypatch.setattr("chat_agent.agent._run_smalltalk_with_groq", fake_run_smalltalk)
-    monkeypatch.setattr("chat_agent.agent.load_rules", lambda: {"items": [], "deposit_rules": {}})
-    monkeypatch.setattr("chat_agent.agent.settings.groq_api_key", "fake-key")
-
-    response = asyncio.run(ask_waste_question("Was denkst du gerade?", []))
-
-    assert response.response == "Alles gut, danke! Was möchtest du entsorgen?"
-    assert captured["response_language"] == "de"

@@ -1,8 +1,8 @@
 ﻿import { Pressable, StyleSheet } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { Text, View } from '@/components/themes/Themed';
 import { Toggle } from '@/components/Toggle';
 import { router } from 'expo-router';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from '@/services/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
@@ -23,11 +23,11 @@ export function SettingsRow({ topic, details, href, hasToggle = false, isToggleA
         <View style={[styles.row, { backgroundColor: theme.surface }]}>
             <View lightColor="transparent" darkColor="transparent" style={styles.left}>
                 <Text variant="h3" style={{ color: theme.text }}>{topic}</Text>
-                <Text variant="p1" style={{ color: theme.muted }}>{details.join(', ')}</Text>
+                <Text variant="p1" style={{ color: theme.muted, textTransform: 'capitalize' }}>{details.join(', ')}</Text>
             </View>
             {hasToggle
                 ? <Toggle size="sm" isActive={isToggleActive} onToggle={onToggle} />
-                : href && <Text variant="h3" style={{ color: theme.muted }}>›</Text>
+                : href && <Text variant="h3" style={[styles.arrowLink, { color: theme.muted }]}>›</Text>
             }
         </View>
     );
@@ -59,5 +59,8 @@ const styles = StyleSheet.create({
     left: {
         flex: 1,
         gap: 2,
+    },
+    arrowLink: {
+        marginLeft: Spacing.sm,
     },
 });

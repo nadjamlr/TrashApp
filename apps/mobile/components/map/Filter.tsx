@@ -1,11 +1,11 @@
 import { Pressable, StyleSheet } from 'react-native';
-import { useState } from 'react';
-import { Text } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Text } from '@/components/themes/Themed';
+import { useColorScheme } from '@/services/useColorScheme';
+import { useEffect, useState } from 'react';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { Radius } from '@/constants/Radius';
-import FilterOverlay from '@/components/FilterOverlay';
+import FilterOverlay from '@/components/map/FilterOverlay';
 
 type FilterProps = {
     label: string;
@@ -21,6 +21,8 @@ export default function Filter({ label, isActive = false, onPress, overlayTitle,
     const theme = Colors[colorScheme];
     const [active, setActive] = useState(isActive);
     const [overlayVisible, setOverlayVisible] = useState(false);
+
+    useEffect(() => { setActive(isActive); }, [isActive]);
 
     function handlePress() {
         if (children) {

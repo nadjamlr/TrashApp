@@ -1600,11 +1600,15 @@ name = "locations-service"
 version = "0.1.0"
 source = { editable = "locations-service" }
 dependencies = [
+    { name = "httpx" },
     { name = "trashapp-shared" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "trashapp-shared", editable = "shared" }]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "trashapp-shared", editable = "shared" },
+]
 
 [[package]]
 name = "markdown-it-py"

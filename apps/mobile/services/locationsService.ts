@@ -1,4 +1,8 @@
+import { Platform } from 'react-native';
+
 const BASE_URL = process.env.EXPO_PUBLIC_LOCATIONS_SERVICE_URL;
+const LOCATIONS_SERVICE_URL =
+  BASE_URL ?? (Platform.OS === 'android' ? 'http://10.0.2.2:8005' : 'http://localhost:8005');
 
 export type LocationType = 'wertstoffhof' | 'wertstoffinsel';
 
@@ -37,8 +41,6 @@ export async function fetchLocations({
   radius = 2000,
   material,
 }: FetchLocationsParams): Promise<Location[]> {
-  if (!BASE_URL) throw new Error('EXPO_PUBLIC_LOCATIONS_SERVICE_URL is not set');
-
   const params = new URLSearchParams({
     lat: String(lat),
     lng: String(lng),
@@ -46,7 +48,7 @@ export async function fetchLocations({
     ...(material ? { material } : {}),
   });
 
-  const response = await fetch(`${BASE_URL}/locations?${params}`);
+  const response = await fetch(`${LOCATIONS_SERVICE_URL}/locations?${params}`);
   if (!response.ok) throw new Error(`Locations service error: ${response.status}`);
 
   const data = await response.json();

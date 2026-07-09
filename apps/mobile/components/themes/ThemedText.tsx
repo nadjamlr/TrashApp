@@ -3,7 +3,7 @@ import { Text as DefaultText } from 'react-native';
 import Colors, { ThemeColorName } from '@/constants/Colors';
 import { Typography, TypographyVariant } from '@/constants/Typography';
 
-import { useColorScheme } from './useColorScheme';
+import { useColorScheme } from '../../services/useColorScheme';
 
 type ThemeProps = {
   lightColor?: string;

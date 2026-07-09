@@ -13,24 +13,14 @@ cp env.example .env
 
 ### 2. Mobile app environment
 
-Create `apps/mobile/.env.local` with your machine's local IP address.  
-Find your IP on Mac:
+The mobile app needs your machine's local IP so the phone can reach the backend over Wi-Fi.  
+Run the included script to auto-detect and write `apps/mobile/.env.local`:
 
 ```bash
-ipconfig getifaddr en0
+./update-ip.sh
 ```
 
-Then create the file:
-
-```bash
-# apps/mobile/.env.local
-EXPO_PUBLIC_VISION_AGENT_URL=http://<YOUR_IP>:8001
-EXPO_PUBLIC_CHAT_AGENT_URL=http://<YOUR_IP>:8004
-EXPO_PUBLIC_INSIGHT_AGENT_URL=http://<YOUR_IP>:8003
-EXPO_PUBLIC_LOCATIONS_SERVICE_URL=http://<YOUR_IP>:8005
-```
-
-> The IP must be your machine's local network IP (not `localhost`) so the phone can reach your Mac over Wi-Fi.
+Re-run this script whenever you change networks (e.g. home → university). Then restart Expo.
 
 ### 3. Start services
 

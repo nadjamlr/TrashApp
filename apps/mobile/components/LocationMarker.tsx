@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { Icon } from './Icon';
+import { Icon } from './navbar/Icon';
 import type { LocationType } from '@/services/locationsService';
 
 type Props = {

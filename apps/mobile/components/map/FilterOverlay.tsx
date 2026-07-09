@@ -1,7 +1,7 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Text } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Text } from '@/components/themes/Themed';
+import { useColorScheme } from '@/services/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Radius } from '@/constants/Radius';
 import { Spacing } from '@/constants/Spacing';
