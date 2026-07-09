@@ -47,15 +47,15 @@ function capitalize(value: string): string {
 }
 
 function openRoute(lat: number, lng: number) {
-  const url =
-    Platform.OS === 'ios'
-      ? `maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`
-      : `google.navigation:q=${lat},${lng}&mode=w`;
+  const nativeUrl = Platform.OS === 'ios'
+    ? `maps://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`
+    : `google.navigation:q=${lat},${lng}&mode=w`;
 
-  Linking.openURL(url).catch(() =>
-    // Fall back to the maps web URL if no native maps app can handle the deep link
-    Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`),
-  );
+  const webUrl = Platform.OS === 'ios'
+    ? `https://maps.apple.com/?daddr=${lat},${lng}&dirflg=w`
+    : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
+
+  Linking.openURL(nativeUrl).catch(() => Linking.openURL(webUrl));
 }
 
 type Props = {
