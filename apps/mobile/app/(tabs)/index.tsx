@@ -1,18 +1,19 @@
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View as RNView } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from '@/components/themes/Themed';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
-import Searchbar from '@/components/Searchbar';
-import Filter from '@/components/Filter';
 import { LocationDetailCard } from '@/components/LocationDetailCard';
 import { LocationMarker } from '@/components/LocationMarker';
-import { View } from '@/components/Themed';
-import { ThemedText } from '@/components/ThemedText';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Abstände zur StatusBAr und HomeIndicator
+import Searchbar from '@/components/map/Searchbar';
+import Filter from '@/components/map/Filter';
+import { ThemedText } from '@/components/themes/ThemedText';
+import { Toggle } from '@/components/Toggle';
 import Colors from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Radius } from '@/constants/Radius';
 import { Spacing } from '@/constants/Spacing';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from '@/services/useColorScheme';
 import { useLocation } from '@/context/LocationContext';
 import { fetchLocations, Location, LocationType } from '@/services/locationsService';
 
@@ -68,7 +69,7 @@ export default function MapScreen() {
         region={{
           latitude: lat,
           longitude: lng,
-          latitudeDelta: 0.05,
+          latitudeDelta: 0.05, // ca. 3km Radius
           longitudeDelta: 0.05,
         }}
         showsUserLocation
@@ -93,7 +94,7 @@ export default function MapScreen() {
         })}
       </MapView>
 
-      <KeyboardAvoidingView
+      <KeyboardAvoidingView // Overlay
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? Layout.keyboardVerticalOffset : 0}
         style={styles.overlay}

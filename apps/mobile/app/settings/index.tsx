@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, View as RNView } from 'react-native';
-import { Text, View } from '@/components/Themed';
-import { SettingsRow } from '@/components/SettingsRow';
-import { SettingsSection } from '@/components/SettingsSection';
+import { Text, View } from '@/components/themes/Themed';
+import { SettingsRow } from '@/components/settings/SettingsRow';
+import { SettingsSection } from '@/components/settings/SettingsSection';
 import { useAppTheme } from '@/context/ThemeContext';
 import { useSavedLocations } from '@/context/SavedLocationsContext';
 import { Colors } from '@/constants/Colors';

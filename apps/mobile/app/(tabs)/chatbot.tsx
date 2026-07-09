@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatMessageList } from '@/components/chat/ChatMessageList';
 import type { ChatMessage } from '@/components/chat/types';
-import { Text, View } from '@/components/Themed';
+import { Text, View } from '@/components/themes/Themed';
 import { Layout } from '@/constants/Layout';
 import { Sizes } from '@/constants/Sizes';
 import { Spacing } from '@/constants/Spacing';

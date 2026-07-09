@@ -2,7 +2,7 @@ import Colors, { ThemeColorName } from '@/constants/Colors';
 
 import { ThemedText, ThemedTextProps } from './ThemedText';
 import { ThemedView, ThemedViewProps } from './ThemedView';
-import { useColorScheme } from './useColorScheme';
+import { useColorScheme } from '../../services/useColorScheme';
 
 export type TextProps = ThemedTextProps;
 export type ViewProps = ThemedViewProps;

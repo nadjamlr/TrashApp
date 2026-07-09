@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { Text, View } from '@/components/Themed';
+import { Text, View } from '@/components/themes/Themed';
 
 export default function LanguageScreen() {
   return (

@@ -1,6 +1,8 @@
 import { Stack } from 'expo-router';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from '@/services/useColorScheme';
 import { Colors } from '@/constants/Colors';
+
+// Eigenes Layout für SettingsPages
 
 export default function SettingsLayout() {
     const colorScheme = useColorScheme();
