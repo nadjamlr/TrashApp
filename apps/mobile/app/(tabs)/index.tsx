@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Abstände
 import Searchbar from '@/components/map/Searchbar';
 import Filter from '@/components/map/Filter';
 import { ThemedText } from '@/components/themes/ThemedText';
-import { Toggle } from '@/components/Toggle';
 import Colors from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Radius } from '@/constants/Radius';

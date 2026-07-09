@@ -26,17 +26,19 @@ export default function SettingsScreen() {
       <Text variant="h1" style={{ color: theme.text }}>Nadja Müller</Text>
       <View style={styles.topics}>
 
-        <SettingsSection heading="Personal Details">
+        <SettingsSection heading="Profil-Details">
           <SettingsRow
-            topic='Personal Info'
-            details={["name", "address", "email", "phone", "username"]}
+            topic='Persönliche Informationen'
+            details={["name", "adresse", "e-mail", "Telefon", "username"]}
             href="/settings/personal-info"
           />
         </SettingsSection>
 
-        <SettingsSection heading="Saved Locations">
+        <SettingsSection heading="Gespeicherte Standorte">
           {savedLocations.length === 0
-            ? <Text variant="p1" style={{ color: theme.muted }}>Keine gespeicherten Standorte</Text>
+            ? <RNView style={[styles.savedBox, styles.savedItem, { backgroundColor: theme.surface }]}>
+                <Text variant="p1" style={{ color: theme.muted }}>Keine gespeicherten Standorte</Text>
+              </RNView>
             : <RNView style={[styles.savedBox, { backgroundColor: theme.surface }]}>
                 {visibleLocations.map((loc, index) => (
                   <RNView key={loc.id}>
@@ -61,33 +63,33 @@ export default function SettingsScreen() {
           }
         </SettingsSection>
 
-        <SettingsSection heading="Collection">
+        <SettingsSection heading="Kollektion">
           <SettingsRow
-            topic='Products'
-            details={[""]}
+            topic='Produkte'
+            details={["Keine Produkte bisher"]}
             href="/settings/collection"
           />
         </SettingsSection>
 
-        <SettingsSection heading="Security">
-          <SettingsRow topic='Access' details={["maps", "photos"]} href="/settings/access" />
-          <SettingsRow topic='Safety' details={["password", "PIN"]} href="/settings/safety" />
+        <SettingsSection heading="Sicherheit">
+          <SettingsRow topic='Zugriff' details={["Maps", "Fotos"]} href="/settings/access" />
+          <SettingsRow topic='Passwörter' details={["Passwort", "PIN"]} href="/settings/safety" />
         </SettingsSection>
 
-        <SettingsSection heading="General Settings">
+        <SettingsSection heading="Allgemeine Einstellungen">
           <SettingsRow
-            topic='Notifications'
-            details={["Push notifications"]}
+            topic='Benachrichtigungen'
+            details={["Push Benachrichtigungen"]}
             hasToggle
           />
           <SettingsRow
-            topic='Language'
-            details={["Choose the language for the app"]}
+            topic='Sprache'
+            details={["Wähle eine Sprache für die App"]}
             href="/settings/language"
           />
           <SettingsRow
             topic='Dark Mode'
-            details={["Choose dark or light mode"]}
+            details={["Wähle Dark- oder Light-Mode"]}
             hasToggle
             isToggleActive={isDark}
             onToggle={(val) => setColorScheme(val ? 'dark' : 'light')}
