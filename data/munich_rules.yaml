@@ -30,6 +30,17 @@ items:
     alternatives:
       - Wertstoffhof for larger quantities of cardboard
       - Sperrmuellabholung for very large cardboard quantities
+    keywords:
+      - Zeitung, Zeitungen, Tageszeitung, Tageszeitungen
+      - Zeitschrift, Zeitschriften, Magazin, Magazine
+      - Papier, Papiere, Papierblatt, Blatt
+      - Karton, Kartons, Kartonage, Kartonagen
+      - Pappe, Pappen, Pappkarton, Pappkartons, Pappschachtel
+      - Brief, Briefe, Briefumschlag, Umschlag, Umschläge
+      - Buch, Bücher, Heft, Hefte, Katalog, Kataloge
+      - Papiertüte, Papierbeutel, Papierverpackung, Papierverpackungen
+      - Schulheft, Notizbuch, Notizblock
+      - newspaper, paper, cardboard, magazine, book, envelope
     notes:
       - Use the paper bin for clean paper, newspapers, envelopes, books without covers, folded cardboard, paper bags, and paper packaging.
       - Dirty paper, wallpaper, backing paper from self-adhesive foils, and hygiene paper belong in Restmuelltonne.
