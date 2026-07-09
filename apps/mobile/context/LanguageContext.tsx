@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
-import { getLocales } from 'expo-localization';
+import { NativeModules, Platform } from 'react-native';
 
 export type Language = 'de' | 'en';
 
@@ -95,8 +95,13 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 function getDeviceLanguage(): Language {
-  const locale = getLocales()[0]?.languageCode ?? 'de';
-  return locale === 'de' ? 'de' : 'en';
+  const locale: string =
+    Platform.OS === 'ios'
+      ? NativeModules.SettingsManager?.settings?.AppleLocale ||
+        NativeModules.SettingsManager?.settings?.AppleLanguages?.[0] ||
+        'de'
+      : NativeModules.I18nManager?.localeIdentifier || 'de';
+  return locale.startsWith('de') ? 'de' : 'en';
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
