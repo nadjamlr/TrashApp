@@ -76,6 +76,12 @@ export default function ChatbotScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isLoading) {
+      requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
+    }
+  }, [isLoading]);
+
   const sendMessage = async () => {
     const trimmedDraft = draft.trim();
     if (!trimmedDraft || isLoading) return;
@@ -137,12 +143,16 @@ export default function ChatbotScreen() {
     <View style={styles.screen}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? Layout.keyboardVerticalOffset : 0}
+        keyboardVerticalOffset={0}
         style={styles.keyboardView}
       >
         <ScrollView
           ref={scrollViewRef}
-          contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + Spacing.lg }]}
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: insets.top + Spacing.lg },
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -224,9 +234,7 @@ export default function ChatbotScreen() {
           style={[
             styles.composerDock,
             {
-              bottom: keyboardHeight
-                ? keyboardHeight + Spacing.md
-                : Layout.chatComposerBottomOffset,
+              paddingBottom: keyboardHeight ? Spacing.md : Layout.chatComposerBottomOffset,
             },
           ]}
         >
@@ -245,7 +253,6 @@ export default function ChatbotScreen() {
                 placeholderTextColor={Colors.light.muted}
                 returnKeyType="send"
                 onSubmitEditing={sendMessage}
-                editable={!isLoading}
                 style={styles.input}
               />
               <Pressable style={styles.cameraButton}>
@@ -276,12 +283,15 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
+  scrollView: {
+    flex: 1,
+  },
   scrollContent: {
     width: '100%',
     maxWidth: Layout.contentMaxWidth,
     alignSelf: 'center',
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Layout.chatScrollBottomPadding,
+    paddingBottom: Spacing.md,
   },
   title: {
     marginBottom: Spacing.lg,
@@ -384,12 +394,10 @@ const styles = StyleSheet.create({
     color: Colors.light.text,
   },
   composerDock: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: Layout.chatComposerBottomOffset,
+    width: '100%',
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
     gap: Spacing.sm,
   },
   composerWrap: {
@@ -413,9 +421,12 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: Sizes.chat.composerHeight,
     color: Colors.light.text,
-    ...Typography.p1,
+    fontSize: Typography.p1.fontSize,
+    fontWeight: Typography.p1.fontWeight,
+    paddingVertical: Spacing.sm,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   cameraButton: {
     width: Sizes.chat.avatar,
