@@ -21,6 +21,12 @@ items:
   - name: Paper and cardboard
     bin: Papiertonne
     deposit: none
+    materials:
+      - Papier
+      - Karton
+      - Pappe
+      - paper
+      - cardboard
     alternatives:
       - Wertstoffhof for larger quantities of cardboard
       - Sperrmuellabholung for very large cardboard quantities
@@ -33,6 +39,16 @@ items:
   - name: Organic kitchen and garden waste
     bin: Biotonne
     deposit: none
+    materials:
+      - Obst
+      - Gemüse
+      - Frucht
+      - Früchte
+      - Lebensmittel
+      - Bioabfall
+      - fruit
+      - vegetable
+      - organic
     alternatives:
       - Wertstoffhof for larger quantities of tree and shrub cuttings
       - Home composting where suitable
@@ -59,11 +75,46 @@ items:
       - vegetable scraps
       - coffee grounds
       - flowers
+      - Gurke
+      - Gurken
+      - cucumber
+      - cucumbers
+      - Gemüseschale
+      - Gemüseschalen
+      - Obstschale
+      - Obstschalen
+      - Obstrest
+      - Gemüserest
+      - Bananenschale
+      - banana peel
+      - Obst
+      - Früchte
+      - Frucht
+      - fruit
+      - Orange
+      - Orangen
+      - Apfel
+      - Äpfel
+      - Banane
+      - Bananen
+      - Erdbeere
+      - Erdbeeren
+      - Gemüse
+      - vegetable
+      - vegetables
+      - Tomate
+      - Tomaten
+      - Karotte
+      - Karotten
+      - Salat
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/bioabfall
 
   - name: Glass packaging
     bin: Wertstoffinseln
     deposit: Pfand bottles must be returned to retailers or reverse vending machines.
+    materials:
+      - Glas
+      - glass
     alternatives:
       - Return reusable or deposit glass bottles through the deposit system.
       - Wertstoffhof only where accepted for special glass items listed by AWM.
@@ -76,6 +127,11 @@ items:
   - name: Plastic packaging
     bin: Wertstoffinseln
     deposit: Pfand applies to many beverage bottles; return those to retailers or reverse vending machines.
+    materials:
+      - Kunststoff
+      - Plastik
+      - plastic
+      - Polymer
     alternatives:
       - Avoid single-use plastic and use reusable packaging where possible.
       - Wertstoffhof for some non-packaging plastic items listed by AWM.
@@ -97,6 +153,11 @@ items:
   - name: Metal packaging
     bin: Wertstoffinseln
     deposit: Pfand applies to many beverage cans; return those to retailers or reverse vending machines.
+    materials:
+      - Metall
+      - Aluminium
+      - metal
+      - aluminium
     alternatives:
       - Wertstoffhof for larger metal household items such as pots, pans, or tools.
     notes:
@@ -114,6 +175,16 @@ items:
       - Milk cartons, beverage cartons, and coated cream or yoghurt containers belong at Wertstoffinseln.
       - These packages do not belong in the Papiertonne because they are composite materials.
       - Empty packaging before disposal.
+    keywords:
+      - Milchkarton
+      - Getränkekarton
+      - Tetra Pak
+      - Tetrapack
+      - milk carton
+      - beverage carton
+      - juice carton
+      - Milchtüte
+      - Safttüte
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/papier-kartonagen
 
   - name: Residual household waste
@@ -175,6 +246,10 @@ items:
   - name: Small electronic devices
     bin: Wertstoffhof
     deposit: none
+    materials:
+      - Elektronik
+      - electronic
+      - Elektrik
     alternatives:
       - Retail take-back where legally offered
       - Wertstoffmobil for small devices where available
@@ -219,6 +294,13 @@ items:
   - name: Clothing, shoes, and textiles
     bin: AWM Altkleidercontainer
     deposit: none
+    materials:
+      - Textil
+      - Textilien
+      - textile
+      - Stoff
+      - clothing
+      - fabric
     alternatives:
       - Wertstoffhof for bagged wearable clothing and shoes
       - Charity collections and second-hand shops
@@ -227,6 +309,18 @@ items:
       - Only put well-preserved and clean textiles into clothing containers, packed in bags or sacks.
       - Broken or heavily soiled textiles belong in Restmuelltonne.
       - AWM notes that rags, bedding, curtains, and loose fabrics are not collected by Sperrmuellabholung.
+    keywords:
+      - Altkleider
+      - alte Kleidung
+      - Kleidung
+      - Textilien
+      - Schuhe
+      - T-Shirt
+      - Hose
+      - Jacke
+      - clothing
+      - textiles
+      - shoes
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/altkleider-schuhe-textilien
 
   - name: Bulky waste
@@ -252,6 +346,14 @@ items:
       - LED lamps contain electronic components and must not go into Restmuelltonne.
       - AWM accepts up to 50 LED lamps at Wertstoffhoefe and up to 5 at Giftmobil or Wertstoffmobil.
       - Do not put LED lamps into glass packaging containers.
+    keywords:
+      - LED
+      - LED-Lampe
+      - LED-Lampen
+      - LED bulb
+      - LED lamp
+      - LED light
+      - LED-Leuchtmittel
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/led-lampen
 
   - name: Fluorescent tubes and energy-saving lamps
@@ -265,6 +367,15 @@ items:
       - Fluorescent tubes, neon tubes, UV tubes, and energy-saving lamps can contain mercury.
       - They must not be disposed of in Restmuelltonne or glass containers.
       - AWM accepts up to 50 pieces at Wertstoffhoefe.
+    keywords:
+      - Energiesparlampe
+      - Energiesparlampen
+      - energy-saving lamp
+      - energy saving lamp
+      - Leuchtstoffröhre
+      - Leuchtstoffroehre
+      - Neonröhre
+      - fluorescent tube
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/leuchtstoffroehren-neonroehren-uv-roehren
 
   - name: Cooking oil, cooking fat, and frying fat
@@ -312,6 +423,18 @@ items:
       - Do not flush medicines down the toilet or sink.
       - Keep medicines safely packed so children or other people cannot access them before disposal.
       - Follow pharmacy or medical guidance for special medication categories if applicable.
+    keywords:
+      - Medikamente
+      - Arzneimittel
+      - medicine
+      - medication
+      - pills
+      - tablets
+      - Tabletten
+      - Pillen
+      - Impfstoff
+      - Kapsel
+      - Kapseln
     source_url: https://www.awm-muenchen.de/entsorgen/abfalllexikon/detailansicht-lexikoneintrag/arzneimittel-medikamente-impfstoffe
 
   - name: E-cigarettes and vapes
