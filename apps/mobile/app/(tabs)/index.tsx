@@ -1,4 +1,5 @@
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View as RNView } from 'react-native';
+import { View } from '@/components/themes/Themed';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 import { LocationDetailCard } from '@/components/LocationDetailCard';
@@ -12,7 +13,7 @@ import Colors from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Radius } from '@/constants/Radius';
 import { Spacing } from '@/constants/Spacing';
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from '@/services/useColorScheme';
 import { useLocation } from '@/context/LocationContext';
 import { fetchLocations, Location, LocationType } from '@/services/locationsService';
 
@@ -21,7 +22,6 @@ export default function MapScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
   const [showProducts, setShowProducts] = useState(false);
-  const [showProducts, setShowProducts] = useState(false); // Toggle
   const { lat, lng } = useLocation();
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
