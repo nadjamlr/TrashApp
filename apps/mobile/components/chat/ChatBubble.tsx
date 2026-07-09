@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Pressable, StyleSheet, View as DefaultView } from 'react-native';
 
-import { Text } from '@/components/Themed';
+import { Text } from '@/components/themes/Themed';
 import Colors from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Radius } from '@/constants/Radius';

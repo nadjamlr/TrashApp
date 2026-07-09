@@ -1,8 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Platform, Pressable, StyleSheet, TextInput, View as DefaultView } from 'react-native';
 
-import { Icon } from '@/components/Icon';
-import { Text } from '@/components/Themed';
+import { Icon } from '@/components/navbar/Icon';
+import { Text } from '@/components/themes/Themed';
 import Colors from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Radius } from '@/constants/Radius';
