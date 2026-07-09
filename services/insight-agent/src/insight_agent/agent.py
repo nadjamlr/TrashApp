@@ -29,16 +29,16 @@ _CATEGORY_INSTRUCTIONS: dict[str, str] = {
 }
 
 
-def _build_rule_context(label: str, material: str, bin: str) -> str:
+def _build_rule_context(label: str, material: str) -> str:
     rule = find_rule_item(label, material)
     if rule:
         notes = "\n".join(f"- {n}" for n in rule.get("notes", []))
         return (
             f"Gescanntes Objekt: {label} (Material: {material})\n"
-            f"Entsorgung: {rule.get('bin', bin)}\n"
+            f"Entsorgung: {rule.get('bin', 'unbekannt')}\n"
             f"Regeln für diese Kategorie:\n{notes}"
         )
-    return f"Gescanntes Objekt: {label} (Material: {material})\nTonne: {bin}"
+    return f"Gescanntes Objekt: {label} (Material: {material})"
 
 
 async def run_agent(request: InsightRequest) -> InsightResult:
@@ -82,7 +82,7 @@ async def run_agent(request: InsightRequest) -> InsightResult:
     crew = Crew(agents=[agent], tasks=[task], verbose=False)
     result = await crew.kickoff_async(
         inputs={
-            "rule_context": _build_rule_context(request.label, request.material, request.bin),
+            "rule_context": _build_rule_context(request.label, request.material),
             "category_instruction": _CATEGORY_INSTRUCTIONS[category],
         }
     )
