@@ -13,3 +13,5 @@ class RulesResult(BaseModel):
     deposit: str | None = Field(default=None, description="Deposit amount if applicable, e.g. '0.25 EUR'")
     alternatives: list[str] = Field(default_factory=list, description="Alternative disposal options")
     important_notes: list[str] = Field(default_factory=list, description="Additional handling notes")
+    source: str = Field(default="llm", description="Where the classification came from: rules, fallback, llm, or unknown")
+    confidence: float = Field(default=0.7, ge=0.0, le=1.0, description="Classifier confidence from 0.0 to 1.0")
