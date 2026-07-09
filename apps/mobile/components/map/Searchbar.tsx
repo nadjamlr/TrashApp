@@ -7,6 +7,7 @@ import { Colors } from '@/constants/Colors';
 import { Radius } from '@/constants/Radius';
 import { Shadows } from '@/constants/Shadows';
 import { Spacing } from '@/constants/Spacing';
+import { useLanguage } from '@/context/LanguageContext';
 import type { Location } from '@/services/locationsService';
 
 type Props = {
@@ -17,11 +18,10 @@ type Props = {
 export default function Searchbar({ locations = [], onSelectLocation }: Props) {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme];
+    const { t } = useLanguage();
     const inputRef = useRef<TextInput>(null);
     const [query, setQuery] = useState('');
     const [focused, setFocused] = useState(false);
-
-    const TYPE_HINTS = ['Wertstoffhof', 'Wertstoffinsel'];
 
     type Suggestion =
         | { kind: 'hint'; label: string }
@@ -34,9 +34,9 @@ export default function Searchbar({ locations = [], onSelectLocation }: Props) {
                 loc.address.toLowerCase().includes(query.toLowerCase())
             )
             .map(loc => ({ kind: 'location' as const, location: loc }))
-        : TYPE_HINTS
-            .filter(t => t.toLowerCase().includes(query.toLowerCase()))
-            .map(t => ({ kind: 'hint' as const, label: t }));
+        : t.typeHints
+            .filter(hint => hint.toLowerCase().includes(query.toLowerCase()))
+            .map(hint => ({ kind: 'hint' as const, label: hint }));
 
     const showSuggestions = focused && suggestions.length > 0;
 
@@ -50,7 +50,7 @@ export default function Searchbar({ locations = [], onSelectLocation }: Props) {
                 <TextInput
                     ref={inputRef}
                     style={[styles.input, { color: theme.text }]}
-                    placeholder="Standorte suchen..."
+                    placeholder={t.searchPlaceholder}
                     placeholderTextColor={theme.muted}
                     value={query}
                     onChangeText={setQuery}

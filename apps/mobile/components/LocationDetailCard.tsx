@@ -6,15 +6,12 @@ import Colors from '@/constants/Colors';
 import { Radius } from '@/constants/Radius';
 import { Shadows } from '@/constants/Shadows';
 import { Spacing } from '@/constants/Spacing';
-import type { Location, LocationType, OpeningHours } from '@/services/locationsService';
+import type { Location, OpeningHours } from '@/services/locationsService';
 import { useSavedLocations } from '@/context/SavedLocationsContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 const WALKING_SPEED_M_PER_MIN = 70;
 
-const TYPE_LABELS: Record<LocationType, string> = {
-  wertstoffhof: 'Wertstoffhof',
-  wertstoffinsel: 'Wertstoffinsel',
-};
 
 // Index matches Date.getDay(): 0 = Sunday
 const WEEKDAY_KEYS: (keyof OpeningHours)[] = [
@@ -32,14 +29,13 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1).replace('.', ',')} km`;
 }
 
-function formatWalkingTime(meters: number): string {
-  const minutes = Math.max(1, Math.round(meters / WALKING_SPEED_M_PER_MIN));
-  return `${minutes} Min. zu Fuß`;
+function walkingMinutes(meters: number): number {
+  return Math.max(1, Math.round(meters / WALKING_SPEED_M_PER_MIN));
 }
 
-function todayOpeningHours(hours: OpeningHours | null): string {
-  if (!hours) return '24/7';
-  return hours[WEEKDAY_KEYS[new Date().getDay()]] || 'Geschlossen';
+function todayOpeningHours(hours: OpeningHours | null): string | null {
+  if (!hours) return null;
+  return hours[WEEKDAY_KEYS[new Date().getDay()]] || null;
 }
 
 function capitalize(value: string): string {
@@ -67,7 +63,9 @@ export function LocationDetailCard({ location, style }: Props) {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
   const { isSaved, toggleSaved } = useSavedLocations();
+  const { t } = useLanguage();
   const bookmarked = isSaved(location.id);
+  const hoursToday = todayOpeningHours(location.opening_hours);
 
   return (
     <View style={[styles.card, { backgroundColor: theme.background }, style]}>
@@ -81,27 +79,27 @@ export function LocationDetailCard({ location, style }: Props) {
 
       <ThemedText variant="h2">{location.name}</ThemedText>
       <ThemedText variant="c2" colorName="muted">
-        {TYPE_LABELS[location.type]}
+        {t.typeLabels[location.type]}
       </ThemedText>
 
       <View style={styles.rows}>
         <View style={styles.row}>
           <ThemedText variant="p1" style={styles.rowLabel}>
-            Öffnungszeiten:
+            {t.openingHours}
           </ThemedText>
           <ThemedText variant="p2" style={styles.rowValue}>
-            {todayOpeningHours(location.opening_hours)}
+            {hoursToday ?? t.closed}
           </ThemedText>
         </View>
 
         <View style={styles.row}>
           <ThemedText variant="p1" style={styles.rowLabel}>
-            Entfernung:
+            {t.distance}
           </ThemedText>
           <ThemedText variant="p2" style={styles.rowValue}>
             {formatDistance(location.distance_m)}
             {'\n'}
-            {formatWalkingTime(location.distance_m)}
+            {t.walkingTime(walkingMinutes(location.distance_m))}
           </ThemedText>
         </View>
       </View>
@@ -112,7 +110,7 @@ export function LocationDetailCard({ location, style }: Props) {
           onPress={() => openRoute(location.lat, location.lng)}
         >
           <ThemedText variant="p1" colorName="background">
-            Route
+            {t.route}
           </ThemedText>
         </Pressable>
 

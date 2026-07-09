@@ -30,6 +30,21 @@ const translations = {
     languageDetails: 'App-Sprache auswählen',
     darkMode: 'Dunkelmodus',
     darkModeDetails: 'Hell- oder Dunkeldesign wählen',
+    // Map
+    filterWertstoffhoefe: 'Wertstoffhöfe',
+    filterWertstoffinseln: 'Wertstoffinseln',
+    filterMaterial: 'Material',
+    filterMaterialActive: (n: number) => `Material (${n})`,
+    filterMaterialTitle: 'Material filtern',
+    searchPlaceholder: 'Standorte suchen...',
+    typeHints: ['Wertstoffhof', 'Wertstoffinsel'],
+    // LocationDetailCard
+    typeLabels: { wertstoffhof: 'Wertstoffhof', wertstoffinsel: 'Wertstoffinsel' },
+    openingHours: 'Öffnungszeiten:',
+    distance: 'Entfernung:',
+    walkingTime: (min: number) => `${min} Min. zu Fuß`,
+    closed: 'Geschlossen',
+    route: 'Route',
   },
   en: {
     profile: 'Profile',
@@ -54,6 +69,21 @@ const translations = {
     languageDetails: 'Choose the language for the app',
     darkMode: 'Dark Mode',
     darkModeDetails: 'Choose dark or light mode',
+    // Map
+    filterWertstoffhoefe: 'Recycling Centers',
+    filterWertstoffinseln: 'Recycling Islands',
+    filterMaterial: 'Material',
+    filterMaterialActive: (n: number) => `Material (${n})`,
+    filterMaterialTitle: 'Filter by material',
+    searchPlaceholder: 'Search locations...',
+    typeHints: ['Recycling Center', 'Recycling Island'],
+    // LocationDetailCard
+    typeLabels: { wertstoffhof: 'Recycling Center', wertstoffinsel: 'Recycling Island' },
+    openingHours: 'Opening hours:',
+    distance: 'Distance:',
+    walkingTime: (min: number) => `${min} min walk`,
+    closed: 'Closed',
+    route: 'Route',
   },
 } as const;
 
@@ -80,6 +110,19 @@ export type Translations = {
   languageDetails: string;
   darkMode: string;
   darkModeDetails: string;
+  filterWertstoffhoefe: string;
+  filterWertstoffinseln: string;
+  filterMaterial: string;
+  filterMaterialActive: (n: number) => string;
+  filterMaterialTitle: string;
+  searchPlaceholder: string;
+  typeHints: readonly string[];
+  typeLabels: { wertstoffhof: string; wertstoffinsel: string };
+  openingHours: string;
+  distance: string;
+  walkingTime: (min: number) => string;
+  closed: string;
+  route: string;
 };
 
 type LanguageContextType = {
