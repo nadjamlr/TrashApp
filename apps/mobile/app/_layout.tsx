@@ -10,6 +10,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { AppThemeProvider } from '@/context/ThemeContext';
 import { LocationProvider } from '@/context/LocationContext';
 import { UserProvider, useUser } from '@/context/UserContext';
+import { SavedLocationsProvider } from '@/context/SavedLocationsContext';
 import { Colors } from '@/constants/Colors';
 
 export {
@@ -50,7 +51,9 @@ export default function RootLayout() {
     <AppThemeProvider>
       <LocationProvider>
         <UserProvider>
-          <RootLayoutNav />
+          <SavedLocationsProvider>
+            <RootLayoutNav />
+          </SavedLocationsProvider>
         </UserProvider>
       </LocationProvider>
     </AppThemeProvider>

@@ -112,7 +112,7 @@ export default function MapScreen() {
         </View>
 
         <View style={styles.topContainer} pointerEvents="box-none">
-          <Searchbar />
+          <Searchbar locations={locations} onSelectLocation={setSelectedLocation} />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}

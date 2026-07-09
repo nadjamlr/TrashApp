@@ -1,15 +1,22 @@
-import { ScrollView, StyleSheet } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View as RNView } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { SettingsRow } from '@/components/SettingsRow';
 import { SettingsSection } from '@/components/SettingsSection';
 import { useAppTheme } from '@/context/ThemeContext';
+import { useSavedLocations } from '@/context/SavedLocationsContext';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
+import { useState } from 'react';
+
+const MAX_VISIBLE = 3;
 
 export default function SettingsScreen() {
   const { colorScheme, setColorScheme } = useAppTheme();
   const isDark = colorScheme === 'dark';
   const theme = Colors[colorScheme];
+  const { savedLocations } = useSavedLocations();
+  const [showAll, setShowAll] = useState(false);
+  const visibleLocations = showAll ? savedLocations : savedLocations.slice(0, MAX_VISIBLE);
 
   return (
     <ScrollView
@@ -25,6 +32,33 @@ export default function SettingsScreen() {
             details={["name", "address", "email", "phone", "username"]}
             href="/settings/personal-info"
           />
+        </SettingsSection>
+
+        <SettingsSection heading="Saved Locations">
+          {savedLocations.length === 0
+            ? <Text variant="p1" style={{ color: theme.muted }}>Keine gespeicherten Standorte</Text>
+            : <RNView style={[styles.savedBox, { backgroundColor: theme.surface }]}>
+                {visibleLocations.map((loc, index) => (
+                  <RNView key={loc.id}>
+                    {index > 0 && <RNView style={[styles.separator, { backgroundColor: theme.separator }]} />}
+                    <RNView style={styles.savedItem}>
+                      <Text variant="p2" style={{ color: theme.text }}>{loc.name}</Text>
+                      {loc.address ? <Text variant="c2" style={{ color: theme.muted }}>{loc.address}</Text> : null}
+                    </RNView>
+                  </RNView>
+                ))}
+                {savedLocations.length > MAX_VISIBLE && (
+                  <RNView>
+                    <RNView style={[styles.separator, { backgroundColor: theme.separator }]} />
+                    <Pressable style={styles.savedItem} onPress={() => setShowAll(prev => !prev)}>
+                      <Text variant="c1" style={{ color: theme.muted }}>
+                        {showAll ? 'Weniger anzeigen' : `${savedLocations.length - MAX_VISIBLE} weitere anzeigen`}
+                      </Text>
+                    </Pressable>
+                  </RNView>
+                )}
+              </RNView>
+          }
         </SettingsSection>
 
         <SettingsSection heading="Collection">
@@ -80,5 +114,18 @@ const styles = StyleSheet.create({
   topics: {
     flexDirection: 'column',
     backgroundColor: 'transparent',
+  },
+  savedBox: {
+    borderRadius: Spacing.sm,
+    overflow: 'hidden',
+  },
+  savedItem: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    gap: 2,
+  },
+  separator: {
+    height: StyleSheet.hairlineWidth,
+    marginHorizontal: Spacing.md,
   },
 });

@@ -7,26 +7,36 @@ import { Colors } from '@/constants/Colors';
 import { Radius } from '@/constants/Radius';
 import { Shadows } from '@/constants/Shadows';
 import { Spacing } from '@/constants/Spacing';
+import type { Location } from '@/services/locationsService';
 
-const MOCK_SUGGESTIONS = [
-    'Wertstoffinsel',
-    'Glascontainer',
-    'Papiercontainer',
-    'Pfandautomat',
-    'Plastikcontainer'
-    
-];
+type Props = {
+    locations?: Location[];
+    onSelectLocation?: (location: Location) => void;
+};
 
-export default function Searchbar() {
+export default function Searchbar({ locations = [], onSelectLocation }: Props) {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme];
     const inputRef = useRef<TextInput>(null);
     const [query, setQuery] = useState('');
     const [focused, setFocused] = useState(false);
 
-    const suggestions = query.length > 0
-        ? MOCK_SUGGESTIONS.filter(s => s.toLowerCase().includes(query.toLowerCase()))
-        : MOCK_SUGGESTIONS;
+    const TYPE_HINTS = ['Wertstoffhof', 'Wertstoffinsel'];
+
+    type Suggestion =
+        | { kind: 'hint'; label: string }
+        | { kind: 'location'; location: Location };
+
+    const suggestions: Suggestion[] = query.length > 1
+        ? locations
+            .filter(loc =>
+                loc.name.toLowerCase().includes(query.toLowerCase()) ||
+                loc.address.toLowerCase().includes(query.toLowerCase())
+            )
+            .map(loc => ({ kind: 'location' as const, location: loc }))
+        : TYPE_HINTS
+            .filter(t => t.toLowerCase().includes(query.toLowerCase()))
+            .map(t => ({ kind: 'hint' as const, label: t }));
 
     const showSuggestions = focused && suggestions.length > 0;
 
@@ -40,7 +50,7 @@ export default function Searchbar() {
                 <TextInput
                     ref={inputRef}
                     style={[styles.input, { color: theme.text }]}
-                    placeholder="Search for locations.."
+                    placeholder="Standorte suchen..."
                     placeholderTextColor={theme.muted}
                     value={query}
                     onChangeText={setQuery}
@@ -58,18 +68,35 @@ export default function Searchbar() {
                 <View style={[styles.suggestionList, { backgroundColor: theme.background, shadowColor: theme.text }]}>
                     {suggestions.map((item, index) => (
                         <Pressable
-                            key={item}
+                            key={item.kind === 'location' ? item.location.id : item.label}
                             onPress={() => {
-                                setQuery(item);
-                                inputRef.current?.blur();
+                                if (item.kind === 'hint') {
+                                    setQuery(item.label);
+                                    inputRef.current?.focus();
+                                } else {
+                                    setQuery(item.location.name);
+                                    inputRef.current?.blur();
+                                    onSelectLocation?.(item.location);
+                                }
                             }}
                             style={[
                                 styles.suggestionItem,
                                 index < suggestions.length - 1 && { borderBottomWidth: 1, borderBottomColor: theme.separator },
                             ]}
                         >
-                            <Feather name="map-pin" size={14} color={theme.muted} />
-                            <Text variant="p2" style={{ color: theme.text }}>{item}</Text>
+                            <Feather
+                                name={item.kind === 'hint' ? 'search' : 'map-pin'}
+                                size={14}
+                                color={theme.muted}
+                            />
+                            <View style={styles.suggestionText}>
+                                <Text variant="p2" style={{ color: theme.text }}>
+                                    {item.kind === 'hint' ? item.label : item.location.name}
+                                </Text>
+                                {item.kind === 'location' && item.location.address
+                                    ? <Text variant="c2" style={{ color: theme.muted }}>{item.location.address}</Text>
+                                    : null}
+                            </View>
                         </Pressable>
                     ))}
                 </View>
@@ -106,5 +133,9 @@ const styles = StyleSheet.create({
         gap: Spacing.sm,
         paddingHorizontal: Spacing.md,
         paddingVertical: Spacing.sm + 2,
+    },
+    suggestionText: {
+        flex: 1,
+        gap: 2,
     },
 });

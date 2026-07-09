@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Linking, Platform, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Icon } from './Icon';
 import { ThemedText } from './ThemedText';
 import { useColorScheme } from './useColorScheme';
@@ -8,6 +8,7 @@ import { Radius } from '@/constants/Radius';
 import { Shadows } from '@/constants/Shadows';
 import { Spacing } from '@/constants/Spacing';
 import type { Location, LocationType, OpeningHours } from '@/services/locationsService';
+import { useSavedLocations } from '@/context/SavedLocationsContext';
 
 const WALKING_SPEED_M_PER_MIN = 70;
 
@@ -66,7 +67,8 @@ type Props = {
 export function LocationDetailCard({ location, style }: Props) {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
-  const [bookmarked, setBookmarked] = useState(false);
+  const { isSaved, toggleSaved } = useSavedLocations();
+  const bookmarked = isSaved(location.id);
 
   return (
     <View style={[styles.card, { backgroundColor: theme.background }, style]}>
@@ -117,9 +119,13 @@ export function LocationDetailCard({ location, style }: Props) {
 
         <Pressable
           style={({ pressed }) => [styles.bookmarkButton, { backgroundColor: theme.text, opacity: pressed ? 0.8 : 1 }]}
-          onPress={() => setBookmarked((prev) => !prev)}
+          onPress={() => toggleSaved(location)}
         >
-          <Icon name="bookmark" size={20} colorName="background" style={bookmarked ? { opacity: 0.5 } : undefined} />
+          <Ionicons
+            name={bookmarked ? 'bookmark' : 'bookmark-outline'}
+            size={20}
+            color={theme.background}
+          />
         </Pressable>
       </View>
     </View>
