@@ -7,9 +7,10 @@ from rules_agent.main import app
 from rules_agent.schemas import RulesRequest
 
 
-client = TestClient(app)
+client = TestClient(app) # Test HTTP Client
 
 
+# Test Health Statuscode - Ist Service erreichbar?
 def test_health_returns_ok() -> None:
     response = client.get("/health")
 
@@ -17,6 +18,7 @@ def test_health_returns_ok() -> None:
     assert response.json() == {"status": "ok", "service": "rules-agent"}
 
 
+# Test runagent gibt YAML-Treffer zuerst zurück
 def test_run_agent_returns_direct_rule_match_before_llm(monkeypatch) -> None:
     monkeypatch.setattr(
         "rules_agent.agent.find_rule_item",
@@ -40,6 +42,7 @@ def test_run_agent_returns_direct_rule_match_before_llm(monkeypatch) -> None:
     assert "Retail take-back" in result.alternatives[0]
 
 
+# regex fallback test vor llm
 def test_run_agent_returns_common_fallback_before_llm(monkeypatch) -> None:
     monkeypatch.setattr("rules_agent.agent.find_rule_item", lambda label, material: None)
 
@@ -53,26 +56,34 @@ def test_run_agent_returns_common_fallback_before_llm(monkeypatch) -> None:
     assert "plastic packaging" in result.reasoning
 
 
-def test_run_agent_returns_organic_fallback_for_cucumber_without_llm(monkeypatch) -> None:
+# regex test: kontexterkennung
+def test_run_agent_returns_fallback_for_broken_glass(monkeypatch) -> None:
     monkeypatch.setattr("rules_agent.agent.find_rule_item", lambda label, material: None)
 
     result = asyncio.run(
-        run_agent(RulesRequest(label="Where do cucumber slices go?", material="", city="munich"))
+        run_agent(RulesRequest(label="broken glass", material="", city="munich"))
     )
 
-    assert result.bin == "Biotonne"
+    assert result.bin == "Restmuelltonne or Wertstoffhof"
     assert result.source == "fallback"
     assert result.confidence == 0.85
-    assert "organic kitchen waste" in result.reasoning
 
 
-def test_run_agent_returns_fast_unknown_without_llm(monkeypatch) -> None:
+# unknown rückgabe bei rest
+def test_run_agent_returns_unknown_when_llm_fails(monkeypatch) -> None:
     monkeypatch.setattr("rules_agent.agent.find_rule_item", lambda label, material: None)
 
-    def fail_if_llm_is_built(*args, **kwargs):
-        raise AssertionError("Ollama/Crew should not run for unknown deterministic misses")
+    class FakeResult:
+        pydantic = None
 
-    monkeypatch.setattr("rules_agent.agent.LLM", fail_if_llm_is_built)
+    class FakeCrew:
+        async def kickoff_async(self, inputs):
+            return FakeResult()
+
+    monkeypatch.setattr("rules_agent.agent.LLM", lambda **kwargs: None)
+    monkeypatch.setattr("rules_agent.agent.Agent", lambda **kwargs: None)
+    monkeypatch.setattr("rules_agent.agent.Task", lambda **kwargs: None)
+    monkeypatch.setattr("rules_agent.agent.Crew", lambda agents, tasks, verbose: FakeCrew())
 
     result = asyncio.run(
         run_agent(RulesRequest(label="mystery blob", material="", city="munich"))
@@ -84,16 +95,17 @@ def test_run_agent_returns_fast_unknown_without_llm(monkeypatch) -> None:
     assert "clarify the material" in result.reasoning
 
 
+# test zusammenspiel main, agent, etc.
 def test_classify_endpoint_returns_fallback_result(monkeypatch) -> None:
     monkeypatch.setattr("rules_agent.agent.find_rule_item", lambda label, material: None)
 
     response = client.post(
         "/rules/classify",
-        json={"label": "Where do LED bulbs go?", "material": "", "city": "munich"},
+        json={"label": "pizza box", "material": "cardboard", "city": "munich"},
     )
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["bin"] == "Wertstoffhof"
+    assert payload["bin"] == "Papiertonne or Restmuelltonne"
     assert payload["source"] == "fallback"
     assert payload["confidence"] == 0.85
