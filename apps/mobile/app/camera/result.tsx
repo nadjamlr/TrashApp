@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from '@/services/useColorScheme';
 import { ResultCard } from '@/components/camera/ResultCard';
 import { FactCard } from '@/components/camera/FactCard';
 import Colors from '@/constants/Colors';

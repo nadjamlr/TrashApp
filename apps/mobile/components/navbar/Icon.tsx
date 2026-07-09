@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 import Colors, { ThemeColorName } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 
-import { useColorScheme } from './useColorScheme';
+import { useColorScheme } from '../../services/useColorScheme';
 
 type IconProps = Omit<ComponentProps<typeof Feather>, 'color'> & {
   color?: string;

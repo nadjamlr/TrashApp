@@ -4,7 +4,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import type { CameraView as CameraViewType } from 'expo-camera';
 import { useRouter } from 'expo-router';
 
-import { useColorScheme } from '@/components/useColorScheme';
+import { useColorScheme } from '@/services/useColorScheme';
 import { ScanOverlay } from '@/components/camera/ScanOverlay';
 import Colors from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';

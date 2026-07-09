@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Icon } from '@/components/Icon';
-import { Text, View } from '@/components/Themed';
+import { Icon } from '@/components/navbar/Icon';
+import { Text, View } from '@/components/themes/Themed';
 import Colors from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
 import { Radius } from '@/constants/Radius';

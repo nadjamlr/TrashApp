@@ -18,7 +18,7 @@ export const LocationContext = createContext<LocationContextType>({
   error: null,
 });
 
-export function LocationProvider({ children }: { children: ReactNode }) {
+export function LocationProvider({ children }: { children: ReactNode }) { // State
   const [lat, setLat] = useState(MUNICH_FALLBACK.lat);
   const [lng, setLng] = useState(MUNICH_FALLBACK.lng);
   const [address, setAddress] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
       setLat(latitude);
       setLng(longitude);
 
-      const [result] = await Location.reverseGeocodeAsync({ latitude, longitude });
+      const [result] = await Location.reverseGeocodeAsync({ latitude, longitude }); // nutzt Apple Maps oder Google Maps
       if (result) {
         const parts = [result.street, result.streetNumber, result.city].filter(Boolean);
         setAddress(parts.join(' '));
@@ -47,7 +47,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
       setLoading(false);
     })();
-  }, []);
+  }, []); // läuft nur einmal beim Start der App ab
 
   return (
     <LocationContext.Provider value={{ lat, lng, address, loading, error }}>
@@ -56,6 +56,6 @@ export function LocationProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useLocation() {
+export function useLocation() { // Hook
   return useContext(LocationContext);
 }

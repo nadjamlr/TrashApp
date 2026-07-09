@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { Text } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Text } from '@/components/themes/Themed';
+import { useColorScheme } from '@/services/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Radius } from '@/constants/Radius';
 import { Shadows } from '@/constants/Shadows';
@@ -14,7 +14,6 @@ const MOCK_SUGGESTIONS = [
     'Papiercontainer',
     'Pfandautomat',
     'Plastikcontainer'
-    
 ];
 
 export default function Searchbar() {

@@ -1,5 +1,3 @@
-from fastapi import HTTPException, status
-
 from trashapp_shared.fastapi_app import create_app
 from rules_agent.schemas import RulesRequest, RulesResult
 from rules_agent.agent import run_agent

@@ -13,8 +13,8 @@ async def run_agent(request: RulesRequest) -> RulesResult:
         goal="Classify items into the correct Munich disposal bin based on the provided rules.",
         backstory="An expert in Munich waste disposal rules who knows exactly which bin every material belongs in, including deposit information and handling notes.",
         llm=llm,
-        verbose=False,
-    )
+        verbose=False,  # Keine Ausgaben im Terminal
+    ) 
 
     task = Task(
         description=(

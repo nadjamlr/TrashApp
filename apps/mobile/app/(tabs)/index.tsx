@@ -1,11 +1,11 @@
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Abstände zur StatusBAr und HomeIndicator
 import { useState } from 'react';
 import MapView from 'react-native-maps';
-import Searchbar from '@/components/Searchbar';
-import Filter from '@/components/Filter';
-import { View } from '@/components/Themed';
-import { ThemedText } from '@/components/ThemedText';
+import Searchbar from '@/components/map/Searchbar';
+import Filter from '@/components/map/Filter';
+import { View } from '@/components/themes/Themed';
+import { ThemedText } from '@/components/themes/ThemedText';
 import { Toggle } from '@/components/Toggle';
 import { Layout } from '@/constants/Layout';
 import { Spacing } from '@/constants/Spacing';
@@ -13,7 +13,7 @@ import { useLocation } from '@/context/LocationContext';
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
-  const [showProducts, setShowProducts] = useState(false);
+  const [showProducts, setShowProducts] = useState(false); // Toggle
   const { lat, lng } = useLocation();
 
   return (
@@ -23,7 +23,7 @@ export default function MapScreen() {
         region={{
           latitude: lat,
           longitude: lng,
-          latitudeDelta: 0.05,
+          latitudeDelta: 0.05, // ca. 3km Radius
           longitudeDelta: 0.05,
         }}
         showsUserLocation
@@ -31,7 +31,7 @@ export default function MapScreen() {
 
       <Pressable style={StyleSheet.absoluteFill} onPress={Keyboard.dismiss} />
 
-      <KeyboardAvoidingView
+      <KeyboardAvoidingView // Overlay
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? Layout.keyboardVerticalOffset : 0}
         style={styles.overlay}

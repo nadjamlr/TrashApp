@@ -1,11 +1,11 @@
 import { Pressable, StyleSheet } from 'react-native';
 import { useState } from 'react';
-import { Text } from '@/components/Themed';
-import { useColorScheme } from '@/components/useColorScheme';
+import { Text } from '@/components/themes/Themed';
+import { useColorScheme } from '@/services/useColorScheme';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
 import { Radius } from '@/constants/Radius';
-import FilterOverlay from '@/components/FilterOverlay';
+import FilterOverlay from '@/components/map/FilterOverlay';
 
 type FilterProps = {
     label: string;
