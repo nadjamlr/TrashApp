@@ -14,6 +14,7 @@ import { Radius } from '@/constants/Radius';
 import { Spacing } from '@/constants/Spacing';
 import { useColorScheme } from '@/services/useColorScheme';
 import { useLocation } from '@/context/LocationContext';
+import { useLanguage } from '@/context/LanguageContext';
 import { fetchLocations, Location, LocationType } from '@/services/locationsService';
 
 export default function MapScreen() {
@@ -26,6 +27,7 @@ export default function MapScreen() {
   const [selectedTypes, setSelectedTypes] = useState<Set<LocationType>>(new Set());
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
   const markerTappedRef = useRef(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     fetchLocations({ lat, lng })
@@ -108,19 +110,19 @@ export default function MapScreen() {
             contentContainerStyle={styles.filters}
           >
             <Filter
-              label="Wertstoffhöfe"
+              label={t.filterWertstoffhoefe}
               isActive={selectedTypes.has('wertstoffhof')}
               onPress={() => toggleType('wertstoffhof')}
             />
             <Filter
-              label="Wertstoffinseln"
+              label={t.filterWertstoffinseln}
               isActive={selectedTypes.has('wertstoffinsel')}
               onPress={() => toggleType('wertstoffinsel')}
             />
             <Filter
-              label={selectedMaterials.size > 0 ? `Material (${selectedMaterials.size})` : 'Material'}
+              label={selectedMaterials.size > 0 ? t.filterMaterialActive(selectedMaterials.size) : t.filterMaterial}
               isActive={selectedMaterials.size > 0}
-              overlayTitle="Material filtern"
+              overlayTitle={t.filterMaterialTitle}
             >
               <RNView style={styles.materialChips}>
                 {allMaterials.map(mat => (

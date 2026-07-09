@@ -11,6 +11,7 @@ import { AppThemeProvider } from '@/context/ThemeContext';
 import { LocationProvider } from '@/context/LocationContext';
 import { UserProvider, useUser } from '@/context/UserContext';
 import { SavedLocationsProvider } from '@/context/SavedLocationsContext';
+import { LanguageProvider } from '@/context/LanguageContext';
 import { Colors } from '@/constants/Colors';
 
 export {
@@ -49,13 +50,15 @@ export default function RootLayout() {
 
   return (
     <AppThemeProvider>
-      <LocationProvider>
-        <UserProvider>
-          <SavedLocationsProvider>
-            <RootLayoutNav />
-          </SavedLocationsProvider>
-        </UserProvider>
-      </LocationProvider>
+      <LanguageProvider>
+        <LocationProvider>
+          <UserProvider>
+            <SavedLocationsProvider>
+              <RootLayoutNav />
+            </SavedLocationsProvider>
+          </UserProvider>
+        </LocationProvider>
+      </LanguageProvider>
     </AppThemeProvider>
   );
 }
