@@ -13,11 +13,11 @@ def _build_rule_context(label: str, material: str, bin: str) -> str:
     if rule:
         notes = "\n".join(f"- {n}" for n in rule.get("notes", []))
         return (
-            f"Name: {rule.get('name', label)}\n"
-            f"Tonne: {rule.get('bin', bin)}\n"
-            f"Hinweise:\n{notes}"
+            f"Gescanntes Objekt: {label} (Material: {material})\n"
+            f"Entsorgung: {rule.get('bin', bin)}\n"
+            f"Regeln für diese Kategorie:\n{notes}"
         )
-    return f"Label: {label}\nMaterial: {material}\nTonne: {bin}"
+    return f"Gescanntes Objekt: {label} (Material: {material})\nTonne: {bin}"
 
 
 async def run_agent(request: InsightRequest) -> InsightResult:
@@ -42,8 +42,9 @@ async def run_agent(request: InsightRequest) -> InsightResult:
     task = Task(
         description=(
             "WICHTIG: Antworte ausschließlich auf DEUTSCH.\n\n"
-            "Verwende NUR die untenstehenden Münchener Abfallregeln als Grundlage.\n"
-            "Generiere genau einen einzigen deutschen Satz, der spezifisch für das Material und die Tonne des gescannten Gegenstands ist.\n"
+            "Verwende NUR die untenstehenden Regelinformationen als Grundlage.\n"
+            "Generiere genau einen einzigen deutschen Satz, der DIREKT über das gescannte Objekt handelt.\n"
+            "Der Satz muss das gescannte Objekt namentlich erwähnen und konkret auf seine Entsorgung eingehen.\n"
             "Der Satz muss kurz, kontextbezogen und nicht generisch sein (vermeide allgemeine Recycling-Floskeln).\n"
             "Wähle genau eine Kategorie aus diesen drei Werten: Myth, Impact, Future.\n"
             "Kategoriebedeutungen:\n"
