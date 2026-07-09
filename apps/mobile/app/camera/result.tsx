@@ -22,12 +22,18 @@ export default function ResultScreen() {
 
   const [rules, setRules] = useState<RulesResult | null>(null);
   const [insight, setInsight] = useState<InsightResult | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState(false);
 
   useEffect(() => {
     if (!label || !material) return;
     classifyItem(label, material).then((r) => {
       setRules(r);
-      generateInsight(label, material, r.bin).then(setInsight);
+      setInsightLoading(true);
+      generateInsight(label, material, r.bin)
+        .then(setInsight)
+        .catch(() => setInsightError(true))
+        .finally(() => setInsightLoading(false));
     });
   }, [label, material]);
 
@@ -52,11 +58,13 @@ export default function ResultScreen() {
         onShowOnMap={() => router.push('/(tabs)/')}
         onAskMore={() => router.push('/(tabs)/chatbot')}
       />
-      {insight && (
-        <View style={styles.factWrapper}>
-          <FactCard fact={insight.fact} />
-        </View>
-      )}
+      <View style={styles.factWrapper}>
+        <FactCard
+          fact={insight?.fact ?? null}
+          loading={insightLoading}
+          error={insightError}
+        />
+      </View>
     </ScrollView>
   );
 }
