@@ -1,8 +1,8 @@
 import { Linking, Platform, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Icon } from './Icon';
-import { ThemedText } from './ThemedText';
-import { useColorScheme } from './useColorScheme';
+import { Icon } from './navbar/Icon';
+import { ThemedText } from './themes/ThemedText';
+import { useColorScheme } from '../services/useColorScheme';
 import Colors from '@/constants/Colors';
 import { Radius } from '@/constants/Radius';
 import { Shadows } from '@/constants/Shadows';
