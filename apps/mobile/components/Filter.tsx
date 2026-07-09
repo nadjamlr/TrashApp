@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Text } from '@/components/Themed';
 import { useColorScheme } from '@/components/useColorScheme';
 import { Colors } from '@/constants/Colors';
@@ -21,6 +21,8 @@ export default function Filter({ label, isActive = false, onPress, overlayTitle,
     const theme = Colors[colorScheme];
     const [active, setActive] = useState(isActive);
     const [overlayVisible, setOverlayVisible] = useState(false);
+
+    useEffect(() => { setActive(isActive); }, [isActive]);
 
     function handlePress() {
         if (children) {

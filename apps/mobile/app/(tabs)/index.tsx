@@ -1,6 +1,6 @@
-import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View as RNView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 import Searchbar from '@/components/Searchbar';
 import Filter from '@/components/Filter';
@@ -9,17 +9,24 @@ import { LocationMarker } from '@/components/LocationMarker';
 import { View } from '@/components/Themed';
 import { ThemedText } from '@/components/ThemedText';
 import { Toggle } from '@/components/Toggle';
+import Colors from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
+import { Radius } from '@/constants/Radius';
 import { Spacing } from '@/constants/Spacing';
+import { useColorScheme } from '@/components/useColorScheme';
 import { useLocation } from '@/context/LocationContext';
-import { fetchLocations, Location } from '@/services/locationsService';
+import { fetchLocations, Location, LocationType } from '@/services/locationsService';
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
+  const colorScheme = useColorScheme() ?? 'light';
+  const theme = Colors[colorScheme];
   const [showProducts, setShowProducts] = useState(false);
   const { lat, lng } = useLocation();
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState<Set<LocationType>>(new Set());
+  const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
   const markerTappedRef = useRef(false);
 
   useEffect(() => {
@@ -27,6 +34,34 @@ export default function MapScreen() {
       .then(setLocations)
       .catch((e) => console.error('[Locations] Fehler:', e.message));
   }, [lat, lng]);
+
+  const allMaterials = useMemo(() => {
+    const seen = new Set<string>();
+    locations.forEach(loc => loc.materials.forEach(m => seen.add(m)));
+    return Array.from(seen).sort();
+  }, [locations]);
+
+  const filteredLocations = useMemo(() => locations.filter(loc => {
+    if (selectedTypes.size > 0 && !selectedTypes.has(loc.type)) return false;
+    if (selectedMaterials.size > 0 && !loc.materials.some(m => selectedMaterials.has(m))) return false;
+    return true;
+  }), [locations, selectedTypes, selectedMaterials]);
+
+  function toggleType(type: LocationType) {
+    setSelectedTypes(prev => {
+      const next = new Set(prev);
+      next.has(type) ? next.delete(type) : next.add(type);
+      return next;
+    });
+  }
+
+  function toggleMaterial(mat: string) {
+    setSelectedMaterials(prev => {
+      const next = new Set(prev);
+      next.has(mat) ? next.delete(mat) : next.add(mat);
+      return next;
+    });
+  }
 
   return (
     <View style={styles.container} lightColor="transparent" darkColor="transparent">
@@ -45,7 +80,7 @@ export default function MapScreen() {
           setSelectedLocation(null);
         }}
       >
-        {locations.map((loc) => {
+        {filteredLocations.map((loc) => {
           const isSelected = selectedLocation?.id === loc.id;
           return (
             <Marker
@@ -77,17 +112,43 @@ export default function MapScreen() {
         </View>
 
         <View style={styles.topContainer} pointerEvents="box-none">
-          <Searchbar />
+          <Searchbar locations={locations} onSelectLocation={setSelectedLocation} />
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={styles.filtersScroll}
             contentContainerStyle={styles.filters}
           >
-            <Filter label="Distance" />
-            <Filter label="Opening hours" />
-            <Filter label="Materials" />
-            <Filter label="Saved" />
+            <Filter
+              label="Wertstoffhöfe"
+              isActive={selectedTypes.has('wertstoffhof')}
+              onPress={() => toggleType('wertstoffhof')}
+            />
+            <Filter
+              label="Wertstoffinseln"
+              isActive={selectedTypes.has('wertstoffinsel')}
+              onPress={() => toggleType('wertstoffinsel')}
+            />
+            <Filter
+              label={selectedMaterials.size > 0 ? `Material (${selectedMaterials.size})` : 'Material'}
+              isActive={selectedMaterials.size > 0}
+              overlayTitle="Material filtern"
+            >
+              <RNView style={styles.materialChips}>
+                {allMaterials.map(mat => (
+                  <Pressable
+                    key={mat}
+                    onPress={() => toggleMaterial(mat)}
+                    style={[
+                      styles.materialChip,
+                      { backgroundColor: selectedMaterials.has(mat) ? theme.primary : theme.surface },
+                    ]}
+                  >
+                    <ThemedText variant="c1">{mat}</ThemedText>
+                  </Pressable>
+                ))}
+              </RNView>
+            </Filter>
           </ScrollView>
         </View>
       </KeyboardAvoidingView>
@@ -139,5 +200,15 @@ const styles = StyleSheet.create({
     left: Spacing.md,
     right: Spacing.md,
     bottom: TAB_BAR_OFFSET + Spacing.md,
+  },
+  materialChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  materialChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: Radius.sm,
   },
 });
