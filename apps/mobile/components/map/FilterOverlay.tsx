@@ -46,7 +46,7 @@ export default function FilterOverlay({ visible, title, onClose, onApply, childr
                     onPress={onApply}
                 >
                     <Text variant="p1" style={{ color: theme.background }}>
-                        Apply
+                        Anwenden
                     </Text>
                 </Pressable>
             </View>
