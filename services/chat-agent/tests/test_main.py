@@ -220,7 +220,8 @@ def test_polish_prompt_preserves_facts_and_requires_explanation() -> None:
     assert "editing and translation task" in prompt
     assert "Include a short explanation" in prompt
     assert "Never mix languages" in prompt
-    assert "Answer in German" in prompt
+    assert "same language as the user's most recent message" in prompt
+    assert "fall back to German" in prompt
     assert "Biotonne" in prompt
     assert "Fruit and vegetable scraps are organic kitchen waste." in prompt
 
@@ -230,9 +231,9 @@ def test_polish_system_prompt_requires_translation_without_reclassification() ->
 
     assert "Do not classify the item again" in prompt
     assert "Do not change the bin" in prompt
-    assert "Translate all source facts" in prompt
     assert "Never mix languages" in prompt
-    assert "Answer in German" in prompt
+    assert "SAME" in prompt and "user's most recent message" in prompt
+    assert "fall back to German" in prompt
 
 
 def test_polish_messages_use_system_prompt() -> None:
@@ -588,6 +589,7 @@ def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) ->
     monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
     monkeypatch.setattr("chat_agent.retrieval.load_rules", lambda: {"items": [], "deposit_rules": {}})
+    monkeypatch.setattr("chat_agent.agent.settings.groq_api_key", "")
 
     with caplog.at_level(logging.WARNING, logger="chat_agent.agent"):
         response = asyncio.run(ask_waste_question("Where do I throw away a mystery blob?", []))

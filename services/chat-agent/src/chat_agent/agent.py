@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import re
 
 import httpx
 
@@ -13,15 +14,83 @@ from chat_agent.prompts import (
     _build_polish_prompt,
     _build_polish_system_prompt,
     _build_prompt,
+    _build_smalltalk_messages,
 )
 from chat_agent.retrieval import _direct_rule_response, _relevant_rules_text
 from chat_agent.schemas import ChatResponse, ConversationMessage
 
 logger = logging.getLogger(__name__)
 
+RULES_AGENT_TIMEOUT_SECONDS = 180.0
+
+APOSTROPHE_CHARS = "'’‘ʼ`´"
+
+GREETING_KIND_HELLO = "hello"
+GREETING_KIND_THANKS = "thanks"
+GREETING_KIND_BYE = "bye"
+GREETING_KIND_HOW_ARE_YOU = "how_are_you"
+GREETING_KIND_WHO_ARE_YOU = "who_are_you"
+
+GREETING_PATTERNS = (
+    (
+        GREETING_KIND_HELLO,
+        r"^\s*(hi|hello|hey|hallo|hej|halloechen|hallöchen|servus|moin|gruezi|grüezi|"
+        r"guten\s+(tag|morgen|abend)|good\s+(morning|afternoon|evening))"
+        r"(\s+(there|everyone|guys|folks|all|leute))?[\s!.?]*$",
+    ),
+    (
+        GREETING_KIND_THANKS,
+        r"^\s*(thanks|thank\s+you|thx|danke|dankeschoen|dankeschön|vielen\s+dank)[\s!.?]*$",
+    ),
+    (
+        GREETING_KIND_BYE,
+        r"^\s*(bye|tschuess|tschüss|ciao|auf\s+wiedersehen|goodbye|see\s+you)[\s!.?]*$",
+    ),
+    (
+        GREETING_KIND_HOW_ARE_YOU,
+        r"^\s*(how\s+are\s+you|how["
+        + APOSTROPHE_CHARS
+        + r"]s\s+it\s+going|"
+        r"wie\s+geht["
+        + APOSTROPHE_CHARS
+        + r"]?s|wie\s+geht\s+es(\s+dir)?|wie\s+gehts)[\s!.?]*$",
+    ),
+    (
+        GREETING_KIND_WHO_ARE_YOU,
+        r"^\s*(who\s+are\s+you|what\s+can\s+you\s+do|was\s+kannst\s+du|wer\s+bist\s+du)[\s!.?]*$",
+    ),
+)
+
+GREETING_REPLIES = {
+    GREETING_KIND_HELLO: {
+        "de": "Hallo! Ich helfe dir bei Fragen zur Müllentsorgung in München. Was möchtest du entsorgen?",
+        "en": "Hi! I can help with waste disposal in Munich. What would you like to throw away?",
+    },
+    GREETING_KIND_THANKS: {
+        "de": "Gerne! Wenn du noch etwas entsorgen möchtest, sag Bescheid.",
+        "en": "You're welcome! Let me know if you have anything else to dispose of.",
+    },
+    GREETING_KIND_BYE: {
+        "de": "Tschüss! Melde dich, wenn du wieder Fragen zur Müllentsorgung hast.",
+        "en": "Bye! Come back anytime for waste disposal questions.",
+    },
+    GREETING_KIND_HOW_ARE_YOU: {
+        "de": "Mir geht's gut, danke! Wobei kann ich dir bei der Müllentsorgung helfen?",
+        "en": "I'm doing well, thanks! How can I help you with waste disposal?",
+    },
+    GREETING_KIND_WHO_ARE_YOU: {
+        "de": "Ich bin dein Münchner Müll-Helfer. Beschreibe einen Gegenstand und ich sage dir, in welche Tonne er gehört.",
+        "en": "I'm your Munich waste helper. Tell me an item and I'll tell you which bin it goes in.",
+    },
+}
+
 
 async def ask_waste_question(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
     response_language = _preferred_language(message, conversation_history)
+
+    greeting_response = _greeting_response(message, response_language)
+    if greeting_response is not None:
+        return greeting_response
 
     rules_agent_response = await _rules_agent_response(message, conversation_history, response_language)
     if rules_agent_response is not None:
@@ -56,19 +125,40 @@ async def ask_waste_question(message: str, conversation_history: list[Conversati
             "chat_agent_unanswered_low_confidence",
             extra={"user_message": message},
         )
-        unknown_response = _unknown_fallback_response(response_language)
-        return await _finalize_standardized_response(
-            message,
-            conversation_history,
-            response_language,
-            unknown_response,
-            "unknown_fallback",
+        return await asyncio.to_thread(
+            _smalltalk_fallback_response, message, conversation_history, response_language
         )
 
     return await asyncio.to_thread(_run_crew, message, conversation_history)
 
 
-def _unknown_fallback_response(response_language: str) -> ChatResponse:
+def _greeting_response(message: str, response_language: str) -> ChatResponse | None:
+    normalized = message.strip().casefold()
+    if not normalized:
+        return None
+
+    for kind, pattern in GREETING_PATTERNS:
+        if re.search(pattern, normalized):
+            language = response_language if response_language in ("de", "en") else "de"
+            return ChatResponse(response=GREETING_REPLIES[kind][language], suggested_location=None)
+
+    return None
+
+
+def _smalltalk_fallback_response(
+    message: str,
+    conversation_history: list[ConversationMessage],
+    response_language: str,
+) -> ChatResponse:
+    if settings.groq_api_key:
+        try:
+            return _run_smalltalk_with_groq(message, conversation_history, response_language)
+        except Exception as exc:
+            logger.warning(
+                "chat_agent_smalltalk_failed",
+                extra={"user_message": message, "error": str(exc)},
+            )
+
     if response_language == "de":
         return ChatResponse(
             response=(
@@ -78,7 +168,6 @@ def _unknown_fallback_response(response_language: str) -> ChatResponse:
             ),
             suggested_location=None,
         )
-
     return ChatResponse(
         response=(
             "I do not have enough Munich-specific rule information for that item. "
@@ -89,13 +178,30 @@ def _unknown_fallback_response(response_language: str) -> ChatResponse:
     )
 
 
+def _run_smalltalk_with_groq(
+    message: str,
+    conversation_history: list[ConversationMessage],
+    response_language: str,
+) -> ChatResponse:
+    from litellm import completion
+
+    result = completion(
+        model="groq/llama-3.3-70b-versatile",
+        api_key=settings.groq_api_key,
+        temperature=0.4,
+        messages=_build_smalltalk_messages(message, conversation_history, response_language),
+    )
+    content = result.choices[0].message.content
+    return _parse_agent_output(str(content))
+
+
 async def _rules_agent_response(
     message: str,
     conversation_history: list[ConversationMessage],
     response_language: str | None = None,
 ) -> ChatResponse | None:
     try:
-        async with httpx.AsyncClient(timeout=3.0) as client:
+        async with httpx.AsyncClient(timeout=RULES_AGENT_TIMEOUT_SECONDS) as client:
             response = await client.post(
                 f"{settings.rules_agent_url.rstrip('/')}/rules/classify",
                 json={"label": message, "material": "", "city": "munich"},

@@ -74,7 +74,10 @@ DISPOSAL_METHOD_GUIDE = [
 FALLBACK_SCENARIOS = [
     {
         "name": "pizza box",
-        "patterns": [r"\bpizza\s+(box|carton|cardboard)\b", r"\bpizzakarton\b"],
+        "patterns": [
+            r"\bpizza\s+(box|boxes|boxen|carton|cartons|cardboard)\b",
+            r"\bpizzakarton(s|e|en)?\b",
+        ],
         "response_en": (
             "For a pizza box in Munich: put clean or only slightly soiled cardboard in Papiertonne. "
             "If it is greasy or food-stained, use Restmuelltonne. Put leftover food in Biotonne."

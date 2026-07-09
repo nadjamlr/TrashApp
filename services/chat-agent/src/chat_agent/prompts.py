@@ -82,18 +82,18 @@ def _build_polish_messages(
 
 
 def _build_polish_system_prompt(response_language: str) -> str:
-    language_name = "English" if response_language == "en" else "German"
+    language_hint = "English" if response_language == "en" else "German"
     return (
         "You are a Munich waste disposal answer editor. "
         "Your task is to rewrite verified disposal facts into one clear chat answer. "
         "Do not classify the item again. Do not change the bin, disposal route, warnings, alternatives, "
         "or uncertainty supplied by the source facts. "
         "Include the user's item when possible and include a short explanation using only source facts. "
-        "Translate all source facts into the requested language. "
         "Never mix languages, except for official disposal names such as Biotonne, Papiertonne, "
         "Restmuelltonne, Wertstoffinseln, Wertstoffhof, Giftmobil, Pfand, and AWM. "
         "Never invent street names, station names, shops, districts, collection points, or exact locations. "
-        f"Answer in {language_name}. "
+        "LANGUAGE: Detect the language of the user's most recent message and reply in the SAME "
+        f"language, fully translating any source facts. If it is genuinely ambiguous, fall back to {language_hint}. "
         'Return only valid JSON: {"response":"...", "suggested_location": null}'
     )
 
@@ -122,7 +122,8 @@ def _build_polish_prompt(
         "Restmuelltonne, Wertstoffinseln, Wertstoffhof, Giftmobil, Pfand, and AWM.\n"
         "If the source answer asks for clarification, keep it as one concise clarifying question.\n"
         "Never invent street names, station names, shops, districts, collection points, or exact locations.\n"
-        f"Answer in {language_name}. Keep the tone friendly, consistent, and direct.\n"
+        f"Reply in the same language as the user's most recent message; if it is genuinely "
+        f"ambiguous, fall back to {language_name}. Keep the tone friendly, consistent, and direct.\n"
         "Do not include markdown or text outside JSON.\n"
         "Return only valid JSON matching this shape: "
         '{"response":"...", "suggested_location": null}\n'
@@ -132,4 +133,58 @@ def _build_polish_prompt(
         f"Source name:\n{source_name}\n\n"
         f"Source answer:\n{source_response.response}\n\n"
         f"Source payload:\n{source_payload_text}"
+    )
+
+
+def _build_smalltalk_messages(
+    message: str,
+    conversation_history: list[ConversationMessage],
+    response_language: str,
+) -> list[dict[str, str]]:
+    return [
+        {"role": "system", "content": _build_smalltalk_system_prompt(response_language)},
+        {"role": "user", "content": _build_smalltalk_user_prompt(message, conversation_history)},
+    ]
+
+
+def _build_smalltalk_system_prompt(response_language: str) -> str:
+    language_hint = "English" if response_language == "en" else "German"
+    return (
+        "You are a friendly Munich waste disposal chatbot. "
+        "For this message, no Munich rule matched the user's input by keyword. You still have "
+        "the simplified Munich disposal rules and category names in the user message; use them "
+        "to reason about the item's category. Pick exactly one response mode and reply in one "
+        "or two short sentences.\n"
+        "1. SMALL TALK OR GREETING (hi, thanks, how are you, off-topic questions) -> answer "
+        "briefly like a person would and offer to help. Do NOT mention any bin.\n"
+        "2. ITEM WHOSE CATEGORY YOU CAN INFER FROM THE SIMPLIFIED RULES -> name the correct "
+        "bin from the simplified rules and give one short reason. Do NOT enumerate item names; "
+        "reason from the category (what it is made of and what it is for), then map to the bin. "
+        "Prefer the most specific applicable rule.\n"
+        "3. ITEM WHOSE CATEGORY IS GENUINELY UNCLEAR FROM THE SIMPLIFIED RULES -> ask ONE "
+        "targeted clarifying question about the ONE detail that would change the bin. Do NOT "
+        "ask about a detail that would not change the bin (for example, if two conditions of "
+        "the item map to the same bin according to the rules, do not ask which condition it is).\n"
+        "Never invent addresses, shops, districts, collection points, or exact locations. "
+        "Never mention bins that don't appear in the simplified rules below.\n"
+        "LANGUAGE: Detect the language of the user's most recent message and reply in the SAME "
+        f"language. If it is genuinely ambiguous, fall back to {language_hint}.\n"
+        "Do not include markdown or text outside JSON. "
+        'Return only valid JSON: {"response":"...", "suggested_location": null}'
+    )
+
+
+def _build_smalltalk_user_prompt(
+    message: str, conversation_history: list[ConversationMessage]
+) -> str:
+    rules = retrieval.load_rules()
+    category_names_text = _category_names_text(rules)
+    disposal_method_guide_text = _disposal_method_guide_text()
+    return (
+        f"Simplified Munich disposal rules:\n{disposal_method_guide_text}\n\n"
+        f"Available rule category names:\n{category_names_text}\n\n"
+        f"Conversation history:\n{retrieval._format_history(conversation_history)}\n\n"
+        f"Current user message:\n{message}\n\n"
+        "Pick exactly one of the three response modes and reply in one or two short sentences. "
+        "Return only the JSON described in the system prompt."
     )

@@ -6,7 +6,9 @@ from chat_agent.schemas import ConversationMessage
 def _looks_german(message: str) -> bool:
     return bool(
         re.search(
-            r"\b(was|wohin|muss|gehört|gehoert|entsorge|entsorgen|müll|muell|kopfhoerer|kopfhörer)\b",
+            r"\b(was|wohin|kommen|kommt|muss|gehört|gehoert|gehören|gehoeren|"
+            r"entsorge|entsorgen|müll|muell|kopfhoerer|kopfhörer|"
+            r"mit|einem|einer|welche|wie|ist|sind)\b",
             message.casefold(),
         )
     )
@@ -35,6 +37,8 @@ def _preferred_language(message: str, conversation_history: list[ConversationMes
         "",
     )
     language_source = first_user_message or message
+    if _looks_german(language_source):
+        return "de"
     if _looks_english(language_source):
         return "en"
     return "de"
