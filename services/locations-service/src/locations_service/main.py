@@ -1,6 +1,7 @@
 from trashapp_shared.fastapi_app import create_app
 from locations_service.open_data import get_locations
 from locations_service.distance import filter_and_rank
+from locations_service.routing import add_routes_to_locations
 from locations_service.schemas import LocationResult, LocationsResponse
 
 app = create_app("locations-service")
@@ -14,16 +15,20 @@ async def startup() -> None:
 
 @app.get("/locations", response_model=LocationsResponse)
 async def locations(
-    material: str,
     lat: float,
     lng: float,
     radius: int = 3000,
+    material: str | None = None,
     routing: bool = False,
+    profile: str = "foot-walking",
 ) -> LocationsResponse:
     all_locations = await get_locations()
     filtered = [
         loc for loc in all_locations
-        if any(material.lower() in m.lower() for m in loc.get("materials", []))
+        if material is None or any(material.lower() in m.lower() for m in loc.get("materials", []))
     ]
     ranked = filter_and_rank(filtered, lat, lng, radius)
+    if routing:
+        ranked = await add_routes_to_locations(ranked, lat, lng, profile)
+
     return LocationsResponse(locations=[LocationResult(**loc) for loc in ranked])

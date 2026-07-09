@@ -7,6 +7,7 @@ COPY services/locations-service/ /app/services/locations-service/
 COPY data/ /app/data/
 
 RUN pip install --no-cache-dir ./services/shared
+RUN pip install --no-cache-dir "httpx>=0.27.0"
 RUN pip install --no-cache-dir --no-deps ./services/locations-service
 
 EXPOSE 8005

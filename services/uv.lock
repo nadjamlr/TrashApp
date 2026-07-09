@@ -494,6 +494,7 @@ version = "0.1.0"
 source = { editable = "chat-agent" }
 dependencies = [
     { name = "crewai", extra = ["litellm"] },
+    { name = "httpx" },
     { name = "trashapp-shared" },
 ]
 
@@ -505,6 +506,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "crewai", extras = ["litellm"], specifier = ">=0.80.0" },
+    { name = "httpx", specifier = ">=0.27.0" },
     { name = "trashapp-shared", editable = "shared" },
 ]
 
@@ -1281,11 +1283,20 @@ dependencies = [
     { name = "trashapp-shared" },
 ]
 
+[package.optional-dependencies]
+dev = [
+    { name = "httpx" },
+    { name = "pytest" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "crewai", specifier = ">=0.80.0" },
+    { name = "httpx", marker = "extra == 'dev'" },
+    { name = "pytest", marker = "extra == 'dev'" },
     { name = "trashapp-shared", editable = "shared" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "instructor"
@@ -1589,11 +1600,15 @@ name = "locations-service"
 version = "0.1.0"
 source = { editable = "locations-service" }
 dependencies = [
+    { name = "httpx" },
     { name = "trashapp-shared" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "trashapp-shared", editable = "shared" }]
+requires-dist = [
+    { name = "httpx", specifier = ">=0.27.0" },
+    { name = "trashapp-shared", editable = "shared" },
+]
 
 [[package]]
 name = "markdown-it-py"

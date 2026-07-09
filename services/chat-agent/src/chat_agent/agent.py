@@ -1,132 +1,256 @@
 import asyncio
-import json
-import re
+import logging
 
-from trashapp_shared.rules import load_rules
+import httpx
+
 from trashapp_shared.settings import settings
 
-from chat_agent.schemas import ChatResponse, ConversationMessage, SuggestedLocation
+from chat_agent.fallbacks import _fallback_rule_response
+from chat_agent.language import _preferred_language
+from chat_agent.parsing import _parse_agent_output
+from chat_agent.prompts import (
+    _build_polish_messages,
+    _build_polish_prompt,
+    _build_polish_system_prompt,
+    _build_prompt,
+)
+from chat_agent.retrieval import _direct_rule_response, _relevant_rules_text
+from chat_agent.schemas import ChatResponse, ConversationMessage
 
-MIN_SEARCH_TOKEN_LENGTH = 4
-MAX_RELEVANT_RULES = 3
-
-
-def _format_history(conversation_history: list[ConversationMessage]) -> str:
-    if not conversation_history:
-        return "No previous messages."
-
-    return "\n".join(f"{message.role}: {message.content}" for message in conversation_history)
-
-
-def _relevant_rules_text(message: str, conversation_history: list[ConversationMessage]) -> str:
-    query_text = " ".join([message, *[item.content for item in conversation_history]])
-    query_tokens = _search_tokens(query_text)
-
-    if not query_tokens:
-        return "No lexical rule matches."
-
-    scored_items = []
-    for item in load_rules()["items"]:
-        score = len(query_tokens & _search_tokens(_rule_item_text(item)))
-        if score:
-            scored_items.append((score, item))
-
-    if not scored_items:
-        return "No lexical rule matches."
-
-    scored_items.sort(key=lambda scored_item: scored_item[0], reverse=True)
-    matches = [item for _, item in scored_items[:MAX_RELEVANT_RULES]]
-    return json.dumps(matches, ensure_ascii=False)
-
-
-def _rule_item_text(item: dict) -> str:
-    values = []
-    for value in item.values():
-        if isinstance(value, list):
-            values.extend(str(part) for part in value)
-        else:
-            values.append(str(value))
-    return " ".join(values)
-
-
-def _search_tokens(text: str) -> set[str]:
-    return {
-        token
-        for token in re.findall(r"[\wäöüßÄÖÜ]+", text.casefold())
-        if len(token) >= MIN_SEARCH_TOKEN_LENGTH
-    }
-
-
-def _parse_agent_output(output: str) -> ChatResponse:
-    output = output.strip()
-    try:
-        payload = json.loads(output)
-    except json.JSONDecodeError:
-        payload = _extract_json_payload(output)
-        if payload is None:
-            return ChatResponse(response=output, suggested_location=None)
-
-    location = payload.get("suggested_location")
-    suggested_location = None
-    if isinstance(location, dict) and location.get("lat") is not None and location.get("lng") is not None:
-        suggested_location = SuggestedLocation(lat=location["lat"], lng=location["lng"])
-
-    response = payload.get("response")
-    if not isinstance(response, str) or not response.strip():
-        response = output.strip()
-
-    return ChatResponse(response=response, suggested_location=suggested_location)
-
-
-def _extract_json_payload(output: str) -> dict | None:
-    json_blocks = re.findall(r"\{.*?\}", output, flags=re.DOTALL)
-    for block in json_blocks:
-        try:
-            payload = json.loads(block)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(payload, dict) and "response" in payload and "suggested_location" in payload:
-            return payload
-    return None
-
-
-def _build_prompt(message: str, conversation_history: list[ConversationMessage]) -> str:
-    rules = load_rules()
-    relevant_rules_text = _relevant_rules_text(message, conversation_history)
-    deposit_rules_text = json.dumps(rules.get("deposit_rules", {}), ensure_ascii=False)
-
-    return (
-        "You are a Munich waste disposal advisor.\n"
-        "Use only the supplied selected rules and deposit rules. If the rules do not cover the item, "
-        "say that the available rules do not specify it and suggest checking AWM.\n"
-        "Never invent street names, station names, shops, districts, collection points, or exact locations.\n"
-        "Only mention a concrete place if it appears verbatim in the selected rules.\n"
-        "For deposit bottles or cans, say they should be returned to retailers or reverse vending machines.\n"
-        "For plastic packaging without deposit, say it goes to Wertstoffinseln.\n"
-        "Answer in the same language as the current user question. Keep the answer direct.\n"
-        "Do not include markdown or text outside JSON.\n"
-        "Return only valid JSON matching this shape: "
-        '{"response":"...", "suggested_location": null}\n'
-        "Set suggested_location to null unless exact coordinates are supplied by the rules.\n\n"
-        f"Conversation history:\n{_format_history(conversation_history)}\n\n"
-        f"Current user question:\n{message}\n\n"
-        f"Selected rules:\n{relevant_rules_text}\n\n"
-        f"Deposit rules:\n{deposit_rules_text}"
-    )
+logger = logging.getLogger(__name__)
 
 
 async def ask_waste_question(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
+    response_language = _preferred_language(message, conversation_history)
+
+    rules_agent_response = await _rules_agent_response(message, conversation_history, response_language)
+    if rules_agent_response is not None:
+        return rules_agent_response
+
+    direct_response = _direct_rule_response(message, response_language)
+    if direct_response is not None:
+        return await _finalize_standardized_response(
+            message,
+            conversation_history,
+            response_language,
+            direct_response,
+            "local_rules",
+        )
+
+    fallback_response = _fallback_rule_response(message, response_language, conversation_history)
+    if fallback_response is not None:
+        logger.info(
+            "chat_agent_fallback_response",
+            extra={"user_message": message, "fallback_response": fallback_response.response},
+        )
+        return await _finalize_standardized_response(
+            message,
+            conversation_history,
+            response_language,
+            fallback_response,
+            "local_fallback",
+        )
+
+    if _relevant_rules_text(message, conversation_history) == "No lexical rule matches.":
+        logger.warning(
+            "chat_agent_unanswered_low_confidence",
+            extra={"user_message": message},
+        )
+        unknown_response = _unknown_fallback_response(response_language)
+        return await _finalize_standardized_response(
+            message,
+            conversation_history,
+            response_language,
+            unknown_response,
+            "unknown_fallback",
+        )
+
     return await asyncio.to_thread(_run_crew, message, conversation_history)
 
 
-def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
-    from crewai import Agent, Crew, LLM, Task
+def _unknown_fallback_response(response_language: str) -> ChatResponse:
+    if response_language == "de":
+        return ChatResponse(
+            response=(
+                "Ich habe dafuer nicht genug muenchenspezifische Regel-Informationen. "
+                "Kannst du beschreiben, woraus der Gegenstand besteht und ob es Verpackung, "
+                "Elektronik, Problemabfall oder mit Essen verschmutzt ist?"
+            ),
+            suggested_location=None,
+        )
 
-    llm = LLM(
+    return ChatResponse(
+        response=(
+            "I do not have enough Munich-specific rule information for that item. "
+            "Can you describe what it is made of, whether it is packaging, electronic, hazardous, "
+            "or contaminated with food?"
+        ),
+        suggested_location=None,
+    )
+
+
+async def _rules_agent_response(
+    message: str,
+    conversation_history: list[ConversationMessage],
+    response_language: str | None = None,
+) -> ChatResponse | None:
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            response = await client.post(
+                f"{settings.rules_agent_url.rstrip('/')}/rules/classify",
+                json={"label": message, "material": "", "city": "munich"},
+            )
+            response.raise_for_status()
+    except httpx.HTTPError as exc:
+        logger.info(
+            "chat_agent_rules_agent_unavailable",
+            extra={"user_message": message, "error": str(exc)},
+        )
+        return None
+
+    payload = response.json()
+    confidence = _numeric_confidence(payload.get("confidence"))
+    source = str(payload.get("source", "llm"))
+    bin_name = str(payload.get("bin", "")).strip()
+    if confidence < 0.7 or not bin_name or bin_name.casefold() == "unknown":
+        logger.info(
+            "chat_agent_rules_agent_low_confidence",
+            extra={"user_message": message, "source": source, "confidence": confidence},
+        )
+        return None
+
+    source_response = ChatResponse(
+        response=_format_rules_agent_response(message, payload, response_language),
+        suggested_location=None,
+    )
+    return await _finalize_standardized_response(
+        message,
+        conversation_history,
+        response_language or _preferred_language(message, conversation_history),
+        source_response,
+        "rules_agent",
+        payload,
+    )
+
+
+async def _finalize_standardized_response(
+    message: str,
+    conversation_history: list[ConversationMessage],
+    response_language: str,
+    source_response: ChatResponse,
+    source_name: str,
+    source_payload: dict | None = None,
+) -> ChatResponse:
+    return await asyncio.to_thread(
+        _polish_standardized_response,
+        message,
+        conversation_history,
+        response_language,
+        source_response,
+        source_name,
+        source_payload,
+    )
+
+
+def _polish_standardized_response(
+    message: str,
+    conversation_history: list[ConversationMessage],
+    response_language: str,
+    source_response: ChatResponse,
+    source_name: str,
+    source_payload: dict | None = None,
+) -> ChatResponse:
+    if not settings.groq_api_key:
+        return source_response
+
+    try:
+        return _run_polish_with_groq(
+            message,
+            conversation_history,
+            response_language,
+            source_response,
+            source_name,
+            source_payload,
+        )
+    except Exception as exc:
+        logger.warning(
+            "chat_agent_polish_failed",
+            extra={"user_message": message, "source": source_name, "error": str(exc)},
+        )
+        return source_response
+
+
+def _run_polish_with_groq(
+    message: str,
+    conversation_history: list[ConversationMessage],
+    response_language: str,
+    source_response: ChatResponse,
+    source_name: str,
+    source_payload: dict | None,
+) -> ChatResponse:
+    from litellm import completion
+
+    result = completion(
         model="groq/llama-3.3-70b-versatile",
         api_key=settings.groq_api_key,
         temperature=0.2,
+        messages=_build_polish_messages(
+            message,
+            conversation_history,
+            response_language,
+            source_response,
+            source_name,
+            source_payload,
+        ),
     )
+    content = result.choices[0].message.content
+    return _parse_agent_output(str(content))
+
+
+def _format_rules_agent_response(message: str, payload: dict, response_language: str | None = None) -> str:
+    bin_name = str(payload.get("bin", "")).strip()
+    reasoning = str(payload.get("reasoning", "")).strip()
+    alternatives = [str(item) for item in payload.get("alternatives", []) if item]
+    notes = [str(item) for item in payload.get("important_notes", []) if item]
+
+    if (response_language or _preferred_language(message, [])) == "de":
+        response = f"Laut Münchner Regeln gehört das zu {bin_name}."
+        if reasoning:
+            response += f" {reasoning}"
+        if notes:
+            response += f" Wichtig: {notes[0]}"
+        if alternatives:
+            response += f" Alternative: {alternatives[0]}."
+        return response
+
+    response = f"According to Munich rules, it belongs in {bin_name}."
+    if reasoning:
+        response += f" {reasoning}"
+    if notes:
+        response += f" Important: {notes[0]}"
+    if alternatives:
+        response += f" Alternative: {alternatives[0]}."
+    return response
+
+
+def _numeric_confidence(value: object) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> ChatResponse:
+    try:
+        return _run_crew_with_llm(message, conversation_history, _build_llm())
+    except Exception as exc:
+        if not settings.groq_api_key or "cache_breakpoint" not in str(exc):
+            raise
+        return _run_crew_with_llm(message, conversation_history, _build_ollama_llm())
+
+
+def _run_crew_with_llm(message: str, conversation_history: list[ConversationMessage], llm: "LLM") -> ChatResponse:
+    from crewai import Agent, Crew, Task
 
     advisor_agent = Agent(
         role="Munich waste disposal advisor",
@@ -142,7 +266,7 @@ def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> 
     )
 
     task = Task(
-        description=_build_prompt(message, conversation_history),
+        description=_build_prompt(message, conversation_history, _preferred_language(message, conversation_history)),
         expected_output='Only valid JSON: {"response":"...", "suggested_location": null}',
         agent=advisor_agent,
     )
@@ -154,3 +278,31 @@ def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> 
     )
     result = crew.kickoff()
     return _parse_agent_output(str(result))
+
+
+def _build_llm() -> "LLM":
+    if settings.groq_api_key:
+        return _build_groq_llm()
+
+    return _build_ollama_llm()
+
+
+def _build_groq_llm() -> "LLM":
+    from crewai import LLM
+
+    return LLM(
+        model="groq/llama-3.3-70b-versatile",
+        api_key=settings.groq_api_key,
+        temperature=0.2,
+        additional_drop_params=["cache_breakpoint"],
+    )
+
+
+def _build_ollama_llm() -> "LLM":
+    from crewai import LLM
+
+    return LLM(
+        model=f"ollama/{settings.ollama_model_text}",
+        base_url=settings.ollama_host,
+        temperature=0.2,
+    )

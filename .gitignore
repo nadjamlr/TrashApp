@@ -23,4 +23,9 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Local material folder (lecture PDFs, etc.)
+material/
+
+# Reviews
 reviews/

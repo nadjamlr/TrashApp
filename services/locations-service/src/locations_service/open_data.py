@@ -3,7 +3,7 @@ import json
 import httpx
 
 WERTSTOFFHOF_URL = "https://geoportal.muenchen.de/geoserver/gsm_wfs/ows?service=WFS&version=1.1.0&request=GetFeature&typeName=gsm_wfs:awm_wertstoffhoefe&outputFormat=application/json&SRSNAME=EPSG:4326"
-WERTSTOFFINSELN_URL = "https://geoportal.muenchen.de/geoserver/gsm_wfs/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=gsm_wfs:awm_container&maxFeatures=50&outputFormat=application/json&SRSNAME=EPSG:4326"
+WERTSTOFFINSELN_URL = "https://geoportal.muenchen.de/geoserver/gsm_wfs/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=gsm_wfs:awm_container&outputFormat=application/json&SRSNAME=EPSG:4326"
 # ISAR_SAMMELBEHAELTER: optional, kann später ergänzt werden
 
 WERTSTOFFHOF_MATERIALS = [
@@ -26,8 +26,8 @@ async def _fetch_and_parse() -> list:
         hof_resp = await client.get(WERTSTOFFHOF_URL)
         insel_resp = await client.get(WERTSTOFFINSELN_URL)
 
-    hoefe = _parse_hoefe(hof_resp.text)
-    inseln = _parse_inseln(insel_resp.text)
+    hoefe = _parse_hoefe(hof_resp.content.decode("utf-8"))
+    inseln = _parse_inseln(insel_resp.content.decode("utf-8"))
     return hoefe + inseln
 
 
@@ -74,8 +74,8 @@ def _parse_inseln(raw: str) -> list:
         }
         results.append({
             "id":            str(feature.get("id", props.get("adresse", ""))),
-            "name":          "Wertstoffinsel " + props.get("adresse", "").split(",")[0],
-            "address":       props.get("adresse", ""),
+            "name":          "Wertstoffinsel " + (props.get("adresse") or "").split(",")[0],
+            "address":       props.get("adresse") or "",
             "lat":           coords[1],
             "lng":           coords[0],
             "materials":     [mat for mat, val in material_flags.items() if val],
