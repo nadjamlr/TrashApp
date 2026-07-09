@@ -21,7 +21,6 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
-  const [showProducts, setShowProducts] = useState(false);
   const { lat, lng } = useLocation();
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -101,17 +100,7 @@ export default function MapScreen() {
         style={styles.overlay}
         pointerEvents="box-none"
       >
-        <View style={[styles.toggleSection, { paddingTop: insets.top + Spacing.md }]} pointerEvents="box-none">
-          <ThemedText variant="h3">Locations</ThemedText>
-          <Toggle
-            size="lg"
-            isActive={showProducts}
-            onToggle={setShowProducts}
-          />
-          <ThemedText variant="h3">Products</ThemedText>
-        </View>
-
-        <View style={styles.topContainer} pointerEvents="box-none">
+        <View style={[styles.topContainer, { paddingTop: insets.top + 33 + Spacing.md }]} pointerEvents="box-none">
           <Searchbar locations={locations} onSelectLocation={setSelectedLocation} />
           <ScrollView
             horizontal
@@ -172,14 +161,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-  },
-  toggleSection: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.md,
   },
   topContainer: {
     paddingHorizontal: Spacing.md,
