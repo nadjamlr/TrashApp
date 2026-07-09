@@ -1,11 +1,23 @@
 from crewai import Agent, Crew, LLM, Task
 
 from insight_agent.schemas import InsightRequest, InsightResult
-from trashapp_shared.rules import get_rules_text
+from trashapp_shared.rules import find_rule_item
 from trashapp_shared.settings import settings
 
 FALLBACK_FACT = "Richtiges Trennen schont Ressourcen und hilft der Umwelt."
 FALLBACK_CATEGORY = "Impact"
+
+
+def _build_rule_context(label: str, material: str, bin: str) -> str:
+    rule = find_rule_item(label, material)
+    if rule:
+        notes = "\n".join(f"- {n}" for n in rule.get("notes", []))
+        return (
+            f"Name: {rule.get('name', label)}\n"
+            f"Tonne: {rule.get('bin', bin)}\n"
+            f"Hinweise:\n{notes}"
+        )
+    return f"Label: {label}\nMaterial: {material}\nTonne: {bin}"
 
 
 async def run_agent(request: InsightRequest) -> InsightResult:
@@ -40,12 +52,8 @@ async def run_agent(request: InsightRequest) -> InsightResult:
             "- Future: Was aus dem Material recycelt werden kann (z.B. wie Aluminiumfolie zu einem Fahrradrahmen wird)\n\n"
             "Gib NUR gültiges JSON zurück, das genau dieser Form entspricht:\n"
             '{"fact": "...", "category": "Myth|Impact|Future"}\n\n'
-            "REGELN:\n"
-            "{rules_text}\n\n"
-            "GEGENSTAND:\n"
-            "Bezeichnung: {label}\n"
-            "Material: {material}\n"
-            "Tonne: {bin}"
+            "REGELWERK FÜR DIESEN GEGENSTAND:\n"
+            "{rule_context}"
         ),
         expected_output='JSON object: {"fact": "<deutscher Satz>", "category": "Myth|Impact|Future"}',
         agent=agent,
@@ -55,10 +63,7 @@ async def run_agent(request: InsightRequest) -> InsightResult:
     crew = Crew(agents=[agent], tasks=[task], verbose=False)
     result = await crew.kickoff_async(
         inputs={
-            "rules_text": get_rules_text(),
-            "label": request.label,
-            "material": request.material,
-            "bin": request.bin,
+            "rule_context": _build_rule_context(request.label, request.material, request.bin),
         }
     )
 
