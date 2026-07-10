@@ -24,6 +24,7 @@ export default function CameraScreen() {
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [scanError, setScanError] = useState(false);
   const cameraRef = useRef<CameraViewType>(null);
   const router = useRouter();
   const scheme = useColorScheme() ?? 'light';
@@ -41,23 +42,37 @@ export default function CameraScreen() {
   async function handleImage(uri: string) {
     setCapturedUri(uri);
     setIsLoading(true);
-    try {
-      const visionResult = await identifyImage(uri);
-      setCapturedUri(null);
-      router.push({
-        pathname: '/camera/result',
-        params: {
-          label: visionResult.label,
-          material: visionResult.material,
-          confidence: String(visionResult.confidence),
-        },
-      });
-    } catch (e) {
-      console.error(e);
-      setCapturedUri(null);
-    } finally {
-      setIsLoading(false);
+    setScanError(false);
+
+    let visionResult = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        visionResult = await identifyImage(uri);
+        break;
+      } catch (e) {
+        if (attempt === 2) {
+          setIsLoading(false);
+          setScanError(true);
+          return;
+        }
+      }
     }
+
+    setIsLoading(false);
+    setCapturedUri(null);
+    router.push({
+      pathname: '/camera/result',
+      params: {
+        label: visionResult!.label,
+        material: visionResult!.material,
+        confidence: String(visionResult!.confidence),
+      },
+    });
+  }
+
+  function handleRetryScan() {
+    setCapturedUri(null);
+    setScanError(false);
   }
 
   async function handleCapture() {
@@ -109,6 +124,20 @@ export default function CameraScreen() {
           <Text style={[Typography.p1, { color: '#fff', marginTop: Spacing.md, textAlign: 'center' }]}>
             {LOADING_STEPS[loadingStep]}
           </Text>
+        </View>
+      )}
+
+      {scanError && (
+        <View style={styles.loadingOverlay}>
+          <Text style={[Typography.h3, { color: '#fff', textAlign: 'center', marginBottom: Spacing.md }]}>
+            Scan fehlgeschlagen.
+          </Text>
+          <Text style={[Typography.p1, { color: '#fff', textAlign: 'center', marginBottom: Spacing.lg }]}>
+            Bitte erneut versuchen.
+          </Text>
+          <Pressable onPress={handleRetryScan} style={[styles.button, { backgroundColor: colors.primary }]}>
+            <Text style={[Typography.p1, { color: colors.text }]}>Nochmal scannen</Text>
+          </Pressable>
         </View>
       )}
     </View>
