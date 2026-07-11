@@ -495,14 +495,10 @@ def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None
     def fail_if_llm_runs(message, conversation_history):
         raise AssertionError(f"LLM should not run for common disposal question: {message}")
 
-    async def no_rules_agent_response(message, conversation_history, response_language=None):
-        return None
-
     def no_polish(message, conversation_history, response_language, source_response, source_name, source_payload=None):
         return source_response
 
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
-    monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
     monkeypatch.setattr("chat_agent.retrieval.load_rules", _common_test_rules)
 
@@ -528,9 +524,6 @@ def test_common_disposal_questions_are_answered_without_llm(monkeypatch) -> None
 def test_standard_local_answer_is_sent_through_polish_step(monkeypatch) -> None:
     captured = {}
 
-    async def no_rules_agent_response(message, conversation_history, response_language=None):
-        return None
-
     def fake_polish(message, conversation_history, response_language, source_response, source_name, source_payload=None):
         captured["message"] = message
         captured["response_language"] = response_language
@@ -538,7 +531,6 @@ def test_standard_local_answer_is_sent_through_polish_step(monkeypatch) -> None:
         captured["source_name"] = source_name
         return ChatResponse(response="Polished German Groq answer.", suggested_location=None)
 
-    monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", fake_polish)
     monkeypatch.setattr("chat_agent.retrieval.load_rules", _common_test_rules)
 
@@ -550,43 +542,14 @@ def test_standard_local_answer_is_sent_through_polish_step(monkeypatch) -> None:
     assert "Biotonne" in captured["source_response"]
 
 
-def test_chat_uses_rules_agent_response_before_local_fallback(monkeypatch) -> None:
-    captured = {}
-
-    async def fake_rules_agent_response(message, conversation_history, response_language=None):
-        captured["response_language"] = response_language
-        captured["conversation_history"] = conversation_history
-        return ChatResponse(
-            response="According to Munich rules, it belongs in Wertstoffinseln.",
-            suggested_location=None,
-        )
-
-    def fail_if_llm_runs(message, conversation_history):
-        raise AssertionError("LLM should not run when rules-agent provides an answer")
-
-    monkeypatch.setattr("chat_agent.agent._rules_agent_response", fake_rules_agent_response)
-    monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
-    monkeypatch.setattr("chat_agent.retrieval.load_rules", lambda: {"items": [], "deposit_rules": {}})
-
-    response = asyncio.run(ask_waste_question("Where does a yogurt cup go?", []))
-
-    assert response.response == "According to Munich rules, it belongs in Wertstoffinseln."
-    assert captured["response_language"] == "en"
-    assert captured["conversation_history"] == []
-
-
 def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) -> None:
     def fail_if_llm_runs(message, conversation_history):
         raise AssertionError("LLM should not run for an unknown low-confidence item")
-
-    async def no_rules_agent_response(message, conversation_history, response_language=None):
-        return None
 
     def no_polish(message, conversation_history, response_language, source_response, source_name, source_payload=None):
         return source_response
 
     monkeypatch.setattr("chat_agent.agent._run_crew", fail_if_llm_runs)
-    monkeypatch.setattr("chat_agent.agent._rules_agent_response", no_rules_agent_response)
     monkeypatch.setattr("chat_agent.agent._polish_standardized_response", no_polish)
     monkeypatch.setattr("chat_agent.retrieval.load_rules", lambda: {"items": [], "deposit_rules": {}})
     monkeypatch.setattr("chat_agent.agent.settings.groq_api_key", "")
