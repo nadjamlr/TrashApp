@@ -1,19 +1,23 @@
 import asyncio
 import json
 import logging
+import sys
+import types
 
 from fastapi.testclient import TestClient
 
 from chat_agent.agent import (
     ask_waste_question,
+    _build_identifier_prompt,
     _build_polish_messages,
     _build_polish_prompt,
     _build_polish_system_prompt,
-    _build_prompt,
+    _build_reasoner_prompt,
     _direct_rule_response,
     _parse_agent_output,
     _preferred_language,
     _relevant_rules_text,
+    _run_crew_with_llm,
 )
 from chat_agent.main import app
 from chat_agent.schemas import ChatResponse, ConversationMessage
@@ -145,7 +149,7 @@ def test_parse_agent_output_falls_back_to_plain_text_for_non_json() -> None:
     )
 
 
-def test_build_prompt_includes_all_category_names_without_full_unselected_rules(monkeypatch) -> None:
+def test_build_identifier_prompt_lists_categories_and_selected_rules(monkeypatch) -> None:
     monkeypatch.setattr(
         "chat_agent.retrieval.load_rules",
         lambda: {
@@ -168,18 +172,31 @@ def test_build_prompt_includes_all_category_names_without_full_unselected_rules(
         },
     )
 
-    prompt = _build_prompt("Where do food scraps go?", [])
+    prompt = _build_identifier_prompt("Where do food scraps go?", [])
 
     assert "- Organic kitchen and garden waste" in prompt
     assert "- Small electronic devices" in prompt
     assert "Selected organic details." in prompt
     assert "Unselected electronics details should not be in the prompt." not in prompt
+    assert '"category"' in prompt
+    assert '"confidence"' in prompt
+
+
+def test_build_reasoner_prompt_includes_fallback_guide_and_language(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "chat_agent.retrieval.load_rules",
+        lambda: {"items": [], "deposit_rules": {}},
+    )
+
+    prompt = _build_reasoner_prompt("Where do food scraps go?", [])
+
     assert "Fallback disposal method guide:" in prompt
     assert "Biotonne: use for Organic kitchen and garden waste" in prompt
     assert "Wertstoffhof: use for Electronics" in prompt
     assert "less than 70 percent confident" in prompt
     assert "ask one concise clarifying question" in prompt
     assert "answer in English" in prompt
+    assert "matcher agent" in prompt
 
 
 def test_preferred_language_uses_first_user_message() -> None:
@@ -198,7 +215,7 @@ def test_preferred_language_defaults_to_german_when_unclear(monkeypatch) -> None
     )
 
     assert _preferred_language("???", []) == "de"
-    assert "answer in German" in _build_prompt("???", [])
+    assert "answer in German" in _build_reasoner_prompt("???", [])
 
 
 def test_polish_prompt_preserves_facts_and_requires_explanation() -> None:
@@ -560,3 +577,84 @@ def test_unknown_question_returns_safe_fallback_and_logs(monkeypatch, caplog) ->
     assert "do not have enough Munich-specific rule information" in response.response
     assert "what it is made of" in response.response
     assert "chat_agent_unanswered_low_confidence" in caplog.text
+
+
+def test_use_ollama_flag_forces_ollama_llm_in_crew(monkeypatch) -> None:
+    from chat_agent.agent import _build_llm
+
+    captured = {}
+
+    class FakeLLM:
+        def __init__(self, model, **kwargs):
+            captured["model"] = model
+            captured["kwargs"] = kwargs
+
+    monkeypatch.setitem(sys.modules, "crewai", types.SimpleNamespace(LLM=FakeLLM))
+    monkeypatch.setattr("chat_agent.agent.settings.groq_api_key", "gsk_dummy")
+    monkeypatch.setattr("chat_agent.agent.settings.chat_use_ollama", True)
+    monkeypatch.setattr("chat_agent.agent.settings.ollama_model_text", "llama3")
+    monkeypatch.setattr("chat_agent.agent.settings.ollama_host", "http://ollama:11434")
+
+    _build_llm()
+
+    assert captured["model"] == "ollama/llama3"
+    assert captured["kwargs"]["base_url"] == "http://ollama:11434"
+
+
+def test_use_ollama_flag_routes_smalltalk_completion_to_ollama(monkeypatch) -> None:
+    from chat_agent.agent import _llm_completion_kwargs
+
+    monkeypatch.setattr("chat_agent.agent.settings.groq_api_key", "gsk_dummy")
+    monkeypatch.setattr("chat_agent.agent.settings.chat_use_ollama", True)
+    monkeypatch.setattr("chat_agent.agent.settings.ollama_model_text", "llama3")
+    monkeypatch.setattr("chat_agent.agent.settings.ollama_host", "http://ollama:11434")
+
+    kwargs = _llm_completion_kwargs()
+
+    assert kwargs == {"model": "ollama/llama3", "api_base": "http://ollama:11434"}
+
+
+def test_run_crew_chains_identifier_and_reasoner_agents(monkeypatch) -> None:
+    captured = {"agents": [], "tasks": [], "crew": None}
+
+    class FakeAgent:
+        def __init__(self, role, **kwargs):
+            self.role = role
+            captured["agents"].append(self)
+
+    class FakeTask:
+        def __init__(self, description, expected_output, agent, context=None):
+            self.description = description
+            self.expected_output = expected_output
+            self.agent = agent
+            self.context = context or []
+            captured["tasks"].append(self)
+
+    class FakeCrew:
+        def __init__(self, agents, tasks, process, verbose=False):
+            captured["crew"] = {"agents": agents, "tasks": tasks, "process": process}
+
+        def kickoff(self):
+            return '{"response": "Batteries go to retail collection boxes.", "suggested_location": null}'
+
+    class FakeProcess:
+        sequential = "sequential"
+
+    fake_crewai = types.SimpleNamespace(
+        Agent=FakeAgent, Task=FakeTask, Crew=FakeCrew, Process=FakeProcess
+    )
+    monkeypatch.setitem(sys.modules, "crewai", fake_crewai)
+    monkeypatch.setattr("chat_agent.retrieval.load_rules", lambda: {"items": [], "deposit_rules": {}})
+
+    result = _run_crew_with_llm("Where do batteries go?", [], llm=object())
+
+    assert [agent.role for agent in captured["agents"]] == [
+        "Munich waste rule matcher",
+        "Munich waste disposal advisor",
+    ]
+    identifier_task, reasoner_task = captured["tasks"]
+    assert reasoner_task.context == [identifier_task]
+    assert captured["crew"]["process"] == "sequential"
+    assert captured["crew"]["agents"] == captured["agents"]
+    assert captured["crew"]["tasks"] == [identifier_task, reasoner_task]
+    assert result.response == "Batteries go to retail collection boxes."

@@ -8,10 +8,11 @@ from chat_agent.fallbacks import _fallback_rule_response
 from chat_agent.language import _preferred_language
 from chat_agent.parsing import _parse_agent_output
 from chat_agent.prompts import (
+    _build_identifier_prompt,
     _build_polish_messages,
     _build_polish_prompt,
     _build_polish_system_prompt,
-    _build_prompt,
+    _build_reasoner_prompt,
     _build_smalltalk_messages,
 )
 from chat_agent.retrieval import _direct_rule_response, _relevant_rules_text
@@ -142,9 +143,9 @@ def _smalltalk_fallback_response(
     conversation_history: list[ConversationMessage],
     response_language: str,
 ) -> ChatResponse:
-    if settings.groq_api_key:
+    if _llm_available():
         try:
-            return _run_smalltalk_with_groq(message, conversation_history, response_language)
+            return _run_smalltalk_with_llm(message, conversation_history, response_language)
         except Exception as exc:
             logger.warning(
                 "chat_agent_smalltalk_failed",
@@ -170,7 +171,7 @@ def _smalltalk_fallback_response(
     )
 
 
-def _run_smalltalk_with_groq(
+def _run_smalltalk_with_llm(
     message: str,
     conversation_history: list[ConversationMessage],
     response_language: str,
@@ -178,13 +179,28 @@ def _run_smalltalk_with_groq(
     from litellm import completion
 
     result = completion(
-        model="groq/llama-3.3-70b-versatile",
-        api_key=settings.groq_api_key,
+        **_llm_completion_kwargs(),
         temperature=0.4,
         messages=_build_smalltalk_messages(message, conversation_history, response_language),
     )
     content = result.choices[0].message.content
     return _parse_agent_output(str(content))
+
+
+def _llm_available() -> bool:
+    return settings.chat_use_ollama or bool(settings.groq_api_key)
+
+
+def _llm_completion_kwargs() -> dict:
+    if settings.chat_use_ollama:
+        return {
+            "model": f"ollama/{settings.ollama_model_text}",
+            "api_base": settings.ollama_host,
+        }
+    return {
+        "model": "groq/llama-3.3-70b-versatile",
+        "api_key": settings.groq_api_key,
+    }
 
 
 async def _finalize_standardized_response(
@@ -214,11 +230,11 @@ def _polish_standardized_response(
     source_name: str,
     source_payload: dict | None = None,
 ) -> ChatResponse:
-    if not settings.groq_api_key:
+    if not _llm_available():
         return source_response
 
     try:
-        return _run_polish_with_groq(
+        return _run_polish_with_llm(
             message,
             conversation_history,
             response_language,
@@ -234,7 +250,7 @@ def _polish_standardized_response(
         return source_response
 
 
-def _run_polish_with_groq(
+def _run_polish_with_llm(
     message: str,
     conversation_history: list[ConversationMessage],
     response_language: str,
@@ -245,8 +261,7 @@ def _run_polish_with_groq(
     from litellm import completion
 
     result = completion(
-        model="groq/llama-3.3-70b-versatile",
-        api_key=settings.groq_api_key,
+        **_llm_completion_kwargs(),
         temperature=0.2,
         messages=_build_polish_messages(
             message,
@@ -271,14 +286,16 @@ def _run_crew(message: str, conversation_history: list[ConversationMessage]) -> 
 
 
 def _run_crew_with_llm(message: str, conversation_history: list[ConversationMessage], llm: "LLM") -> ChatResponse:
-    from crewai import Agent, Crew, Task
+    from crewai import Agent, Crew, Process, Task
 
-    advisor_agent = Agent(
-        role="Munich waste disposal advisor",
-        goal="Answer waste disposal questions using only the selected Munich AWM rules.",
+    response_language = _preferred_language(message, conversation_history)
+
+    identifier_agent = Agent(
+        role="Munich waste rule matcher",
+        goal="Pick the single best matching Munich AWM rule for the user's item, or return unknown.",
         backstory=(
-            "You advise Munich residents about waste disposal. You are strict about using only "
-            "the supplied rules and you never invent collection points, addresses, or shop names."
+            "You classify items by matching them to Munich AWM waste rules. You only pick rules "
+            "that appear in the supplied selected rules. You never invent categories."
         ),
         llm=llm,
         verbose=False,
@@ -286,15 +303,39 @@ def _run_crew_with_llm(message: str, conversation_history: list[ConversationMess
         respect_context_window=False,
     )
 
-    task = Task(
-        description=_build_prompt(message, conversation_history, _preferred_language(message, conversation_history)),
+    reasoner_agent = Agent(
+        role="Munich waste disposal advisor",
+        goal="Explain the matched Munich AWM rule to the user in a short, conversational answer.",
+        backstory=(
+            "You advise Munich residents about waste disposal. You rely on the matcher agent's "
+            "pick and you never invent collection points, addresses, or shop names."
+        ),
+        llm=llm,
+        verbose=False,
+        allow_delegation=False,
+        respect_context_window=False,
+    )
+
+    identifier_task = Task(
+        description=_build_identifier_prompt(message, conversation_history),
+        expected_output=(
+            'Only valid JSON: {"category":"...", "bin":"...", "confidence": 0.0, '
+            '"reasoning_bullets": ["..."]}'
+        ),
+        agent=identifier_agent,
+    )
+
+    reasoner_task = Task(
+        description=_build_reasoner_prompt(message, conversation_history, response_language),
         expected_output='Only valid JSON: {"response":"...", "suggested_location": null}',
-        agent=advisor_agent,
+        agent=reasoner_agent,
+        context=[identifier_task],
     )
 
     crew = Crew(
-        agents=[advisor_agent],
-        tasks=[task],
+        agents=[identifier_agent, reasoner_agent],
+        tasks=[identifier_task, reasoner_task],
+        process=Process.sequential,
         verbose=False,
     )
     result = crew.kickoff()
@@ -302,6 +343,9 @@ def _run_crew_with_llm(message: str, conversation_history: list[ConversationMess
 
 
 def _build_llm() -> "LLM":
+    if settings.chat_use_ollama:
+        return _build_ollama_llm()
+
     if settings.groq_api_key:
         return _build_groq_llm()
 
