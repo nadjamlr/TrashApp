@@ -15,7 +15,10 @@ import { Text, View } from '@/components/themes/Themed';
 import { Layout } from '@/constants/Layout';
 import { Sizes } from '@/constants/Sizes';
 import { Spacing } from '@/constants/Spacing';
+import { useLocation } from '@/context/LocationContext';
 import { askChatAgent, ConversationMessage } from '@/services/chatService';
+import { triggerHaptic } from '@/services/haptics';
+import { fetchLocations, Location } from '@/services/locationsService';
 
 const initialMessages: ChatMessage[] = [
   {
@@ -26,14 +29,50 @@ const initialMessages: ChatMessage[] = [
   },
 ];
 
+function formatDistance(distanceMeters: number): string {
+  if (distanceMeters < 1000) return `${Math.round(distanceMeters)} m`;
+  return `${(distanceMeters / 1000).toFixed(1)} km`;
+}
+
+function formatNearestLocations(locations: Location[]): string {
+  if (locations.length === 0) {
+    return 'In der Nähe habe ich keine Wertstoffinsel oder Wertstoffhof gefunden. Vielleicht ist der Radius zu klein.';
+  }
+
+  const sorted = [...locations].sort((a, b) => a.distance_m - b.distance_m);
+  const nearestInsel = sorted.find((location) => location.type === 'wertstoffinsel');
+  const nearestHof = sorted.find((location) => location.type === 'wertstoffhof');
+
+  const lines: string[] = [];
+  if (nearestInsel) {
+    lines.push(
+      `Nächste Wertstoffinsel: ${nearestInsel.name} — ${nearestInsel.address} (${formatDistance(nearestInsel.distance_m)})`,
+    );
+  }
+  if (nearestHof) {
+    lines.push(
+      `Nächster Wertstoffhof: ${nearestHof.name} — ${nearestHof.address} (${formatDistance(nearestHof.distance_m)})`,
+    );
+  }
+  if (lines.length === 0) {
+    const nearest = sorted[0];
+    lines.push(
+      `Nächster Standort: ${nearest.name} — ${nearest.address} (${formatDistance(nearest.distance_m)})`,
+    );
+  }
+  return lines.join('\n');
+}
+
 export default function ChatbotScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isFindingNearest, setIsFindingNearest] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef<ScrollView>(null);
+  const userLocation = useLocation();
   const composerBottom = keyboardHeight ? keyboardHeight + Spacing.md : Layout.chatComposerBottomOffset;
   const scrollBottomPadding = composerBottom + Sizes.chat.composerHeight + Spacing.xl;
 
@@ -74,6 +113,7 @@ export default function ChatbotScreen() {
     setDraft('');
     setErrorMessage(null);
     setIsLoading(true);
+    void triggerHaptic('sendMessage');
     requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
 
     try {
@@ -86,11 +126,56 @@ export default function ChatbotScreen() {
           content: data.response,
         },
       ]);
+      void triggerHaptic('botResponse');
       requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
     } catch {
       setErrorMessage('Could not reach the waste assistant. Please try again.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const findNearestDisposalSpots = async () => {
+    if (isFindingNearest || isLoading) return;
+
+    if (userLocation.error) {
+      setErrorMessage('Standortzugriff nicht möglich. Bitte in den Einstellungen erlauben.');
+      return;
+    }
+
+    setErrorMessage(null);
+    setIsFindingNearest(true);
+    void triggerHaptic('sendMessage');
+
+    const promptMessage: ChatMessage = {
+      id: `${Date.now()}-user`,
+      role: 'user',
+      content: 'Wo ist die nächste Wertstoffinsel oder der nächste Wertstoffhof?',
+    };
+    setMessages((currentMessages) => [...currentMessages, promptMessage]);
+    requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
+
+    try {
+      const locations = await fetchLocations({
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        radius: 5000,
+      });
+      const answer = formatNearestLocations(locations);
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `${Date.now()}-assistant`,
+          role: 'assistant',
+          content: answer,
+        },
+      ]);
+      void triggerHaptic('botResponse');
+      requestAnimationFrame(() => scrollViewRef.current?.scrollToEnd({ animated: true }));
+    } catch {
+      setErrorMessage('Konnte den Standort-Service nicht erreichen.');
+    } finally {
+      setIsFindingNearest(false);
     }
   };
 
@@ -122,9 +207,11 @@ export default function ChatbotScreen() {
           draft={draft}
           errorMessage={errorMessage}
           isLoading={isLoading}
+          isFindingNearest={isFindingNearest}
           bottom={composerBottom}
           onChangeDraft={setDraft}
           onSend={sendMessage}
+          onFindNearest={findNearestDisposalSpots}
         />
       </KeyboardAvoidingView>
     </View>
