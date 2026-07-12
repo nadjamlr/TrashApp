@@ -6,14 +6,40 @@ from chat_agent import retrieval
 from chat_agent.schemas import ChatResponse, ConversationMessage
 
 
-def _build_prompt(
+def _build_identifier_prompt(
+    message: str,
+    conversation_history: list[ConversationMessage],
+) -> str:
+    rules = retrieval.load_rules()
+    relevant_rules_text = retrieval._relevant_rules_text(message, conversation_history)
+    category_names_text = _category_names_text(rules)
+
+    return (
+        "You are a Munich waste disposal rule matcher.\n"
+        "Pick exactly one rule from the selected rules below that best fits the user's item, "
+        "or return unknown when no selected rule fits.\n"
+        "Choose only from the selected rules. Do not invent categories, bins, or reasoning "
+        "beyond what those rules contain.\n"
+        "Use the category names list only to notice that another category might exist; do not "
+        "match against it directly.\n"
+        "Set confidence to 0.7 or higher only when a selected rule clearly matches the item. "
+        "Set confidence below 0.5 and bin to 'unknown' when no rule clearly matches.\n"
+        "Do not include markdown or text outside JSON.\n"
+        "Return only valid JSON matching this shape: "
+        '{"category":"...", "bin":"...", "confidence": 0.0, "reasoning_bullets": ["...", "..."]}\n\n'
+        f"Conversation history:\n{retrieval._format_history(conversation_history)}\n\n"
+        f"Current user question:\n{message}\n\n"
+        f"Available rule category names:\n{category_names_text}\n\n"
+        f"Selected rules:\n{relevant_rules_text}"
+    )
+
+
+def _build_reasoner_prompt(
     message: str,
     conversation_history: list[ConversationMessage],
     response_language: str | None = None,
 ) -> str:
     rules = retrieval.load_rules()
-    relevant_rules_text = retrieval._relevant_rules_text(message, conversation_history)
-    category_names_text = _category_names_text(rules)
     disposal_method_guide_text = _disposal_method_guide_text()
     deposit_rules_text = json.dumps(rules.get("deposit_rules", {}), ensure_ascii=False)
     language = response_language or _preferred_language(message, conversation_history)
@@ -21,17 +47,16 @@ def _build_prompt(
 
     return (
         "You are a Munich waste disposal advisor.\n"
-        "Use the supplied selected rules first. If the selected rules do not cover the item exactly, "
-        "use the fallback disposal method guide for broad classification. If neither source gives enough "
-        "confidence, say that the available rules do not specify it and suggest checking AWM.\n"
-        "You also receive a lightweight list of all available rule category names. Use those names only "
-        "to notice that another category might exist; do not invent disposal instructions from a category "
-        "name alone.\n"
-        "If you are less than 70 percent confident after checking the selected rules and fallback guide, "
+        "The matcher agent has already picked a rule for the user's item. Its JSON output is "
+        "attached as context above. Use that pick as the source of truth for the bin and reasoning.\n"
+        "If the matcher returned bin 'unknown' or confidence below 0.7, use the fallback disposal "
+        "method guide for broad classification. If that also does not give enough confidence, say "
+        "that the available rules do not specify it and suggest checking AWM.\n"
+        "If you are less than 70 percent confident after checking the matcher output and fallback guide, "
         "ask one concise clarifying question that would let you choose the right disposal method. "
         "Do not guess a bin in that case.\n"
         "Never invent street names, station names, shops, districts, collection points, or exact locations.\n"
-        "Only mention a concrete place if it appears verbatim in the selected rules.\n"
+        "Only mention a concrete place if it appears verbatim in the matcher output.\n"
         "For deposit bottles or cans, say they should be returned to retailers or reverse vending machines.\n"
         "For plastic packaging without deposit, say it goes to Wertstoffinseln.\n"
         "Use the language of the first user message in the conversation. German is the default when "
@@ -42,8 +67,6 @@ def _build_prompt(
         "Set suggested_location to null unless exact coordinates are supplied by the rules.\n\n"
         f"Conversation history:\n{retrieval._format_history(conversation_history)}\n\n"
         f"Current user question:\n{message}\n\n"
-        f"Available rule category names:\n{category_names_text}\n\n"
-        f"Selected rules:\n{relevant_rules_text}\n\n"
         f"Fallback disposal method guide:\n{disposal_method_guide_text}\n\n"
         f"Deposit rules:\n{deposit_rules_text}"
     )

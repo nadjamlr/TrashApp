@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     ors_api_key: str = ""
     rules_path: str = "/data/munich_rules.yaml"
     rules_agent_url: str = "http://rules-agent:8002"
+    chat_use_ollama: bool = False
 
 
 settings = Settings()
