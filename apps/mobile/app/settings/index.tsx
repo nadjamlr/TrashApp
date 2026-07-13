@@ -12,8 +12,7 @@ import { useState } from 'react';
 const MAX_VISIBLE = 3;
 
 export default function SettingsScreen() {
-  const { colorScheme, setColorScheme } = useAppTheme();
-  const isDark = colorScheme === 'dark';
+  const { colorScheme } = useAppTheme();
   const theme = Colors[colorScheme];
   const { savedLocations } = useSavedLocations();
   const { t } = useLanguage();
@@ -92,9 +91,6 @@ export default function SettingsScreen() {
           <SettingsRow
             topic={t.darkMode}
             details={[t.darkModeDetails]}
-            hasToggle
-            isToggleActive={isDark}
-            onToggle={(val) => setColorScheme(val ? 'dark' : 'light')}
           />
         </SettingsSection>
 
