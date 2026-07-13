@@ -1,5 +1,5 @@
 import { Link, Tabs } from 'expo-router';
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Icon } from '@/components/navbar/Icon';
 import { Colors } from '@/constants/Colors';
@@ -31,12 +31,17 @@ export default function TabLayout() {
             <Link href="/settings" asChild>
               <Pressable>
                 {({ pressed }) => (
-                  <Icon
-                    name="user"
-                    size={Spacing.lg}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: Spacing.lg, opacity: pressed ? 0.5 : 1 }}
-                  />
+                  <View
+                    style={{
+                      marginRight: Spacing.lg,
+                      padding: Spacing.sm,
+                      borderRadius: 999,
+                      backgroundColor: Colors[colorScheme ?? 'light'].primary,
+                      opacity: pressed ? 0.5 : 1,
+                    }}
+                  >
+                    <Icon name="user" size={Spacing.lg} color={Colors.light.text} />
+                  </View>
                 )}
               </Pressable>
             </Link>
@@ -52,12 +57,17 @@ export default function TabLayout() {
             <Link href="/settings" asChild>
               <Pressable>
                 {({ pressed }) => (
-                  <Icon
-                    name="user"
-                    size={Spacing.xl - Spacing.sm}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: Spacing.lg, opacity: pressed ? 0.5 : 1 }}
-                  />
+                  <View
+                    style={{
+                      marginRight: Spacing.lg,
+                      padding: Spacing.sm,
+                      borderRadius: 999,
+                      backgroundColor: Colors[colorScheme ?? 'light'].primary,
+                      opacity: pressed ? 0.5 : 1,
+                    }}
+                  >
+                    <Icon name="user" size={Spacing.xl - Spacing.sm} color={Colors.light.text} />
+                  </View>
                 )}
               </Pressable>
             </Link>
@@ -73,12 +83,17 @@ export default function TabLayout() {
             <Link href="/settings" asChild>
               <Pressable>
                 {({ pressed }) => (
-                  <Icon
-                    name="user"
-                    size={Spacing.xl - Spacing.sm}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: Spacing.lg, opacity: pressed ? 0.5 : 1 }}
-                  />
+                  <View
+                    style={{
+                      marginRight: Spacing.lg,
+                      padding: Spacing.sm,
+                      borderRadius: 999,
+                      backgroundColor: Colors[colorScheme ?? 'light'].primary,
+                      opacity: pressed ? 0.5 : 1,
+                    }}
+                  >
+                    <Icon name="user" size={Spacing.xl - Spacing.sm} color={Colors.light.text} />
+                  </View>
                 )}
               </Pressable>
             </Link>
