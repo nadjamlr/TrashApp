@@ -9,6 +9,7 @@ from vision_agent.crew import run_verification_crew
 from vision_agent.schemas import VisionResult
 
 CONFIDENCE_THRESHOLD = 0.6
+REJECTED_LABELS = {"Nicht erkannt", "Unbekannt"}
 
 PROMPT = (
 """
@@ -81,7 +82,7 @@ async def identify_item(image_bytes: bytes) -> VisionResult:
     )
     result = await _parse_response(response)
 
-    if result.confidence < CONFIDENCE_THRESHOLD:
+    if result.label not in REJECTED_LABELS and result.confidence < CONFIDENCE_THRESHOLD:
         try:
             result = await asyncio.to_thread(
                 run_verification_crew,
