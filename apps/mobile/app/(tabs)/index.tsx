@@ -15,7 +15,8 @@ import { Spacing } from '@/constants/Spacing';
 import { useColorScheme } from '@/services/useColorScheme';
 import { useLocation } from '@/context/LocationContext';
 import { useLanguage } from '@/context/LanguageContext';
-import { fetchLocations, Location, LocationType } from '@/services/locationsService';
+import { useSavedLocations } from '@/context/SavedLocationsContext';
+import { fetchAllWertstoffhoefe, fetchLocations, Location, LocationType } from '@/services/locationsService';
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
@@ -23,11 +24,14 @@ export default function MapScreen() {
   const theme = Colors[colorScheme];
   const { lat, lng } = useLocation();
   const [locations, setLocations] = useState<Location[]>([]);
+  const [cityHoefe, setCityHoefe] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<Set<LocationType>>(new Set());
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
+  const [topContainerHeight, setTopContainerHeight] = useState(0);
   const markerTappedRef = useRef(false);
   const { t } = useLanguage();
+  const { savedLocations } = useSavedLocations();
 
   useEffect(() => {
     fetchLocations({ lat, lng })
@@ -35,17 +39,35 @@ export default function MapScreen() {
       .catch((e) => console.error('[Locations] Fehler:', e.message));
   }, [lat, lng]);
 
+  // Wenn Wertstoffhöfe-Filter aktiv: gecachte Stadtliste laden (kein wiederholter API-Call)
+  useEffect(() => {
+    if (!selectedTypes.has('wertstoffhof')) {
+      setCityHoefe([]);
+      return;
+    }
+    fetchAllWertstoffhoefe().then(setCityHoefe).catch(() => {});
+  }, [selectedTypes]);
+
+  const savedIds = useMemo(() => new Set(savedLocations.map(l => l.id)), [savedLocations]);
+
+  // Nahe Locations + stadtweite Höfe zusammenführen (dedup)
+  const allLocations = useMemo(() => {
+    const nearbyIds = new Set(locations.map(l => l.id));
+    return [...locations, ...cityHoefe.filter(l => !nearbyIds.has(l.id))];
+  }, [locations, cityHoefe]);
+
   const allMaterials = useMemo(() => {
     const seen = new Set<string>();
-    locations.forEach(loc => loc.materials.forEach(m => seen.add(m)));
+    allLocations.forEach(loc => loc.materials.forEach(m => seen.add(m)));
     return Array.from(seen).sort();
-  }, [locations]);
+  }, [allLocations]);
 
-  const filteredLocations = useMemo(() => locations.filter(loc => {
+  const filteredLocations = useMemo(() => allLocations.filter(loc => {
+    if (savedIds.has(loc.id)) return false; // saved locations werden separat angezeigt
     if (selectedTypes.size > 0 && !selectedTypes.has(loc.type)) return false;
     if (selectedMaterials.size > 0 && !loc.materials.some(m => selectedMaterials.has(m))) return false;
     return true;
-  }), [locations, selectedTypes, selectedMaterials]);
+  }), [allLocations, selectedTypes, selectedMaterials, savedIds]);
 
   function toggleType(type: LocationType) {
     setSelectedTypes(prev => {
@@ -74,6 +96,7 @@ export default function MapScreen() {
           longitudeDelta: 0.05,
         }}
         showsUserLocation
+        mapPadding={{ top: topContainerHeight, left: 0, right: 0, bottom: 0 }}
         onPress={() => {
           if (markerTappedRef.current) { markerTappedRef.current = false; return; }
           Keyboard.dismiss();
@@ -86,10 +109,23 @@ export default function MapScreen() {
             <Marker
               key={loc.id}
               coordinate={{ latitude: loc.lat, longitude: loc.lng }}
-              tracksViewChanges
+              tracksViewChanges={isSelected}
               onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
             >
               <LocationMarker type={loc.type} selected={isSelected} />
+            </Marker>
+          );
+        })}
+        {savedLocations.map((loc) => {
+          const isSelected = selectedLocation?.id === loc.id;
+          return (
+            <Marker
+              key={`saved-${loc.id}`}
+              coordinate={{ latitude: loc.lat, longitude: loc.lng }}
+              tracksViewChanges={isSelected}
+              onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
+            >
+              <LocationMarker type={loc.type} selected={isSelected} saved />
             </Marker>
           );
         })}
@@ -101,7 +137,11 @@ export default function MapScreen() {
         style={styles.overlay}
         pointerEvents="box-none"
       >
-        <View style={[styles.topContainer, { paddingTop: insets.top + 33 + Spacing.md }]} pointerEvents="box-none">
+        <View
+          style={[styles.topContainer, { paddingTop: insets.top + 33 + Spacing.md }]}
+          pointerEvents="box-none"
+          onLayout={(e) => setTopContainerHeight(e.nativeEvent.layout.height)}
+        >
           <Searchbar locations={locations} onSelectLocation={setSelectedLocation} />
           <ScrollView
             horizontal
