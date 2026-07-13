@@ -27,25 +27,29 @@ export function LocationProvider({ children }: { children: ReactNode }) { // Sta
 
   useEffect(() => {
     (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setError('Standortzugriff verweigert');
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setError('Standortzugriff verweigert');
+          setLoading(false);
+          return;
+        }
+
+        const position = await Location.getCurrentPositionAsync({});
+        const { latitude, longitude } = position.coords;
+        setLat(latitude);
+        setLng(longitude);
+
+        const [result] = await Location.reverseGeocodeAsync({ latitude, longitude }); // nutzt Apple Maps oder Google Maps
+        if (result) {
+          const parts = [result.street, result.streetNumber, result.city].filter(Boolean);
+          setAddress(parts.join(' '));
+        }
+      } catch (e) {
+        setError('Standort nicht verfügbar');
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const position = await Location.getCurrentPositionAsync({});
-      const { latitude, longitude } = position.coords;
-      setLat(latitude);
-      setLng(longitude);
-
-      const [result] = await Location.reverseGeocodeAsync({ latitude, longitude }); // nutzt Apple Maps oder Google Maps
-      if (result) {
-        const parts = [result.street, result.streetNumber, result.city].filter(Boolean);
-        setAddress(parts.join(' '));
-      }
-
-      setLoading(false);
     })();
   }, []); // läuft nur einmal beim Start der App ab
 
