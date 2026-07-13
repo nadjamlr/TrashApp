@@ -30,6 +30,17 @@ items:
     alternatives:
       - Wertstoffhof for larger quantities of cardboard
       - Sperrmuellabholung for very large cardboard quantities
+    keywords:
+      - Zeitung, Zeitungen, Tageszeitung, Tageszeitungen
+      - Zeitschrift, Zeitschriften, Magazin, Magazine
+      - Papier, Papiere, Papierblatt, Blatt
+      - Karton, Kartons, Kartonage, Kartonagen
+      - Pappe, Pappen, Pappkarton, Pappkartons, Pappschachtel
+      - Brief, Briefe, Briefumschlag, Umschlag, Umschläge
+      - Buch, Bücher, Heft, Hefte, Katalog, Kataloge
+      - Papiertüte, Papierbeutel, Papierverpackung, Papierverpackungen
+      - Schulheft, Notizbuch, Notizblock
+      - newspaper, paper, cardboard, magazine, book, envelope
     notes:
       - Use the paper bin for clean paper, newspapers, envelopes, books without covers, folded cardboard, paper bags, and paper packaging.
       - Dirty paper, wallpaper, backing paper from self-adhesive foils, and hygiene paper belong in Restmuelltonne.
@@ -64,6 +75,66 @@ items:
       - leftovers
       - cooked food
       - raw food
+      # Obst / Früchte
+      - Obst
+      - Frucht
+      - Früchte
+      - Obstrest
+      - Obstschale
+      - Banane
+      - Bananenschale
+      - Apfel
+      - Apfelschale
+      - Apfelkern
+      - Orange
+      - Mandarine
+      - Zitrone
+      - Erdbeere
+      - Himbeere
+      - Blaubeere
+      - Traube
+      - Weintraube
+      - Kirsche
+      - Pflaume
+      - Pfirsich
+      - Mango
+      - Ananas
+      - Melone
+      - Kiwi
+      - Birne
+      - fruit
+      - banana
+      - apple
+      - orange
+      # Gemüse
+      - Gemüse
+      - Gemüserest
+      - Salat
+      - Salatrest
+      - Kartoffel
+      - Kartoffelschale
+      - Karotte
+      - Möhre
+      - Zwiebel
+      - Tomate
+      - Gurke
+      - Paprika
+      - Brokkoli
+      - Blumenkohl
+      - Spinat
+      - Zucchini
+      - Aubergine
+      - vegetable
+      - vegetables
+      # Fleisch & Fisch
+      - Fleisch
+      - Fleischrest
+      - Fisch
+      - Fischrest
+      - Knochen
+      - meat
+      - fish
+      # Brot & Backwaren
       - bread
       - Brot
       - Brötchen
@@ -71,9 +142,16 @@ items:
       - sandwich
       - Sandwich
       - belegtes Brot
+      - Backware
+      - Kuchen
+      - Keks
+      # Sonstiges Bio
       - fruit scraps
       - vegetable scraps
       - coffee grounds
+      - Kaffeesatz
+      - Kaffeefilter
+      - Blumen
       - flowers
       - Gurke
       - Gurken
@@ -107,6 +185,13 @@ items:
       - Karotte
       - Karotten
       - Salat
+      - Pflanzen
+      - Laub
+      - Gras
+      - Eier
+      - Eischale
+      - Nuss
+      - Nüsse
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/bioabfall
 
   - name: Glass packaging

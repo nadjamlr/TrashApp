@@ -24,6 +24,8 @@ export default function ResultScreen() {
 
   const [rules, setRules] = useState<RulesResult | null>(null);
   const [insight, setInsight] = useState<InsightResult | null>(null);
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightError, setInsightError] = useState(false);
   const [rulesError, setRulesError] = useState(false);
 
   useEffect(() => {
@@ -44,9 +46,11 @@ export default function ResultScreen() {
         }
       }
       setRules(result);
+      setInsightLoading(true);
       generateInsight(label, material, result!.bin)
         .then(setInsight)
-        .catch(() => {});
+        .catch(() => setInsightError(true))
+        .finally(() => setInsightLoading(false));
     };
 
     classify();
@@ -92,11 +96,13 @@ export default function ResultScreen() {
         onShowOnMap={() => router.push('/(tabs)/')}
         onAskMore={() => router.push('/(tabs)/chatbot')}
       />
-      {insight && (
-        <View style={styles.factWrapper}>
-          <FactCard fact={insight.fact} />
-        </View>
-      )}
+      <View style={styles.factWrapper}>
+        <FactCard
+          fact={insight?.fact ?? null}
+          loading={insightLoading}
+          error={insightError}
+        />
+      </View>
     </ScrollView>
   );
 }

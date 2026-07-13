@@ -1,26 +1,61 @@
+import random
+from typing import Literal
+
 from crewai import Agent, Crew, LLM, Task
 
 from insight_agent.schemas import InsightRequest, InsightResult
-from trashapp_shared.rules import get_rules_text
+from trashapp_shared.rules import find_rule_item
 from trashapp_shared.settings import settings
+
+FALLBACK_FACT = "Richtiges Trennen schont Ressourcen und hilft der Umwelt."
+FALLBACK_CATEGORY = "Impact"
+
+_CATEGORY_INSTRUCTIONS: dict[str, str] = {
+    "Myth": (
+        "Kategorie: Myth\n"
+        "Korrigiere einen häufigen Irrtum über die Entsorgung dieses Objekts.\n"
+        "Beispiel: \"Viele denken, Plastikflaschen gehören in den Müll – sie kommen in die Wertstoffinsel.\""
+    ),
+    "Impact": (
+        "Kategorie: Impact\n"
+        "Erkläre die ökologische Wirkung von richtigem oder falschem Recycling dieses Objekts.\n"
+        "Beispiel: \"Eine recycelte Glasflasche spart bis zu 30 % Energie gegenüber neuer Produktion.\""
+    ),
+    "Future": (
+        "Kategorie: Future\n"
+        "Beschreibe, was nach dem Recycling aus dem Material dieses Objekts werden kann.\n"
+        "Beispiel: \"Aus alten Zeitungen wird neues Zeitungspapier hergestellt.\""
+    ),
+}
+
+
+def _build_rule_context(label: str, material: str) -> str:
+    rule = find_rule_item(label, material)
+    if rule:
+        notes = "\n".join(f"- {n}" for n in rule.get("notes", []))
+        return (
+            f"Gescanntes Objekt: {label} (Material: {material})\n"
+            f"Entsorgung: {rule.get('bin', 'unbekannt')}\n"
+            f"Regeln für diese Kategorie:\n{notes}"
+        )
+    return f"Gescanntes Objekt: {label} (Material: {material})"
 
 
 async def run_agent(request: InsightRequest) -> InsightResult:
-    """
-    Run the CrewAI agent to generate a contextual recycling fact for a given item.
-    The fact is grounded in the Munich waste rules and categorized as Myth, Impact, or Future.
-    """
+    category: Literal["Myth", "Impact", "Future"] = random.choice(["Myth", "Impact", "Future"])
     llm = LLM(model=f"ollama/{settings.ollama_model_text}", base_url=settings.ollama_host)
 
     agent = Agent(
-        role="Munich recycling insight writer",
+        role="Münchener Recycling-Experte",
         goal=(
-            "Write a short contextual recycling fact that helps Munich residents learn something useful "
-            "about the scanned item."
+            "Schreibe einen kurzen, kontextbezogenen Recycling-Hinweis auf DEUTSCH "
+            "für Münchener Bürger zum gescannten Gegenstand."
         ),
         backstory=(
-            "You are a careful recycling educator. You only use the supplied Munich waste rules and the item "
-            "details to generate one single sentence that feels specific, factual, and helpful."
+            "Du bist ein sorgfältiger Recycling-Pädagoge. Du verwendest ausschließlich die "
+            "bereitgestellten Münchener Abfallregeln und die Gegenstandsdetails, um einen einzigen "
+            "Satz zu formulieren, der spezifisch, faktisch und hilfreich ist. "
+            "Du antwortest IMMER auf Deutsch."
         ),
         llm=llm,
         verbose=False,
@@ -28,43 +63,31 @@ async def run_agent(request: InsightRequest) -> InsightResult:
 
     task = Task(
         description=(
-            "Use ONLY the Munich waste disposal rules below as grounding.\n"
-            "Generate exactly one single sentence in German that is specific to the scanned item's material and bin.\n"
-            "The sentence must be short, contextual, and non-generic (avoid generic recycling trivia).\n"
-            "Choose exactly one category from these three values: Myth, Impact, Future.\n"
-            "Category meanings and guidelines:\n"
-            "- Myth: Myth-buster that clears up common misconceptions (e.g. explaining why 'compostable plastic bags' are prohibited in Munich's organic waste bin / Biotonne)\n"
-            "- Impact: Ecological impact showing the consequence of correct or incorrect sorting (e.g. how a greasy pizza box ruins an entire load of waste paper)\n"
-            "- Future: Vision of the future explaining what the material can be recycled into (e.g. how aluminum foil is recycled into a bicycle frame)\n\n"
-            "Return only valid JSON matching this exact shape:\n"
-            '{"fact": "...", "category": "Myth|Impact|Future"}\n\n'
-            "RULES:\n"
-            "{rules_text}\n\n"
-            "ITEM:\n"
-            "Label: {label}\n"
-            "Material: {material}\n"
-            "Bin: {bin}"
+            "WICHTIG: Antworte ausschließlich auf DEUTSCH.\n\n"
+            "Aufgabe: Schreibe genau EINEN kurzen deutschen Satz (max. 20 Wörter) über das gescannte Objekt.\n"
+            "Verwende NUR die untenstehenden Regelinformationen.\n"
+            "Der Satz muss das Objekt beim Namen nennen.\n\n"
+            "{category_instruction}\n\n"
+            f"Die Kategorie im JSON muss exakt \"{category}\" sein.\n"
+            "Gib NUR gültiges JSON zurück:\n"
+            '{"fact": "...", "category": "' + category + '"}\n\n'
+            "REGELWERK FÜR DIESEN GEGENSTAND:\n"
+            "{rule_context}"
         ),
-        expected_output="A JSON object with fact and category fields.",
+        expected_output=f'JSON object: {{"fact": "<kurzer deutscher Satz>", "category": "{category}"}}',
         agent=agent,
         output_pydantic=InsightResult,
     )
 
-
     crew = Crew(agents=[agent], tasks=[task], verbose=False)
     result = await crew.kickoff_async(
         inputs={
-            "rules_text": get_rules_text(),
-            "label": request.label,
-            "material": request.material,
-            "bin": request.bin,
+            "rule_context": _build_rule_context(request.label, request.material),
+            "category_instruction": _CATEGORY_INSTRUCTIONS[category],
         }
     )
 
     if result.pydantic is None:
-        raise ValueError(
-            f"Agent returned no structured result for label='{request.label}', "
-            f"material='{request.material}', bin='{request.bin}'. Raw output: {result.raw}"
-        )
+        return InsightResult(fact=FALLBACK_FACT, category=FALLBACK_CATEGORY)
 
     return result.pydantic
