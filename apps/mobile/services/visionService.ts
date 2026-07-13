@@ -18,14 +18,22 @@ export async function identifyImage(uri: string): Promise<VisionResult> {
   const body = new FormData();
   body.append('image', { uri, name: filename, type } as unknown as Blob);
 
-  const response = await fetch(`${BASE_URL}/vision/identify`, {
-    method: 'POST',
-    body,
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.timeout = 360_000;
+    xhr.open('POST', `${BASE_URL}/vision/identify`);
+    xhr.responseType = 'json';
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.response as VisionResult);
+      } else {
+        reject(new Error(`Vision agent error: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Vision agent network error'));
+    xhr.ontimeout = () => reject(new Error('Vision agent timed out'));
+
+    xhr.send(body);
   });
-
-  if (!response.ok) {
-    throw new Error(`Vision agent error: ${response.status}`);
-  }
-
-  return response.json() as Promise<VisionResult>;
 }

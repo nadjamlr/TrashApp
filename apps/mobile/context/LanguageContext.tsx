@@ -29,7 +29,7 @@ const translations = {
     language: 'Sprache',
     languageDetails: 'App-Sprache auswählen',
     darkMode: 'Dunkelmodus',
-    darkModeDetails: 'Hell- oder Dunkeldesign wählen',
+    darkModeDetails: 'Folgt den Systemeinstellungen deines Handys',
     // Map
     filterWertstoffhoefe: 'Wertstoffhöfe',
     filterWertstoffinseln: 'Wertstoffinseln',
@@ -68,7 +68,7 @@ const translations = {
     language: 'Language',
     languageDetails: 'Choose the language for the app',
     darkMode: 'Dark Mode',
-    darkModeDetails: 'Choose dark or light mode',
+    darkModeDetails: 'Follows your phone\'s system settings',
     // Map
     filterWertstoffhoefe: 'Recycling Centers',
     filterWertstoffinseln: 'Recycling Islands',
