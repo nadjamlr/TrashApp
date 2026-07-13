@@ -4,6 +4,7 @@ import { SettingsRow } from '@/components/settings/SettingsRow';
 import { SettingsSection } from '@/components/settings/SettingsSection';
 import { useAppTheme } from '@/context/ThemeContext';
 import { useSavedLocations } from '@/context/SavedLocationsContext';
+import { Icon } from '@/components/navbar/Icon';
 import { useLanguage } from '@/context/LanguageContext';
 import { Colors } from '@/constants/Colors';
 import { Spacing } from '@/constants/Spacing';
@@ -14,7 +15,7 @@ const MAX_VISIBLE = 3;
 export default function SettingsScreen() {
   const { colorScheme } = useAppTheme();
   const theme = Colors[colorScheme];
-  const { savedLocations } = useSavedLocations();
+  const { savedLocations, toggleSaved } = useSavedLocations();
   const { t } = useLanguage();
   const [showAll, setShowAll] = useState(false);
   const visibleLocations = showAll ? savedLocations : savedLocations.slice(0, MAX_VISIBLE);
@@ -45,8 +46,13 @@ export default function SettingsScreen() {
                   <RNView key={loc.id}>
                     {index > 0 && <RNView style={[styles.separator, { backgroundColor: theme.separator }]} />}
                     <RNView style={styles.savedItem}>
-                      <Text variant="p2" style={{ color: theme.text }}>{loc.name}</Text>
-                      {loc.address ? <Text variant="c2" style={{ color: theme.muted }}>{loc.address}</Text> : null}
+                      <RNView style={{ flex: 1 }}>
+                        <Text variant="p2" style={{ color: theme.text }}>{loc.name}</Text>
+                        {loc.address ? <Text variant="c2" style={{ color: theme.muted }}>{loc.address}</Text> : null}
+                      </RNView>
+                      <Pressable onPress={() => toggleSaved(loc)} hitSlop={8}>
+                        <Icon name="x" size={18} color={theme.muted} />
+                      </Pressable>
                     </RNView>
                   </RNView>
                 ))}
@@ -120,9 +126,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   savedItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
-    gap: 2,
+    gap: Spacing.sm,
   },
   separator: {
     height: StyleSheet.hairlineWidth,

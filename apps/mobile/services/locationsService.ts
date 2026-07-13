@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 const BASE_URL = process.env.EXPO_PUBLIC_LOCATIONS_SERVICE_URL;
@@ -56,20 +55,12 @@ export async function fetchLocations({
   return data.locations as Location[];
 }
 
-const HOEFE_CACHE_KEY = 'cached_wertstoffhoefe';
-
-// Münchner Wertstoffhöfe: beim ersten Aufruf von der API laden und dauerhaft cachen.
+// München-Mitte als Ankerpunkt, 20 km Radius deckt die ganze Stadt ab.
+// Das Backend cached die Daten im Memory – kein eigener Cache nötig.
 export async function fetchAllWertstoffhoefe(): Promise<Location[]> {
-  const cached = await AsyncStorage.getItem(HOEFE_CACHE_KEY);
-  if (cached) return JSON.parse(cached) as Location[];
-
-  // München-Mitte als Ankerpunkt, 20 km Radius deckt die ganze Stadt ab
   const params = new URLSearchParams({ lat: '48.1374', lng: '11.5755', radius: '20000' });
   const response = await fetch(`${LOCATIONS_SERVICE_URL}/locations?${params}`);
   if (!response.ok) throw new Error(`Locations service error: ${response.status}`);
-
   const data = await response.json();
-  const hoefe = (data.locations as Location[]).filter(l => l.type === 'wertstoffhof');
-  await AsyncStorage.setItem(HOEFE_CACHE_KEY, JSON.stringify(hoefe));
-  return hoefe;
+  return (data.locations as Location[]).filter(l => l.type === 'wertstoffhof');
 }

@@ -31,6 +31,8 @@ const translations = {
     darkMode: 'Dunkelmodus',
     darkModeDetails: 'Folgt den Systemeinstellungen deines Handys',
     // Map
+    filterSaved: 'Gespeichert',
+    filterSavedEmpty: 'Noch keine Standorte gespeichert.',
     filterWertstoffhoefe: 'Wertstoffhöfe',
     filterWertstoffinseln: 'Wertstoffinseln',
     filterMaterial: 'Material',
@@ -70,6 +72,8 @@ const translations = {
     darkMode: 'Dark Mode',
     darkModeDetails: 'Follows your phone\'s system settings',
     // Map
+    filterSaved: 'Saved',
+    filterSavedEmpty: 'No saved locations yet.',
     filterWertstoffhoefe: 'Recycling Centers',
     filterWertstoffinseln: 'Recycling Islands',
     filterMaterial: 'Material',
@@ -110,6 +114,8 @@ export type Translations = {
   languageDetails: string;
   darkMode: string;
   darkModeDetails: string;
+  filterSaved: string;
+  filterSavedEmpty: string;
   filterWertstoffhoefe: string;
   filterWertstoffinseln: string;
   filterMaterial: string;
