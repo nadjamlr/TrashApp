@@ -3871,6 +3871,7 @@ name = "vision-agent"
 version = "0.1.0"
 source = { editable = "vision-agent" }
 dependencies = [
+    { name = "crewai" },
     { name = "python-multipart" },
     { name = "trashapp-shared" },
 ]
@@ -3883,6 +3884,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "crewai", specifier = ">=0.80.0" },
     { name = "python-multipart", specifier = ">=0.0.9" },
     { name = "trashapp-shared", editable = "shared" },
 ]
