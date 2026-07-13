@@ -162,7 +162,6 @@ export default function MapScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={styles.filtersScroll}
             contentContainerStyle={styles.filters}
           >
             <Pressable
@@ -237,9 +236,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.md,
     gap: Spacing.sm,
-    overflow: 'visible',
-  },
-  filtersScroll: {
     overflow: 'visible',
   },
   filters: {

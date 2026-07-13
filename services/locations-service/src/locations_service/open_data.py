@@ -65,7 +65,7 @@ async def _fetch_and_parse() -> list:
     scraped_hours = _load_hours_yaml()
     hoefe = _parse_hoefe(hof_resp.content.decode("utf-8"), scraped_hours)
     inseln = _parse_inseln(insel_resp.content.decode("utf-8"))
-    return hoefe + inseln
+    return [loc for loc in hoefe + inseln if loc["lat"] is not None and loc["lng"] is not None]
 
 
 def _parse_hoefe(raw: str, scraped_hours: dict[str, dict] | None = None) -> list:

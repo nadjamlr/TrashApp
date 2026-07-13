@@ -52,7 +52,7 @@ export async function fetchLocations({
   if (!response.ok) throw new Error(`Locations service error: ${response.status}`);
 
   const data = await response.json();
-  return data.locations as Location[];
+  return (data.locations as Location[]).filter(l => l.lat != null && l.lng != null);
 }
 
 // München-Mitte als Ankerpunkt, 20 km Radius deckt die ganze Stadt ab.
@@ -62,5 +62,5 @@ export async function fetchAllWertstoffhoefe(): Promise<Location[]> {
   const response = await fetch(`${LOCATIONS_SERVICE_URL}/locations?${params}`);
   if (!response.ok) throw new Error(`Locations service error: ${response.status}`);
   const data = await response.json();
-  return (data.locations as Location[]).filter(l => l.type === 'wertstoffhof');
+  return (data.locations as Location[]).filter(l => l.type === 'wertstoffhof' && l.lat != null && l.lng != null);
 }
