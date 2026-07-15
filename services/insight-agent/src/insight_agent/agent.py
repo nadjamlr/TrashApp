@@ -53,10 +53,12 @@ def _build_rule_context(label: str, material: str) -> str:
 
 
 _DISPOSAL_INSTRUCTION = re.compile(
-    r"(gehört|sollte?|muss|müssen|darf|dürfen|werden|wird)\s.{0,50}"
-    r"(entsorgt|recycelt|entsorgen|in die (Bio|Papier|Restmüll|Gelbe)tonne"
+    r"(gehört|gehören|sollte?|muss|müssen|darf|dürfen|werden|wird|sind)\s.{0,60}"
+    r"(entsorgt|recycelt|entsorgen|zu entsorgen"
+    r"|nicht in der .{0,20}tonne"
+    r"|in die (Bio|Papier|Restmüll|Gelbe)tonne"
     r"|in (der|den|die) (Bio|Papier|Restmüll|Gelbe)tonne"
-    r"|im Wertstoffhof|in den Müll|in Wertstoffinseln)",
+    r"|im Wertstoffhof|in den Müll|in Wertstoffinseln?|an die Wertstoffinseln?)",
     re.IGNORECASE,
 )
 

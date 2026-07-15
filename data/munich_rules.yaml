@@ -28,8 +28,8 @@ items:
       - paper
       - cardboard
     alternatives:
-      - Wertstoffhof for larger quantities of cardboard
-      - Sperrmuellabholung for very large cardboard quantities
+      - Wertstoffhof für größere Mengen Karton und Pappe
+      - Sperrmüllabholung für sehr große Kartonmengen
     keywords:
       - Zeitung, Zeitungen, Tageszeitung, Tageszeitungen
       - Zeitschrift, Zeitschriften, Magazin, Magazine
@@ -42,9 +42,9 @@ items:
       - Schulheft, Notizbuch, Notizblock
       - newspaper, paper, cardboard, magazine, book, envelope
     notes:
-      - Use the paper bin for clean paper, newspapers, envelopes, books without covers, folded cardboard, paper bags, and paper packaging.
-      - Dirty paper, wallpaper, backing paper from self-adhesive foils, and hygiene paper belong in Restmuelltonne.
-      - Beverage cartons and coated dairy cartons belong at Wertstoffinseln, not in the paper bin.
+      - Papiertonne für sauberes Papier: Zeitungen, Briefe, Bücher ohne Einband, gefalteter Karton, Papiertüten und Papierverpackungen.
+      - Schmutziges Papier, Tapeten, Rückpapier von selbstklebenden Folien und Hygienepapier kommen in die Restmülltonne.
+      - Getränkekartons und beschichtete Milchkartons kommen an die Wertstoffinseln, nicht in die Papiertonne.
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/papier-kartonagen
 
   - name: Organic kitchen and garden waste
@@ -61,12 +61,12 @@ items:
       - vegetable
       - organic
     alternatives:
-      - Wertstoffhof for larger quantities of tree and shrub cuttings
-      - Home composting where suitable
+      - Wertstoffhof für größere Mengen Baum- und Strauchschnitt
+      - Eigenkompostierung, falls geeignet
     notes:
-      - Use the brown organic bin for fruit and vegetable scraps, cooked and raw food scraps, bread, coffee grounds, filters, flowers, small amounts of potting soil, leaves, grass, and small branches.
-      - Plastic bags and compostable plastic bio-bags must not go into the Biotonne.
-      - Dog feces, cat litter, and small animal litter do not belong in the Biotonne.
+      - In die Biotonne: Obst- und Gemüsereste, gekochte und rohe Speisereste, Brot, Kaffeesatz und -filter, Blumen, kleine Mengen Erde, Laub, Gras und kleine Äste.
+      - Plastiktüten und kompostierbare Plastik-Biobeutel dürfen nicht in die Biotonne.
+      - Hundekot, Katzenstreu und Kleintier-Einstreu gehören nicht in die Biotonne.
     keywords:
       - Bioabfall
       - organic waste
@@ -196,17 +196,17 @@ items:
 
   - name: Glass packaging
     bin: Wertstoffinseln
-    deposit: Pfand bottles must be returned to retailers or reverse vending machines.
+    deposit: Pfandflaschen beim Händler oder am Pfandautomaten zurückgeben.
     materials:
       - Glas
       - glass
     alternatives:
-      - Return reusable or deposit glass bottles through the deposit system.
-      - Wertstoffhof only where accepted for special glass items listed by AWM.
+      - Pfand- und Mehrwegflaschen über das Pfandsystem zurückgeben.
+      - Wertstoffhof nur für besondere Glasartikel laut AWM-Liste.
     notes:
-      - Use Wertstoffinseln for disposable glass packaging such as bottles and jars without deposit.
-      - Do not put ceramic glass, window glass, mirrors, or drinking glasses into glass packaging containers.
-      - Respect Wertstoffinsel insertion times, generally Monday to Saturday from 7:00 to 19:00.
+      - Wertstoffinseln für Einwegglasbehälter wie Flaschen und Gläser ohne Pfand.
+      - Kein Keramikglas, Fensterglas, Spiegel oder Trinkgläser in den Glascontainer.
+      - Einwurfzeiten an Wertstoffinseln beachten: in der Regel Mo–Sa 7:00–19:00 Uhr.
     keywords:
       - Flasche
       - Flaschen
@@ -229,19 +229,19 @@ items:
 
   - name: Plastic packaging
     bin: Wertstoffinseln
-    deposit: Pfand applies to many beverage bottles; return those to retailers or reverse vending machines.
+    deposit: Pfand gilt für viele Getränkeflaschen – beim Händler oder am Pfandautomaten zurückgeben.
     materials:
       - Kunststoff
       - Plastik
       - plastic
       - Polymer
     alternatives:
-      - Avoid single-use plastic and use reusable packaging where possible.
-      - Wertstoffhof for some non-packaging plastic items listed by AWM.
+      - Einwegplastik vermeiden und auf Mehrwegverpackungen umsteigen.
+      - Wertstoffhof für bestimmte Kunststoff-Nicht-Verpackungen laut AWM.
     notes:
-      - Use Wertstoffinseln for plastic packaging such as foils, shopping bags, shampoo bottles, detergent containers, and yoghurt cups.
-      - Packaging should be empty; it does not need to be rinsed perfectly clean.
-      - Non-packaging plastic household items may have different disposal routes; check the Abfall-ABC entry.
+      - Wertstoffinseln für Kunststoffverpackungen: Folien, Tragetaschen, Shampoo-Flaschen, Waschmittelkanister und Joghurtbecher.
+      - Verpackungen müssen leer sein; perfektes Ausspülen ist nicht nötig.
+      - Kunststoff-Haushaltsartikel ohne Verpackungsfunktion können andere Entsorgungswege haben – Abfall-ABC prüfen.
     keywords:
       - Plastikflasche
       - PET-Flasche
@@ -255,18 +255,18 @@ items:
 
   - name: Metal packaging
     bin: Wertstoffinseln
-    deposit: Pfand applies to many beverage cans; return those to retailers or reverse vending machines.
+    deposit: Pfand gilt für viele Getränkedosen – beim Händler oder am Pfandautomaten zurückgeben.
     materials:
       - Metall
       - Aluminium
       - metal
       - aluminium
     alternatives:
-      - Wertstoffhof for larger metal household items such as pots, pans, or tools.
+      - Wertstoffhof für größere Metallgegenstände wie Töpfe, Pfannen oder Werkzeug.
     notes:
-      - Use Wertstoffinseln for metal packaging such as cans, aluminium trays, aluminium foil, and metal lids.
-      - Empty spray cans without hazardous residues can usually go with packaging; cans with hazardous residues belong with problem waste.
-      - Do not leave waste next to containers; this is considered illegal dumping.
+      - Wertstoffinseln für Metallverpackungen: Dosen, Aluschalen, Alufolie und Metalldeckel.
+      - Leere Sprühdosen ohne Gefahrstoffreste kommen mit den Verpackungen; Dosen mit Gefahrstoffresten kommen zum Sondermüll.
+      - Abfall nicht neben den Containern abstellen – das gilt als illegale Entsorgung.
     keywords:
       - Dose
       - Dosen
@@ -292,11 +292,11 @@ items:
     bin: Wertstoffinseln
     deposit: none
     alternatives:
-      - Avoid composite packaging where reusable alternatives are available.
+      - Mehrwegalternativen bevorzugen, wo möglich.
     notes:
-      - Milk cartons, beverage cartons, and coated cream or yoghurt containers belong at Wertstoffinseln.
-      - These packages do not belong in the Papiertonne because they are composite materials.
-      - Empty packaging before disposal.
+      - Milchkartons, Getränkekartons und beschichtete Behälter für Sahne oder Joghurt kommen an die Wertstoffinseln.
+      - Diese Verbundverpackungen gehören nicht in die Papiertonne.
+      - Verpackungen vor der Entsorgung leeren.
     keywords:
       - Milchkarton
       - Getränkekarton
@@ -313,11 +313,11 @@ items:
     bin: Restmuelltonne
     deposit: none
     alternatives:
-      - Use recycling, Biotonne, Papiertonne, Wertstoffinseln, Wertstoffhof, or Giftmobil first when an item has a dedicated route.
+      - Zuerst Recycling, Biotonne, Papiertonne, Wertstoffinseln, Wertstoffhof oder Giftmobil nutzen, wenn ein eigener Entsorgungsweg vorhanden ist.
     notes:
-      - Restmuelltonne is for waste that cannot be recycled through Munich's separate collection systems.
-      - Examples from AWM include dirty paper, hygiene products, backpaper, and many contaminated small household wastes.
-      - Batteries, electronics, problem waste, and recyclable packaging do not belong in Restmuelltonne.
+      - Restmülltonne für Abfälle, die nicht über Münchens getrennte Sammelsysteme recycelt werden können.
+      - Beispiele laut AWM: Schmutzpapier, Hygieneartikel, Rückpapier und kontaminierte Kleinabfälle.
+      - Batterien, Elektronik, Problemabfälle und recycelbare Verpackungen gehören nicht in die Restmülltonne.
     keywords:
       - Restmuell
       - Restmüll
@@ -343,15 +343,15 @@ items:
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon
 
   - name: Batteries and button cells
-    bin: Retail battery collection boxes
+    bin: Rückgabeboxen im Handel
     deposit: none
     alternatives:
       - Wertstoffhof
       - Giftmobil
     notes:
-      - Batteries must not be thrown into nature or disposed of in Restmuelltonne.
-      - Shops that sell batteries usually provide collection boxes near the entrance.
-      - Prefer rechargeable batteries where possible.
+      - Batterien nicht in die Natur werfen oder in die Restmülltonne.
+      - Geschäfte, die Batterien verkaufen, haben meist Sammelboxen am Eingang.
+      - Wenn möglich, auf wiederaufladbare Akkus umsteigen.
     keywords:
       - Batterie
       - Batterien
@@ -367,13 +367,13 @@ items:
     bin: Wertstoffhof
     deposit: none
     alternatives:
-      - Retail take-back points
+      - Handel-Rückgabestellen
       - Giftmobil
-      - Wertstoffmobil for small quantities where available
+      - Wertstoffmobil für kleine Mengen, falls verfügbar
     notes:
-      - Remove batteries and rechargeable batteries from unsuitable-for-reuse electronic devices before disposal where possible.
-      - Insulate lithium battery poles with tape or put them back into packaging before disposal because they can ignite.
-      - Defective lithium batteries are a fire risk and need careful handling.
+      - Wenn möglich, Akkus aus defekten Elektrogeräten vor der Entsorgung entnehmen.
+      - Lithium-Akku-Pole vor der Entsorgung mit Klebeband isolieren oder in die Originalverpackung legen – Brandgefahr.
+      - Defekte Lithium-Akkus sind ein Brandrisiko und müssen sorgfältig behandelt werden.
     keywords:
       - Akku
       - Akkus
@@ -394,13 +394,13 @@ items:
 
   - name: Car batteries and lead batteries
     bin: Wertstoffhof
-    deposit: Retailers may charge or refund a statutory battery deposit depending on purchase and return proof.
+    deposit: Händler können ein gesetzliches Batteriepfand erheben oder erstatten – Kaufnachweis erforderlich.
     alternatives:
-      - Return to specialist retailers, who have a legal take-back obligation for battery types they sell.
+      - Rückgabe an Fachhändler, die eine gesetzliche Rücknahmepflicht haben.
     notes:
-      - Up to two car batteries per person per day can be handed in at Munich Wertstoffhoefe.
-      - Transport carefully so that battery acid does not spill.
-      - Do not dispose of lead batteries in Restmuelltonne.
+      - Pro Person und Tag können bis zu zwei Autobatterien an Münchner Wertstoffhöfen abgegeben werden.
+      - Vorsichtig transportieren, damit keine Batteriesäure ausläuft.
+      - Bleiakkus nicht in die Restmülltonne.
     keywords:
       - Autobatterie
       - Autobatterien
@@ -420,13 +420,13 @@ items:
       - electronic
       - Elektrik
     alternatives:
-      - Retail take-back where legally offered
-      - Wertstoffmobil for small devices where available
-      - Repair, donate, sell, or reuse if still functional
+      - Handel-Rücknahme, wo gesetzlich vorgesehen
+      - Wertstoffmobil für kleine Geräte, falls verfügbar
+      - Reparieren, spenden, verkaufen oder weiterverwenden, falls noch funktionsfähig
     notes:
-      - Electrical and electronic devices must not be disposed of in Restmuelltonne.
-      - Delete personal data before handing in devices such as phones, tablets, laptops, or storage media.
-      - Remove accessible batteries and rechargeable batteries before disposal when the device is not intended for reuse.
+      - Elektrische und elektronische Geräte dürfen nicht in die Restmülltonne.
+      - Persönliche Daten vor der Abgabe von Handys, Tablets, Laptops oder Speichermedien löschen.
+      - Zugängliche Batterien und Akkus vor der Entsorgung entnehmen, wenn das Gerät nicht weiterverwendet wird.
     keywords:
       - Elektrogeraet
       - Elektrogerät
@@ -452,12 +452,12 @@ items:
     bin: Wertstoffhof
     deposit: none
     alternatives:
-      - Sperrmuellabholung for eligible large appliances
-      - Repair, donate, sell, or reuse if still functional
+      - Sperrmüllabholung für geeignete Großgeräte
+      - Reparieren, spenden, verkaufen oder weiterverwenden, falls noch funktionsfähig
     notes:
-      - Munich Wertstoffhoefe accept large electrical appliances in household quantities; AWM lists two large appliances per delivery for many categories.
-      - Cooling and freezing appliances are limited separately, usually one item per delivery.
-      - Large electronic appliances must not be placed in Restmuelltonne.
+      - Münchner Wertstoffhöfe nehmen Großelektrogeräte in Haushaltsmengen an; laut AWM bis zu zwei Großgeräte pro Anlieferung.
+      - Kühl- und Gefriergeräte sind separat limitiert, in der Regel ein Stück pro Anlieferung.
+      - Großelektrogeräte dürfen nicht in die Restmülltonne.
     keywords:
       - Waschmaschine
       - Waschmaschinen
@@ -493,13 +493,13 @@ items:
       - clothing
       - fabric
     alternatives:
-      - Wertstoffhof for bagged wearable clothing and shoes
-      - Charity collections and second-hand shops
-      - Sperrmuellabholung for wearable clothing and shoes packed in sacks
+      - Wertstoffhof für verpackte, tragbare Kleidung und Schuhe
+      - Charity-Sammlungen und Secondhand-Läden
+      - Sperrmüllabholung für tragbare Kleidung und Schuhe in Säcken
     notes:
-      - Only put well-preserved and clean textiles into clothing containers, packed in bags or sacks.
-      - Broken or heavily soiled textiles belong in Restmuelltonne.
-      - AWM notes that rags, bedding, curtains, and loose fabrics are not collected by Sperrmuellabholung.
+      - Nur gut erhaltene und saubere Textilien in Altkleidercontainer – in Tüten oder Säcken verpackt.
+      - Kaputte oder stark verschmutzte Textilien kommen in die Restmülltonne.
+      - Laut AWM werden Lumpen, Bettwäsche, Vorhänge und lose Stoffe nicht von der Sperrmüllabholung mitgenommen.
     keywords:
       - Altkleider
       - alte Kleidung
@@ -518,12 +518,12 @@ items:
     bin: Wertstoffhof
     deposit: none
     alternatives:
-      - Sperrmuellabholung
-      - Donate, sell, repair, or reuse usable furniture and household items
+      - Sperrmüllabholung
+      - Brauchbare Möbel und Haushaltsgegenstände spenden, verkaufen, reparieren oder wiederverwenden
     notes:
-      - Bulky waste means household items that do not fit into an 80-liter residual waste bin even after reasonable dismantling.
-      - Examples include furniture, lamps, stoves, washing machines, dishwashers, sewing machines, mattresses, carpets, and sports equipment.
-      - AWM allows one delivery per day of about 2 cubic meters at Wertstoffhoefe; larger quantities can incur fees at Wertstoffhof Plus.
+      - Sperrmüll sind Haushaltsgegenstände, die auch nach zumutbarer Demontage nicht in eine 80-Liter-Restmülltonne passen.
+      - Beispiele: Möbel, Lampen, Herde, Waschmaschinen, Geschirrspüler, Nähmaschinen, Matratzen, Teppiche und Sportgeräte.
+      - Laut AWM sind ca. 2 Kubikmeter pro Tag an Wertstoffhöfen erlaubt; größere Mengen können am Wertstoffhof Plus kostenpflichtig sein.
     keywords:
       - Sperrmuell
       - Sperrmüll
@@ -554,13 +554,13 @@ items:
     bin: Wertstoffhof
     deposit: none
     alternatives:
-      - Giftmobil for small quantities
-      - Wertstoffmobil for small quantities where available
-      - Retail take-back where offered
+      - Giftmobil für kleine Mengen
+      - Wertstoffmobil für kleine Mengen, falls verfügbar
+      - Handel-Rücknahme, falls angeboten
     notes:
-      - LED lamps contain electronic components and must not go into Restmuelltonne.
-      - AWM accepts up to 50 LED lamps at Wertstoffhoefe and up to 5 at Giftmobil or Wertstoffmobil.
-      - Do not put LED lamps into glass packaging containers.
+      - LED-Lampen enthalten elektronische Bauteile und dürfen nicht in die Restmülltonne.
+      - AWM nimmt bis zu 50 LED-Lampen an Wertstoffhöfen und bis zu 5 am Giftmobil oder Wertstoffmobil an.
+      - LED-Lampen nicht in Glascontainer.
     keywords:
       - LED
       - LED-Lampe
@@ -575,13 +575,13 @@ items:
     bin: Wertstoffhof
     deposit: none
     alternatives:
-      - Giftmobil for up to 5 pieces
-      - Wertstoffmobil for up to 5 pieces
-      - Lightcycle collection points
+      - Giftmobil für bis zu 5 Stück
+      - Wertstoffmobil für bis zu 5 Stück
+      - Lightcycle-Sammelstellen
     notes:
-      - Fluorescent tubes, neon tubes, UV tubes, and energy-saving lamps can contain mercury.
-      - They must not be disposed of in Restmuelltonne or glass containers.
-      - AWM accepts up to 50 pieces at Wertstoffhoefe.
+      - Leuchtstoffröhren, Neonröhren, UV-Röhren und Energiesparlampen können Quecksilber enthalten.
+      - Nicht in Restmülltonne oder Glascontainer entsorgen.
+      - AWM nimmt bis zu 50 Stück an Wertstoffhöfen an.
     keywords:
       - Energiesparlampe
       - Energiesparlampen
@@ -597,11 +597,11 @@ items:
     bin: Restmuelltonne
     deposit: none
     alternatives:
-      - Biotonne for solid cooking fats and very small amounts of liquid cooking oil absorbed with kitchen paper
+      - Biotonne für feste Kochfette und sehr kleine Mengen aufgesaugtes Speiseöl
     notes:
-      - Pour liquid cooking oil into a container before placing it in Restmuelltonne.
-      - Do not pour cooking oil into the sink, drain, or toilet.
-      - Small amounts of absorbed liquid oil and solid cooking fats may go into Biotonne according to AWM.
+      - Flüssiges Speiseöl vor der Entsorgung in einen Behälter füllen, dann in die Restmülltonne.
+      - Speiseöl nicht in den Ausguss, Abfluss oder die Toilette schütten.
+      - Kleine Mengen aufgesaugtes Öl und feste Kochfette können laut AWM in die Biotonne.
     keywords:
       - Speiseoel
       - Speiseöl
@@ -617,14 +617,14 @@ items:
 
   - name: Paint, wall paint, and varnish
     bin: Wertstoffhof
-    deposit: Some natural paint suppliers offer reusable containers with deposit.
+    deposit: Manche Naturfarben-Anbieter bieten Mehrwegbehälter mit Pfand an.
     alternatives:
-      - Restmuelltonne for dried residues up to 2 kg
-      - Wertstoffhof Plus for quantities above 25 kg, subject to fees
+      - Restmülltonne für getrocknete Reste bis 2 kg
+      - Wertstoffhof Plus für Mengen über 25 kg, kostenpflichtig
     notes:
-      - Private households can take quantities up to 25 kg to Wertstoffhoefe free of charge.
-      - Dried residues up to 2 kg may go into Restmuelltonne.
-      - Keep usable paint from spoiling by storing it properly; reuse before disposal.
+      - Privathaushalte können bis zu 25 kg kostenlos an Wertstoffhöfen abgeben.
+      - Getrocknete Farbreste bis 2 kg dürfen in die Restmülltonne.
+      - Brauchbare Farbe richtig lagern, um Verderb zu vermeiden; erst wiederverwenden, dann entsorgen.
     keywords:
       - Farbe
       - Wandfarbe
@@ -643,12 +643,12 @@ items:
     bin: Giftmobil
     deposit: none
     alternatives:
-      - Wertstoffhof during problem-waste acceptance times
-      - Wertstoffhof Plus for larger accepted quantities, subject to AWM rules and fees
+      - Wertstoffhof zu Problemabfall-Annahmezeiten
+      - Wertstoffhof Plus für größere Mengen, laut AWM-Regeln und kostenpflichtig
     notes:
-      - Problem waste is harmful even in small quantities and must be handled through dedicated collection.
-      - Examples include solvents, pesticides, acids, alkalis, mercury thermometers, some gas cartridges, and spray cans with toxic residues.
-      - Bring hazardous waste well packed, preferably in original containers.
+      - Problemabfall ist auch in kleinen Mengen gefährlich und muss über spezielle Sammelstellen entsorgt werden.
+      - Beispiele: Lösungsmittel, Pestizide, Säuren, Laugen, Quecksilber-Thermometer, manche Gaskartuschen und Sprühdosen mit Giftresten.
+      - Gefahrstoffe gut verpackt bringen, am besten in Originalgebinden.
     keywords:
       - Chemikalien
       - Loesungsmittel
@@ -672,12 +672,12 @@ items:
     bin: Restmuelltonne
     deposit: none
     alternatives:
-      - Wertstoffhof during problem-waste acceptance times
+      - Wertstoffhof zu Problemabfall-Annahmezeiten
       - Giftmobil
     notes:
-      - Do not flush medicines down the toilet or sink.
-      - Keep medicines safely packed so children or other people cannot access them before disposal.
-      - Follow pharmacy or medical guidance for special medication categories if applicable.
+      - Medikamente nicht in die Toilette oder den Ausguss spülen.
+      - Medikamente bis zur Entsorgung sicher aufbewahren, für Kinder unzugänglich.
+      - Bei besonderen Medikamentenkategorien Apotheke oder Arzt befragen.
     keywords:
       - Medikamente
       - Arzneimittel
@@ -696,14 +696,14 @@ items:
     bin: Wertstoffhof
     deposit: none
     alternatives:
-      - Wertstoffmobil for small quantities where available
-      - Retail take-back at electronics retailers with sales areas exceeding 400 square meters (no proof of purchase required)
+      - Wertstoffmobil für kleine Mengen, falls verfügbar
+      - Handel-Rücknahme bei Elektronikhändlern mit über 400 m² Verkaufsfläche (kein Kaufnachweis nötig)
     notes:
-      - E-cigarettes are electronic waste and must not be disposed of in Restmuelltonne.
-      - They contain hazardous substances including lithium batteries, mercury, lead, and cadmium.
-      - Insulate the lithium battery poles with tape before disposal to prevent fire risk.
-      - Disposable e-cigarettes (Einweg-E-Zigaretten) such as Elfbar and similar brands fall under this category.
-      - Retailers with sales areas over 400 square meters must accept e-cigarettes regardless of where they were purchased.
+      - E-Zigaretten sind Elektroschrott und dürfen nicht in die Restmülltonne.
+      - Sie enthalten Gefahrstoffe: Lithium-Akkus, Quecksilber, Blei und Cadmium.
+      - Lithium-Akku-Pole vor der Entsorgung mit Klebeband isolieren – Brandgefahr.
+      - Einweg-E-Zigaretten wie Elfbar fallen ebenfalls darunter.
+      - Händler mit über 400 m² Verkaufsfläche müssen E-Zigaretten unabhängig vom Kaufort zurücknehmen.
     keywords:
       - E-Zigarette
       - E-Zigaretten
@@ -717,14 +717,14 @@ items:
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/e-zigarette
 
   - name: Motor oil and lubricating oil
-    bin: Specialist retailer take-back
+    bin: Rücknahme beim Fachhändler
     deposit: none
     alternatives:
-      - Wertstoffhof during problem-waste acceptance times, subject to fee
+      - Wertstoffhof zu Problemabfall-Annahmezeiten, kostenpflichtig
     notes:
-      - Motor oil and lubricating oil must be collected separately and must not enter groundwater.
-      - Retailers are required to take back motor oil; proof of purchase may be required.
-      - AWM lists a fee for accepting used oil at Wertstoffhoefe during problem-waste times.
+      - Motoröl und Schmieröl müssen getrennt gesammelt werden und dürfen nicht ins Grundwasser gelangen.
+      - Händler sind zur Rücknahme von Motoröl verpflichtet; Kaufnachweis kann erforderlich sein.
+      - AWM berechnet Gebühren für Altöl-Annahme an Wertstoffhöfen zu Problemabfall-Zeiten.
     keywords:
       - Motoroel
       - Motoröl
