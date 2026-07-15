@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+import logging
 import re
 import unicodedata
 
@@ -8,7 +9,16 @@ import yaml
 from trashapp_shared.settings import settings
 from rules_agent.schemas import RulesResult
 
+logger = logging.getLogger("rules_agent")
+
 MIN_SEARCH_TOKEN_LENGTH = 3
+# Minimum length of the *shorter* token before it's allowed to count as a partial/
+# compound match against a longer token. Keeps regular DE/EN pluralization (which
+# just appends a suffix, so the singular is a literal prefix of the plural - e.g.
+# "Flasche"/"Flaschen", "bottle"/"bottles") working, while staying high enough to
+# avoid coincidental short-prefix collisions between unrelated words (e.g. stemming
+# "broken" down to "brok" used to falsely match the keyword "Brokkoli").
+MIN_PARTIAL_MATCH_LENGTH = 5
 
 
 @lru_cache(maxsize=1)
@@ -35,6 +45,7 @@ def find_rule_item(label: str, material: str) -> dict | None:
             matches.append((score, -index, item))
 
     if not matches:
+        logger.info("No local rule match for label=%r material=%r", label, material)
         return None
 
     matches.sort(reverse=True)
@@ -44,11 +55,15 @@ def find_rule_item(label: str, material: str) -> dict | None:
 def _score_rule_item(query: str, material: str, item: dict) -> int:
     score = 0
 
-    # Exact match on the request's material against the item's declared material categories
+    # Match on the request's material against the item's declared material categories.
     if material:
         for mat in item.get("materials", []):
-            if _normalize_text(str(mat)) == material:
+            normalized_mat = _normalize_text(str(mat))
+            if normalized_mat == material:
                 score += 20
+                break
+            if _is_partial_match(normalized_mat, material):
+                score += 18
                 break
 
     for keyword in item.get("keywords", []):
@@ -62,8 +77,31 @@ def _score_rule_item(query: str, material: str, item: dict) -> int:
 
     query_tokens = _search_tokens(query)
     searchable_tokens = _search_tokens(_rule_search_text(item))
-    score += len(query_tokens & searchable_tokens)
+    score += _token_overlap_score(query_tokens, searchable_tokens)
     return score
+
+
+def _token_overlap_score(query_tokens: set[str], searchable_tokens: set[str]) -> int:
+    """Exact token matches score full points; remaining tokens still get credit if
+    one contains the other as a whole word, so plurals ("Flaschen" containing
+    "Flasche") and German compounds ("Zeitungspapier" containing "papier") match
+    their component keyword without a destructive stemmer that risks collisions."""
+    exact = query_tokens & searchable_tokens
+    score = len(exact)
+
+    remaining_query = query_tokens - exact
+    remaining_searchable = searchable_tokens - exact
+    for query_token in remaining_query:
+        for searchable_token in remaining_searchable:
+            if _is_partial_match(query_token, searchable_token):
+                score += 1
+                break
+    return score
+
+
+def _is_partial_match(token_a: str, token_b: str) -> bool:
+    shorter, longer = sorted((token_a, token_b), key=len)
+    return len(shorter) >= MIN_PARTIAL_MATCH_LENGTH and shorter in longer
 
 
 def _rule_search_text(item: dict) -> str:

@@ -207,6 +207,24 @@ items:
       - Use Wertstoffinseln for disposable glass packaging such as bottles and jars without deposit.
       - Do not put ceramic glass, window glass, mirrors, or drinking glasses into glass packaging containers.
       - Respect Wertstoffinsel insertion times, generally Monday to Saturday from 7:00 to 19:00.
+    keywords:
+      - Flasche
+      - Flaschen
+      - Glasflasche
+      - Glasflaschen
+      - Marmeladenglas
+      - Einmachglas
+      - Einweckglas
+      - Konservenglas
+      - Weinflasche
+      - Bierflasche
+      - Saftflasche
+      - Sektflasche
+      - glass bottle
+      - glass jar
+      - jam jar
+      - wine bottle
+      - beer bottle
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abgabestellen/wertstoffinseln
 
   - name: Plastic packaging
@@ -249,6 +267,25 @@ items:
       - Use Wertstoffinseln for metal packaging such as cans, aluminium trays, aluminium foil, and metal lids.
       - Empty spray cans without hazardous residues can usually go with packaging; cans with hazardous residues belong with problem waste.
       - Do not leave waste next to containers; this is considered illegal dumping.
+    keywords:
+      - Dose
+      - Dosen
+      - Konservendose
+      - Konservendosen
+      - Getraenkedose
+      - Getränkedose
+      - Getränkedosen
+      - Konservenbuechse
+      - Konservenbüchse
+      - Alufolie
+      - Aluminiumfolie
+      - Alubehaelter
+      - Alubehälter
+      - tin can
+      - food can
+      - beverage can
+      - aluminium foil
+      - aluminum foil
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abgabestellen/wertstoffinseln
 
   - name: Beverage cartons and composite packaging
@@ -281,6 +318,28 @@ items:
       - Restmuelltonne is for waste that cannot be recycled through Munich's separate collection systems.
       - Examples from AWM include dirty paper, hygiene products, backpaper, and many contaminated small household wastes.
       - Batteries, electronics, problem waste, and recyclable packaging do not belong in Restmuelltonne.
+    keywords:
+      - Restmuell
+      - Restmüll
+      - Hausmuell
+      - Hausmüll
+      - Windel
+      - Windeln
+      - Zigarettenkippe
+      - Zigarettenkippen
+      - Staubsaugerbeutel
+      - Kaugummi
+      - Damenbinde
+      - Tampon
+      - Taschentuch
+      - Taschentuecher
+      - Taschentücher
+      - diaper
+      - cigarette butt
+      - vacuum bag
+      - hygiene product
+      - hygiene item
+      - chewing gum
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon
 
   - name: Batteries and button cells
@@ -315,6 +374,22 @@ items:
       - Remove batteries and rechargeable batteries from unsuitable-for-reuse electronic devices before disposal where possible.
       - Insulate lithium battery poles with tape or put them back into packaging before disposal because they can ignite.
       - Defective lithium batteries are a fire risk and need careful handling.
+    keywords:
+      - Akku
+      - Akkus
+      - Lithiumakku
+      - Lithium-Akku
+      - Lithiumbatterie
+      - Handyakku
+      - Laptopakku
+      - Laptop-Akku
+      - Powerbank
+      - E-Bike-Akku
+      - Akkupack
+      - rechargeable battery
+      - lithium battery
+      - li-ion battery
+      - power bank
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/akkus
 
   - name: Car batteries and lead batteries
@@ -326,6 +401,15 @@ items:
       - Up to two car batteries per person per day can be handed in at Munich Wertstoffhoefe.
       - Transport carefully so that battery acid does not spill.
       - Do not dispose of lead batteries in Restmuelltonne.
+    keywords:
+      - Autobatterie
+      - Autobatterien
+      - Bleiakku
+      - Bleiakkus
+      - Starterbatterie
+      - car battery
+      - lead battery
+      - lead-acid battery
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/autobatterien-bleiakku
 
   - name: Small electronic devices
@@ -374,6 +458,28 @@ items:
       - Munich Wertstoffhoefe accept large electrical appliances in household quantities; AWM lists two large appliances per delivery for many categories.
       - Cooling and freezing appliances are limited separately, usually one item per delivery.
       - Large electronic appliances must not be placed in Restmuelltonne.
+    keywords:
+      - Waschmaschine
+      - Waschmaschinen
+      - Kuehlschrank
+      - Kühlschrank
+      - Kuehlschraenke
+      - Kühlschränke
+      - Gefrierschrank
+      - Gefriertruhe
+      - Herd
+      - Spuelmaschine
+      - Spülmaschine
+      - Geschirrspueler
+      - Geschirrspüler
+      - Fernseher
+      - washing machine
+      - refrigerator
+      - fridge
+      - freezer
+      - stove
+      - dishwasher
+      - television
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/elektro-elektronikschrott
 
   - name: Clothing, shoes, and textiles
@@ -418,6 +524,30 @@ items:
       - Bulky waste means household items that do not fit into an 80-liter residual waste bin even after reasonable dismantling.
       - Examples include furniture, lamps, stoves, washing machines, dishwashers, sewing machines, mattresses, carpets, and sports equipment.
       - AWM allows one delivery per day of about 2 cubic meters at Wertstoffhoefe; larger quantities can incur fees at Wertstoffhof Plus.
+    keywords:
+      - Sperrmuell
+      - Sperrmüll
+      - Moebel
+      - Möbel
+      - Sofa
+      - Couch
+      - Matratze
+      - Matratzen
+      - Teppich
+      - Teppiche
+      - Schrank
+      - Schraenke
+      - Schränke
+      - Sessel
+      - Tisch
+      - Stuhl
+      - furniture
+      - sofa
+      - couch
+      - mattress
+      - carpet
+      - wardrobe
+      - bulky item
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/sperrmuell
 
   - name: LED lamps
@@ -472,6 +602,17 @@ items:
       - Pour liquid cooking oil into a container before placing it in Restmuelltonne.
       - Do not pour cooking oil into the sink, drain, or toilet.
       - Small amounts of absorbed liquid oil and solid cooking fats may go into Biotonne according to AWM.
+    keywords:
+      - Speiseoel
+      - Speiseöl
+      - Frittierfett
+      - Bratfett
+      - Kochfett
+      - Oel
+      - Öl
+      - cooking oil
+      - frying fat
+      - cooking fat
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/speiseoel-fette-frittierfett
 
   - name: Paint, wall paint, and varnish
@@ -484,6 +625,18 @@ items:
       - Private households can take quantities up to 25 kg to Wertstoffhoefe free of charge.
       - Dried residues up to 2 kg may go into Restmuelltonne.
       - Keep usable paint from spoiling by storing it properly; reuse before disposal.
+    keywords:
+      - Farbe
+      - Wandfarbe
+      - Farbeimer
+      - Farbdose
+      - Lack
+      - Dispersionsfarbe
+      - paint
+      - wall paint
+      - varnish
+      - paint can
+      - paint bucket
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/dispersionsfarben
 
   - name: Chemicals and hazardous problem waste
@@ -496,6 +649,23 @@ items:
       - Problem waste is harmful even in small quantities and must be handled through dedicated collection.
       - Examples include solvents, pesticides, acids, alkalis, mercury thermometers, some gas cartridges, and spray cans with toxic residues.
       - Bring hazardous waste well packed, preferably in original containers.
+    keywords:
+      - Chemikalien
+      - Loesungsmittel
+      - Lösungsmittel
+      - Saeure
+      - Säure
+      - Lauge
+      - Pestizid
+      - Gift
+      - Quecksilber
+      - Thermometer
+      - chemicals
+      - solvent
+      - acid
+      - pesticide
+      - poison
+      - mercury thermometer
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/problemabfaelle-chemikalien
 
   - name: Medicines and pharmaceuticals
@@ -534,6 +704,16 @@ items:
       - Insulate the lithium battery poles with tape before disposal to prevent fire risk.
       - Disposable e-cigarettes (Einweg-E-Zigaretten) such as Elfbar and similar brands fall under this category.
       - Retailers with sales areas over 400 square meters must accept e-cigarettes regardless of where they were purchased.
+    keywords:
+      - E-Zigarette
+      - E-Zigaretten
+      - Einweg-E-Zigarette
+      - Vape
+      - Elfbar
+      - Puff
+      - e-cigarette
+      - vape pen
+      - disposable vape
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/e-zigarette
 
   - name: Motor oil and lubricating oil
@@ -545,6 +725,19 @@ items:
       - Motor oil and lubricating oil must be collected separately and must not enter groundwater.
       - Retailers are required to take back motor oil; proof of purchase may be required.
       - AWM lists a fee for accepting used oil at Wertstoffhoefe during problem-waste times.
+    keywords:
+      - Motoroel
+      - Motoröl
+      - Altoel
+      - Altöl
+      - Schmieroel
+      - Schmieröl
+      - Getriebeoel
+      - Getriebeöl
+      - motor oil
+      - engine oil
+      - used oil
+      - lubricant
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/altoel-schmieroel
 
 deposit_rules:
