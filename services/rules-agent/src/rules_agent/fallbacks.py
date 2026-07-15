@@ -1,5 +1,6 @@
 import re
 
+from rules_agent.rules import MAX_IMPORTANT_NOTES
 from rules_agent.schemas import RulesRequest, RulesResult
 
 FALLBACK_SCENARIOS = [
@@ -60,7 +61,7 @@ def fallback_result(request: RulesRequest) -> RulesResult | None:
                 reasoning=scenario["reasoning"],
                 deposit=None,
                 alternatives=[str(a) for a in scenario.get("alternatives", [])],
-                important_notes=[str(n) for n in scenario.get("important_notes", [])],
+                important_notes=[str(n) for n in scenario.get("important_notes", [])][:MAX_IMPORTANT_NOTES],
                 source="fallback",
                 confidence=0.85,
             )
