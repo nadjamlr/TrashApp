@@ -48,7 +48,7 @@ def _build_rule_context(label: str, material: str) -> str:
     return f"Gescanntes Objekt: {label} (Material: {material})"
 
 
-def _is_valid_fact(fact: str, label: str) -> bool:
+def _is_valid_fact(fact: str, label: str, material: str = "") -> bool:
     if not fact or not isinstance(fact, str):
         return False
     # Reject JSON fragments or curly braces leaking through
@@ -57,10 +57,14 @@ def _is_valid_fact(fact: str, label: str) -> bool:
     words = fact.split()
     if len(words) < 5 or len(words) > 30:
         return False
-    # Fact must reference the scanned object (at least one token overlap)
-    label_tokens = {t.lower() for t in re.findall(r"\w+", label) if len(t) > 2}
+    # Fact must reference the item or its material (LLMs often use synonyms/material names)
+    context_tokens = {
+        t.lower()
+        for t in re.findall(r"\w+", f"{label} {material}")
+        if len(t) > 2
+    }
     fact_lower = fact.lower()
-    if label_tokens and not any(t in fact_lower for t in label_tokens):
+    if context_tokens and not any(t in fact_lower for t in context_tokens):
         return False
     return True
 
@@ -121,7 +125,7 @@ async def run_agent(request: InsightRequest) -> InsightResult:
         return InsightResult(fact=FALLBACK_FACT, category=FALLBACK_CATEGORY)
 
     fact = result.pydantic.fact
-    if not _is_valid_fact(fact, request.label):
+    if not _is_valid_fact(fact, request.label, request.material):
         return InsightResult(fact=FALLBACK_FACT, category=FALLBACK_CATEGORY)
 
     return result.pydantic
