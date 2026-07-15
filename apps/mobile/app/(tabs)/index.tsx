@@ -65,11 +65,15 @@ export default function MapScreen() {
     return true;
   }), [allLocations, selectedTypes, selectedMaterials, savedIds]);
 
-  // Region der Karte: bei aktivem Gespeichert-Filter alle gespeicherten Marker einschließen
+  // Region der Karte: nur beim Aktivieren des Gespeichert-Filters neu berechnen,
+  // nicht bei jedem Speichern – sonst crasht MapView durch gleichzeitige Region- + Marker-Updates.
+  const savedLocationsRef = useRef(savedLocations);
+  savedLocationsRef.current = savedLocations;
+
   const mapRegion = useMemo(() => {
-    if (showSavedOnly && savedLocations.length > 0) {
-      const lats = savedLocations.map(l => l.lat);
-      const lngs = savedLocations.map(l => l.lng);
+    if (showSavedOnly && savedLocationsRef.current.length > 0) {
+      const lats = savedLocationsRef.current.map(l => l.lat);
+      const lngs = savedLocationsRef.current.map(l => l.lng);
       const minLat = Math.min(...lats);
       const maxLat = Math.max(...lats);
       const minLng = Math.min(...lngs);
@@ -82,7 +86,8 @@ export default function MapScreen() {
       };
     }
     return { latitude: lat, longitude: lng, latitudeDelta: 0.05, longitudeDelta: 0.05 };
-  }, [showSavedOnly, savedLocations, lat, lng]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSavedOnly, lat, lng]);
 
   function toggleType(type: LocationType) {
     setSelectedTypes(prev => {
