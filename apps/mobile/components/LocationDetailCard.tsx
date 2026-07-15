@@ -1,4 +1,4 @@
-import { Linking, Platform, Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import { Linking, Platform, Pressable, Share, StyleSheet, View, ViewStyle } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { ThemedText } from './themes/ThemedText';
 import { useColorScheme } from '@/services/useColorScheme';
@@ -52,6 +52,13 @@ function openRoute(lat: number, lng: number) {
     : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=walking`;
 
   Linking.openURL(nativeUrl).catch(() => Linking.openURL(webUrl));
+}
+
+function shareLocation(name: string, address: string, lat: number, lng: number) {
+  const mapsUrl = Platform.OS === 'ios'
+    ? `https://maps.apple.com/?q=${encodeURIComponent(name)}&ll=${lat},${lng}`
+    : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  Share.share({ message: `${name}\n${address}\n${mapsUrl}` });
 }
 
 type Props = {
@@ -115,7 +122,14 @@ export function LocationDetailCard({ location, style }: Props) {
         </Pressable>
 
         <Pressable
-          style={({ pressed }) => [styles.bookmarkButton, { backgroundColor: theme.text, opacity: pressed ? 0.8 : 1 }]}
+          style={({ pressed }) => [styles.iconButton, { backgroundColor: theme.text, opacity: pressed ? 0.8 : 1 }]}
+          onPress={() => shareLocation(location.name, location.address, location.lat, location.lng)}
+        >
+          <Ionicons name="share-outline" size={20} color={theme.background} />
+        </Pressable>
+
+        <Pressable
+          style={({ pressed }) => [styles.iconButton, { backgroundColor: theme.text, opacity: pressed ? 0.8 : 1 }]}
           onPress={() => toggleSaved(location)}
         >
           <Ionicons
@@ -173,7 +187,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  bookmarkButton: {
+  iconButton: {
     width: 40,
     height: 40,
     borderRadius: Radius.sm,
