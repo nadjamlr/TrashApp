@@ -12,20 +12,21 @@ import { Typography } from '@/constants/Typography';
 import { classifyItem, type RulesResult } from '@/services/rulesService';
 import { generateInsight, type InsightResult } from '@/services/insightService';
 
-const BIN_TO_MAP_FILTER: Record<string, string[]> = {
-  'Papiertonne':             ['Papier'],
-  'AWM Altkleidercontainer': ['Altkleider'],
-};
+const MATERIAL_MAP_FILTER: Array<{ keywords: string[]; filter: string[] }> = [
+  { keywords: ['glas', 'glass'],                        filter: ['Glas braun', 'Glas grün', 'Glas weiß'] },
+  { keywords: ['aluminium', 'aluminum', 'metall', 'metal', 'stahl', 'eisen'], filter: ['LVP', 'Metall'] },
+  { keywords: ['kunststoff', 'plastik', 'plastic', 'pet', 'polymer'],         filter: ['LVP'] },
+  { keywords: ['papier', 'pappe', 'karton', 'paper', 'cardboard'],            filter: ['Papier'] },
+  { keywords: ['textil', 'stoff', 'baumwolle', 'wolle', 'fabric', 'cloth'],   filter: ['Altkleider'] },
+  { keywords: ['elektronik', 'elektrik', 'electric', 'electronic'],           filter: ['Elektroschrott'] },
+];
 
-function getMapFilter(bin: string, material: string): string[] {
-  if (bin === 'Wertstoffinseln') {
-    const m = material.toLowerCase();
-    if (m.includes('glas') || m.includes('glass')) {
-      return ['Glas braun', 'Glas grün', 'Glas weiß'];
-    }
-    return ['LVP'];
+function getMapFilter(material: string): string[] {
+  const m = material.toLowerCase();
+  for (const entry of MATERIAL_MAP_FILTER) {
+    if (entry.keywords.some(k => m.includes(k))) return entry.filter;
   }
-  return BIN_TO_MAP_FILTER[bin] ?? [];
+  return [];
 }
 
 export default function ResultScreen() {
@@ -109,8 +110,8 @@ export default function ResultScreen() {
         material={material ?? ''}
         rules={rules}
         onClose={() => router.back()}
-        onShowOnMap={rules.bin === 'unknown' ? undefined : () => {
-          const filter = getMapFilter(rules.bin, material ?? '');
+        onShowOnMap={() => {
+          const filter = getMapFilter(material ?? '');
           router.push({
             pathname: '/(tabs)/',
             params: filter.length > 0 ? { materials: filter.join(',') } : {},
