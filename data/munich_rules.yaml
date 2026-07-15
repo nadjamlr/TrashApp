@@ -42,7 +42,7 @@ items:
       - Schulheft, Notizbuch, Notizblock
       - newspaper, paper, cardboard, magazine, book, envelope
     notes:
-      - Papiertonne für sauberes Papier: Zeitungen, Briefe, Bücher ohne Einband, gefalteter Karton, Papiertüten und Papierverpackungen.
+      - "Papiertonne für sauberes Papier: Zeitungen, Briefe, Bücher ohne Einband, gefalteter Karton, Papiertüten und Papierverpackungen."
       - Schmutziges Papier, Tapeten, Rückpapier von selbstklebenden Folien und Hygienepapier kommen in die Restmülltonne.
       - Getränkekartons und beschichtete Milchkartons kommen an die Wertstoffinseln, nicht in die Papiertonne.
     source_url: https://www.awm-muenchen.de/abfall-entsorgen/abfalllexikon/detailansicht-lexikoneintrag/papier-kartonagen
@@ -64,7 +64,7 @@ items:
       - Wertstoffhof für größere Mengen Baum- und Strauchschnitt
       - Eigenkompostierung, falls geeignet
     notes:
-      - In die Biotonne: Obst- und Gemüsereste, gekochte und rohe Speisereste, Brot, Kaffeesatz und -filter, Blumen, kleine Mengen Erde, Laub, Gras und kleine Äste.
+      - "In die Biotonne: Obst- und Gemüsereste, gekochte und rohe Speisereste, Brot, Kaffeesatz und -filter, Blumen, kleine Mengen Erde, Laub, Gras und kleine Äste."
       - Plastiktüten und kompostierbare Plastik-Biobeutel dürfen nicht in die Biotonne.
       - Hundekot, Katzenstreu und Kleintier-Einstreu gehören nicht in die Biotonne.
     keywords:
@@ -206,7 +206,7 @@ items:
     notes:
       - Wertstoffinseln für Einwegglasbehälter wie Flaschen und Gläser ohne Pfand.
       - Kein Keramikglas, Fensterglas, Spiegel oder Trinkgläser in den Glascontainer.
-      - Einwurfzeiten an Wertstoffinseln beachten: in der Regel Mo–Sa 7:00–19:00 Uhr.
+      - "Einwurfzeiten an Wertstoffinseln beachten: in der Regel Mo–Sa 7:00–19:00 Uhr."
     keywords:
       - Flasche
       - Flaschen
@@ -239,7 +239,7 @@ items:
       - Einwegplastik vermeiden und auf Mehrwegverpackungen umsteigen.
       - Wertstoffhof für bestimmte Kunststoff-Nicht-Verpackungen laut AWM.
     notes:
-      - Wertstoffinseln für Kunststoffverpackungen: Folien, Tragetaschen, Shampoo-Flaschen, Waschmittelkanister und Joghurtbecher.
+      - "Wertstoffinseln für Kunststoffverpackungen: Folien, Tragetaschen, Shampoo-Flaschen, Waschmittelkanister und Joghurtbecher."
       - Verpackungen müssen leer sein; perfektes Ausspülen ist nicht nötig.
       - Kunststoff-Haushaltsartikel ohne Verpackungsfunktion können andere Entsorgungswege haben – Abfall-ABC prüfen.
     keywords:
@@ -264,7 +264,7 @@ items:
     alternatives:
       - Wertstoffhof für größere Metallgegenstände wie Töpfe, Pfannen oder Werkzeug.
     notes:
-      - Wertstoffinseln für Metallverpackungen: Dosen, Aluschalen, Alufolie und Metalldeckel.
+      - "Wertstoffinseln für Metallverpackungen: Dosen, Aluschalen, Alufolie und Metalldeckel."
       - Leere Sprühdosen ohne Gefahrstoffreste kommen mit den Verpackungen; Dosen mit Gefahrstoffresten kommen zum Sondermüll.
       - Abfall nicht neben den Containern abstellen – das gilt als illegale Entsorgung.
     keywords:
@@ -316,7 +316,7 @@ items:
       - Zuerst Recycling, Biotonne, Papiertonne, Wertstoffinseln, Wertstoffhof oder Giftmobil nutzen, wenn ein eigener Entsorgungsweg vorhanden ist.
     notes:
       - Restmülltonne für Abfälle, die nicht über Münchens getrennte Sammelsysteme recycelt werden können.
-      - Beispiele laut AWM: Schmutzpapier, Hygieneartikel, Rückpapier und kontaminierte Kleinabfälle.
+      - "Beispiele laut AWM: Schmutzpapier, Hygieneartikel, Rückpapier und kontaminierte Kleinabfälle."
       - Batterien, Elektronik, Problemabfälle und recycelbare Verpackungen gehören nicht in die Restmülltonne.
     keywords:
       - Restmuell
@@ -522,7 +522,7 @@ items:
       - Brauchbare Möbel und Haushaltsgegenstände spenden, verkaufen, reparieren oder wiederverwenden
     notes:
       - Sperrmüll sind Haushaltsgegenstände, die auch nach zumutbarer Demontage nicht in eine 80-Liter-Restmülltonne passen.
-      - Beispiele: Möbel, Lampen, Herde, Waschmaschinen, Geschirrspüler, Nähmaschinen, Matratzen, Teppiche und Sportgeräte.
+      - "Beispiele: Möbel, Lampen, Herde, Waschmaschinen, Geschirrspüler, Nähmaschinen, Matratzen, Teppiche und Sportgeräte."
       - Laut AWM sind ca. 2 Kubikmeter pro Tag an Wertstoffhöfen erlaubt; größere Mengen können am Wertstoffhof Plus kostenpflichtig sein.
     keywords:
       - Sperrmuell
@@ -647,7 +647,7 @@ items:
       - Wertstoffhof Plus für größere Mengen, laut AWM-Regeln und kostenpflichtig
     notes:
       - Problemabfall ist auch in kleinen Mengen gefährlich und muss über spezielle Sammelstellen entsorgt werden.
-      - Beispiele: Lösungsmittel, Pestizide, Säuren, Laugen, Quecksilber-Thermometer, manche Gaskartuschen und Sprühdosen mit Giftresten.
+      - "Beispiele: Lösungsmittel, Pestizide, Säuren, Laugen, Quecksilber-Thermometer, manche Gaskartuschen und Sprühdosen mit Giftresten."
       - Gefahrstoffe gut verpackt bringen, am besten in Originalgebinden.
     keywords:
       - Chemikalien
@@ -700,7 +700,7 @@ items:
       - Handel-Rücknahme bei Elektronikhändlern mit über 400 m² Verkaufsfläche (kein Kaufnachweis nötig)
     notes:
       - E-Zigaretten sind Elektroschrott und dürfen nicht in die Restmülltonne.
-      - Sie enthalten Gefahrstoffe: Lithium-Akkus, Quecksilber, Blei und Cadmium.
+      - "Sie enthalten Gefahrstoffe: Lithium-Akkus, Quecksilber, Blei und Cadmium."
       - Lithium-Akku-Pole vor der Entsorgung mit Klebeband isolieren – Brandgefahr.
       - Einweg-E-Zigaretten wie Elfbar fallen ebenfalls darunter.
       - Händler mit über 400 m² Verkaufsfläche müssen E-Zigaretten unabhängig vom Kaufort zurücknehmen.
