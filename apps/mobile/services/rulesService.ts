@@ -15,12 +15,13 @@ export type RulesResult = {
 export async function classifyItem(
   label: string,
   material: string,
+  language: 'de' | 'en' = 'de',
 ): Promise<RulesResult> {
   try {
     const response = await fetch(`${BASE_URL}/rules/classify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ label, material, city: 'munich' }),
+      body: JSON.stringify({ label, material, city: 'munich', language }),
     });
 
     if (!response.ok) {
