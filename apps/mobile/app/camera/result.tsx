@@ -117,7 +117,10 @@ export default function ResultScreen() {
             params: filter.length > 0 ? { materials: filter.join(',') } : {},
           });
         }}
-        onAskMore={() => router.push('/(tabs)/chatbot')}
+        onAskMore={() => router.push({
+          pathname: '/(tabs)/chatbot',
+          params: { label: label ?? '', material: material ?? '' },
+        })}
       />
       <View style={styles.factWrapper}>
         <FactCard
