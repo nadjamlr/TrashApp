@@ -70,7 +70,7 @@ export function LocationDetailCard({ location, style }: Props) {
   return (
     <View style={[styles.card, { backgroundColor: theme.background }, style]}>
       <View style={styles.chips}>
-        {location.materials.map((material) => (
+        {location.materials?.map((material) => (
           <View key={material} style={[styles.chip, { backgroundColor: theme.surface }]}>
             <ThemedText variant="c1">{capitalize(material)}</ThemedText>
           </View>

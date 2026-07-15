@@ -4,9 +4,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 import { LocationDetailCard } from '@/components/LocationDetailCard';
 import { LocationMarker } from '@/components/LocationMarker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Abstände zur StatusBAr und HomeIndicator
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Searchbar from '@/components/map/Searchbar';
 import Filter from '@/components/map/Filter';
+import { Icon } from '@/components/navbar/Icon';
 import { ThemedText } from '@/components/themes/ThemedText';
 import Colors from '@/constants/Colors';
 import { Layout } from '@/constants/Layout';
@@ -16,7 +17,27 @@ import { useColorScheme } from '@/services/useColorScheme';
 import { useLocation } from '@/context/LocationContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSavedLocations } from '@/context/SavedLocationsContext';
-import { fetchAllWertstoffhoefe, fetchLocations, Location, LocationType } from '@/services/locationsService';
+import { fetchLocations, Location, LocationType } from '@/services/locationsService';
+import { WERTSTOFFHOEFE } from '@/constants/wertstoffhoefe';
+
+// Delayed tracksViewChanges=true on mount so iOS captures the custom view correctly.
+// After 300ms → false to avoid continuous re-renders.
+function SavedMarker({ loc, isSelected, onPress }: { loc: Location; isSelected: boolean; onPress: () => void }) {
+  const [captured, setCaptured] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setCaptured(true), 300);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <Marker
+      coordinate={{ latitude: loc.lat, longitude: loc.lng }}
+      tracksViewChanges={!captured || isSelected}
+      onPress={onPress}
+    >
+      <LocationMarker type={loc.type} selected={isSelected} saved />
+    </Marker>
+  );
+}
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
@@ -24,10 +45,10 @@ export default function MapScreen() {
   const theme = Colors[colorScheme];
   const { lat, lng } = useLocation();
   const [locations, setLocations] = useState<Location[]>([]);
-  const [cityHoefe, setCityHoefe] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<Set<LocationType>>(new Set());
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [topContainerHeight, setTopContainerHeight] = useState(0);
   const markerTappedRef = useRef(false);
   const { t } = useLanguage();
@@ -39,35 +60,48 @@ export default function MapScreen() {
       .catch((e) => console.error('[Locations] Fehler:', e.message));
   }, [lat, lng]);
 
-  // Wenn Wertstoffhöfe-Filter aktiv: gecachte Stadtliste laden (kein wiederholter API-Call)
-  useEffect(() => {
-    if (!selectedTypes.has('wertstoffhof')) {
-      setCityHoefe([]);
-      return;
-    }
-    fetchAllWertstoffhoefe().then(setCityHoefe).catch(() => {});
-  }, [selectedTypes]);
-
-  const savedIds = useMemo(() => new Set(savedLocations.map(l => l.id)), [savedLocations]);
-
-  // Nahe Locations + stadtweite Höfe zusammenführen (dedup)
+  // Stable marker pool: 12 static Wertstoffhöfe (always) + up to 48 nearest API locations.
+  // Does NOT depend on filter state → filter changes never add/remove native views,
+  // only update the opacity prop. This prevents Fabric crashes from bulk native-view operations.
   const allLocations = useMemo(() => {
     const nearbyIds = new Set(locations.map(l => l.id));
-    return [...locations, ...cityHoefe.filter(l => !nearbyIds.has(l.id))];
-  }, [locations, cityHoefe]);
+    const staticHoefe = WERTSTOFFHOEFE.filter(l => !nearbyIds.has(l.id));
+    return [...staticHoefe, ...locations.slice(0, 48)];
+  }, [locations]);
 
   const allMaterials = useMemo(() => {
     const seen = new Set<string>();
-    allLocations.forEach(loc => loc.materials.forEach(m => seen.add(m)));
+    allLocations.forEach(loc => loc.materials?.forEach(m => seen.add(m)));
     return Array.from(seen).sort();
   }, [allLocations]);
 
-  const filteredLocations = useMemo(() => allLocations.filter(loc => {
-    if (savedIds.has(loc.id)) return false; // saved locations werden separat angezeigt
-    if (selectedTypes.size > 0 && !selectedTypes.has(loc.type)) return false;
-    if (selectedMaterials.size > 0 && !loc.materials.some(m => selectedMaterials.has(m))) return false;
-    return true;
-  }), [allLocations, selectedTypes, selectedMaterials, savedIds]);
+  // savedIds für Opacity-Steuerung: saved locations bekommen opacity=0 (regulärer Marker
+  // bleibt im nativen Layer, wird aber ausgeblendet) → kein simultanes Entfernen+Hinzufügen.
+  const savedIds = useMemo(() => new Set(savedLocations.map(l => l.id)), [savedLocations]);
+
+  // Region der Karte: savedLocations über ref lesen, damit mapRegion nicht
+  // gleichzeitig mit den Marker-Updates neu berechnet wird (→ Fabric-Crash).
+  const savedLocationsRef = useRef(savedLocations);
+  savedLocationsRef.current = savedLocations;
+
+  const mapRegion = useMemo(() => {
+    if (showSavedOnly && savedLocationsRef.current.length > 0) {
+      const lats = savedLocationsRef.current.map(l => l.lat);
+      const lngs = savedLocationsRef.current.map(l => l.lng);
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+      return {
+        latitude: (minLat + maxLat) / 2,
+        longitude: (minLng + maxLng) / 2,
+        latitudeDelta: Math.max(maxLat - minLat + 0.02, 0.02),
+        longitudeDelta: Math.max(maxLng - minLng + 0.02, 0.02),
+      };
+    }
+    return { latitude: lat, longitude: lng, latitudeDelta: 0.05, longitudeDelta: 0.05 };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showSavedOnly, lat, lng]);
 
   function toggleType(type: LocationType) {
     setSelectedTypes(prev => {
@@ -89,12 +123,7 @@ export default function MapScreen() {
     <View style={styles.container} lightColor="transparent" darkColor="transparent">
       <MapView
         style={StyleSheet.absoluteFill}
-        region={{
-          latitude: lat,
-          longitude: lng,
-          latitudeDelta: 0.05, // ca. 3km Radius
-          longitudeDelta: 0.05,
-        }}
+        region={mapRegion}
         showsUserLocation
         mapPadding={{ top: topContainerHeight, left: 0, right: 0, bottom: 0 }}
         onPress={() => {
@@ -103,35 +132,38 @@ export default function MapScreen() {
           setSelectedLocation(null);
         }}
       >
-        {filteredLocations.map((loc) => {
+        {/* All markers always stay mounted; only opacity/onPress change on filter toggle.
+            This avoids bulk native-view add/remove operations that crash react-native-maps on Fabric. */}
+        {allLocations.map((loc) => {
+          const isVisible = !showSavedOnly &&
+            !savedIds.has(loc.id) &&
+            (selectedTypes.size === 0 || selectedTypes.has(loc.type)) &&
+            (selectedMaterials.size === 0 || loc.materials?.some(m => selectedMaterials.has(m)));
           const isSelected = selectedLocation?.id === loc.id;
           return (
             <Marker
               key={loc.id}
               coordinate={{ latitude: loc.lat, longitude: loc.lng }}
               tracksViewChanges={isSelected}
-              onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
+              opacity={isVisible ? 1 : 0}
+              onPress={isVisible ? () => { markerTappedRef.current = true; setSelectedLocation(loc); } : undefined}
             >
               <LocationMarker type={loc.type} selected={isSelected} />
             </Marker>
           );
         })}
-        {savedLocations.map((loc) => {
-          const isSelected = selectedLocation?.id === loc.id;
-          return (
-            <Marker
-              key={`saved-${loc.id}`}
-              coordinate={{ latitude: loc.lat, longitude: loc.lng }}
-              tracksViewChanges={isSelected}
-              onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
-            >
-              <LocationMarker type={loc.type} selected={isSelected} saved />
-            </Marker>
-          );
-        })}
+        {/* SavedMarkers layer on top; saving adds exactly 1 view, unsaving removes 1. */}
+        {savedLocations.map((loc) => (
+          <SavedMarker
+            key={`saved-${loc.id}`}
+            loc={loc}
+            isSelected={selectedLocation?.id === loc.id}
+            onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
+          />
+        ))}
       </MapView>
 
-      <KeyboardAvoidingView // Overlay
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? Layout.keyboardVerticalOffset : 0}
         style={styles.overlay}
@@ -146,9 +178,14 @@ export default function MapScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={styles.filtersScroll}
             contentContainerStyle={styles.filters}
           >
+            <Pressable
+              onPress={() => setShowSavedOnly(prev => !prev)}
+              style={[styles.bookmarkChip, { backgroundColor: showSavedOnly ? theme.primary : theme.surface }]}
+            >
+              <Icon name="bookmark" size={16} color={theme.text} />
+            </Pressable>
             <Filter
               label={t.filterWertstoffhoefe}
               isActive={selectedTypes.has('wertstoffhof')}
@@ -183,6 +220,14 @@ export default function MapScreen() {
         </View>
       </KeyboardAvoidingView>
 
+      {showSavedOnly && savedLocations.length === 0 && (
+        <RNView style={styles.emptyState} pointerEvents="none">
+          <ThemedText variant="p1" style={{ color: theme.muted, textAlign: 'center' }}>
+            {t.filterSavedEmpty}
+          </ThemedText>
+        </RNView>
+      )}
+
       {selectedLocation && (
         <LocationDetailCard location={selectedLocation} style={styles.detailCard} />
       )}
@@ -190,7 +235,6 @@ export default function MapScreen() {
   );
 }
 
-// Keep the card above the floating tab bar (bottom: Spacing.lg, height 72 in (tabs)/_layout.tsx)
 const TAB_BAR_OFFSET = Spacing.lg + 72;
 
 const styles = StyleSheet.create({
@@ -209,13 +253,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     overflow: 'visible',
   },
-  filtersScroll: {
-    marginHorizontal: -Spacing.md,
-  },
   filters: {
     flexDirection: 'row',
     gap: Spacing.sm,
-    paddingHorizontal: Spacing.md,
   },
   detailCard: {
     position: 'absolute',
@@ -232,5 +272,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: 6,
     borderRadius: Radius.sm,
+  },
+  bookmarkChip: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 6,
+    borderRadius: Radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+  },
+  emptyState: {
+    position: 'absolute',
+    left: Spacing.md,
+    right: Spacing.md,
+    bottom: TAB_BAR_OFFSET + Spacing.md,
+    alignItems: 'center',
   },
 });
