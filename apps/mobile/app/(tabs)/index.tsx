@@ -17,7 +17,7 @@ import { useColorScheme } from '@/services/useColorScheme';
 import { useLocation } from '@/context/LocationContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSavedLocations } from '@/context/SavedLocationsContext';
-import { fetchLocations, Location, LocationType } from '@/services/locationsService';
+import { fetchLocationsWithCache, Location, LocationType } from '@/services/locationsService';
 import { WERTSTOFFHOEFE } from '@/constants/wertstoffhoefe';
 
 // Delayed tracksViewChanges=true on mount so iOS captures the custom view correctly.
@@ -49,15 +49,19 @@ export default function MapScreen() {
   const [selectedTypes, setSelectedTypes] = useState<Set<LocationType>>(new Set());
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [isFromCache, setIsFromCache] = useState(false);
   const [topContainerHeight, setTopContainerHeight] = useState(0);
   const markerTappedRef = useRef(false);
   const { t } = useLanguage();
   const { savedLocations } = useSavedLocations();
 
   useEffect(() => {
-    fetchLocations({ lat, lng })
-      .then(setLocations)
-      .catch((e) => console.error('[Locations] Fehler:', e.message));
+    fetchLocationsWithCache({ lat, lng })
+      .then(({ locations, fromCache }) => {
+        setLocations(locations);
+        setIsFromCache(fromCache);
+      })
+      .catch(() => {});
   }, [lat, lng]);
 
   // Stable marker pool: 12 static Wertstoffhöfe (always) + up to 48 nearest API locations.
@@ -175,6 +179,12 @@ export default function MapScreen() {
           onLayout={(e) => setTopContainerHeight(e.nativeEvent.layout.height)}
         >
           <Searchbar locations={locations} onSelectLocation={setSelectedLocation} />
+          {isFromCache && (
+            <RNView style={styles.offlineBanner}>
+              <Icon name="wifi-off" size={11} color={theme.muted} />
+              <ThemedText variant="c2" style={{ color: theme.muted }}>{t.offlineBanner}</ThemedText>
+            </RNView>
+          )}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -287,5 +297,11 @@ const styles = StyleSheet.create({
     right: Spacing.md,
     bottom: TAB_BAR_OFFSET + Spacing.md,
     alignItems: 'center',
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.xs,
   },
 });

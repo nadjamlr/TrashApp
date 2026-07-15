@@ -47,6 +47,8 @@ const translations = {
     walkingTime: (min: number) => `${min} Min. zu Fuß`,
     closed: 'Geschlossen',
     route: 'Route',
+    share: 'Teilen',
+    offlineBanner: 'Offline – gespeicherte Daten',
   },
   en: {
     profile: 'Profile',
@@ -88,6 +90,8 @@ const translations = {
     walkingTime: (min: number) => `${min} min walk`,
     closed: 'Closed',
     route: 'Route',
+    share: 'Share',
+    offlineBanner: 'Offline – cached data',
   },
 } as const;
 
@@ -129,6 +133,8 @@ export type Translations = {
   walkingTime: (min: number) => string;
   closed: string;
   route: string;
+  share: string;
+  offlineBanner: string;
 };
 
 type LanguageContextType = {
