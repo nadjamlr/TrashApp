@@ -25,6 +25,7 @@ export default function CameraScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [scanError, setScanError] = useState(false);
+  const [scanErrorMessage, setScanErrorMessage] = useState('');
   const cameraRef = useRef<CameraViewType>(null);
   const router = useRouter();
   const scheme = useColorScheme() ?? 'light';
@@ -43,16 +44,33 @@ export default function CameraScreen() {
     setCapturedUri(uri);
     setIsLoading(true);
     setScanError(false);
+    setScanErrorMessage('');
 
     let visionResult = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         visionResult = await identifyImage(uri);
+        if (visionResult.label === 'Nicht erkannt') {
+          setIsLoading(false);
+          setScanError(true);
+          setScanErrorMessage('Dieser Gegenstand kann nicht gescannt werden. Bitte scanne einen entsorgbaren Gegenstand.');
+          return;
+        }
+        if (visionResult.label === 'Unbekannt') {
+          if (attempt === 2) {
+            setIsLoading(false);
+            setScanError(true);
+            setScanErrorMessage('Objekt konnte nicht erkannt werden. Bitte nochmal versuchen.');
+            return;
+          }
+          continue;
+        }
         break;
       } catch (e) {
         if (attempt === 2) {
           setIsLoading(false);
           setScanError(true);
+          setScanErrorMessage('Scan fehlgeschlagen. Bitte erneut versuchen.');
           return;
         }
       }
@@ -129,11 +147,8 @@ export default function CameraScreen() {
 
       {scanError && (
         <View style={styles.loadingOverlay}>
-          <Text style={[Typography.h3, { color: '#fff', textAlign: 'center', marginBottom: Spacing.md }]}>
-            Scan fehlgeschlagen.
-          </Text>
-          <Text style={[Typography.p1, { color: '#fff', textAlign: 'center', marginBottom: Spacing.lg }]}>
-            Bitte erneut versuchen.
+          <Text style={[Typography.p1, { color: '#fff', textAlign: 'center', marginBottom: Spacing.lg, paddingHorizontal: Spacing.lg }]}>
+            {scanErrorMessage}
           </Text>
           <Pressable onPress={handleRetryScan} style={[styles.button, { backgroundColor: colors.primary }]}>
             <Text style={[Typography.p1, { color: colors.text }]}>Nochmal scannen</Text>

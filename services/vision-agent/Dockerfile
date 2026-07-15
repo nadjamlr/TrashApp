@@ -8,6 +8,7 @@ COPY data/ /app/data/
 
 RUN pip install --no-cache-dir ./services/shared
 RUN pip install --no-cache-dir python-multipart>=0.0.9
+RUN pip install --no-cache-dir "crewai>=0.80.0"
 RUN pip install --no-cache-dir --no-deps ./services/vision-agent
 
 EXPOSE 8001
