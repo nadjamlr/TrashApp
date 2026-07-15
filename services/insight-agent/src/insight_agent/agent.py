@@ -53,7 +53,10 @@ def _build_rule_context(label: str, material: str) -> str:
 
 
 _DISPOSAL_INSTRUCTION = re.compile(
-    r"(gehört|sollte?|muss|müssen)\s.{0,40}(entsorgt werden|in die (Bio|Papier|Restmüll|Gelbe)tonne|im Wertstoffhof|in den Müll)",
+    r"(gehört|sollte?|muss|müssen|darf|dürfen|werden|wird)\s.{0,50}"
+    r"(entsorgt|recycelt|entsorgen|in die (Bio|Papier|Restmüll|Gelbe)tonne"
+    r"|in (der|den|die) (Bio|Papier|Restmüll|Gelbe)tonne"
+    r"|im Wertstoffhof|in den Müll|in Wertstoffinseln)",
     re.IGNORECASE,
 )
 
@@ -66,6 +69,9 @@ def _is_valid_fact(fact: str, label: str, material: str = "") -> bool:
         return False
     words = fact.split()
     if len(words) < 5 or len(words) > 30:
+        return False
+    # Reject facts starting with "Wusstest du" — that's already the card header
+    if re.match(r"^Wusstest du", fact, re.IGNORECASE):
         return False
     # Reject facts that are just disposal instructions (ResultCard already shows that)
     if _DISPOSAL_INSTRUCTION.search(fact):
@@ -115,7 +121,8 @@ async def run_agent(request: InsightRequest) -> InsightResult:
         description=(
             "WICHTIG: Antworte ausschließlich auf DEUTSCH.\n\n"
             "Aufgabe: Schreibe genau EINEN kurzen deutschen Satz (5–20 Wörter) über das gescannte Objekt.\n"
-            "Der Satz erscheint unter der Überschrift \"Wusstest du?\" – er soll überraschend und lehrreich sein.\n"
+            "Der Satz soll überraschend und lehrreich sein – ein echter Fakt, keine Entsorgungsanweisung.\n"
+            "VERBOTEN: Beginne den Satz NICHT mit 'Wusstest du' oder einer Frage.\n"
             "VERBOTEN: Erkläre NICHT, wohin das Objekt entsorgt wird – das steht bereits auf der Karte darüber.\n"
             "Der Satz MUSS das Objekt oder sein Material beim Namen nennen.\n"
             "Erfinde keine Wörter. Schreibe grammatikalisch korrektes Deutsch.\n\n"
