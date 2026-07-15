@@ -1,4 +1,5 @@
 import random
+import re
 from typing import Literal
 
 from crewai import Agent, Crew, LLM, Task
@@ -13,18 +14,28 @@ FALLBACK_CATEGORY = "Impact"
 _CATEGORY_INSTRUCTIONS: dict[str, str] = {
     "Myth": (
         "Kategorie: Myth\n"
-        "Korrigiere einen häufigen Irrtum über die Entsorgung dieses Objekts.\n"
-        "Beispiel: \"Viele denken, Plastikflaschen gehören in den Müll – sie kommen in die Wertstoffinsel.\""
+        "Korrigiere einen Irrtum. Format: [Falsche Annahme] – [Korrektur].\n"
+        "Der Satz MUSS ein '–' oder 'aber' enthalten, das Irrtum und Wahrheit trennt.\n"
+        "NICHT: wo es entsorgt wird – das weiß der Nutzer schon.\n"
+        "Beispiele:\n"
+        "- \"Viele waschen Gläser vor dem Recycling gründlich – ein kurzes Ausspülen reicht völlig aus.\"\n"
+        "- \"Kompostierbare Bio-Plastiktüten klingen umweltfreundlich, zersetzen sich in der Biotonne aber nicht richtig.\""
     ),
     "Impact": (
         "Kategorie: Impact\n"
-        "Erkläre die ökologische Wirkung von richtigem oder falschem Recycling dieses Objekts.\n"
-        "Beispiel: \"Eine recycelte Glasflasche spart bis zu 30 % Energie gegenüber neuer Produktion.\""
+        "Nenne eine konkrete, überraschende Zahl oder Wirkung – nicht nur 'spart Energie', sondern wie viel.\n"
+        "NICHT: wo es entsorgt wird – das weiß der Nutzer schon.\n"
+        "Beispiele:\n"
+        "- \"Eine einzige Aluminiumdose neu herzustellen verbraucht 20-mal mehr Energie als sie zu recyceln.\"\n"
+        "- \"Falsch entsorgter Elektroschrott enthält oft mehr Gold pro Tonne als ein Goldminengestein.\""
     ),
     "Future": (
         "Kategorie: Future\n"
-        "Beschreibe, was nach dem Recycling aus dem Material dieses Objekts werden kann.\n"
-        "Beispiel: \"Aus alten Zeitungen wird neues Zeitungspapier hergestellt.\""
+        "Beschreibe überraschend, was aus dem recycelten Material tatsächlich werden kann – konkret und unerwartet.\n"
+        "NICHT: wo es entsorgt wird – das weiß der Nutzer schon.\n"
+        "Beispiele:\n"
+        "- \"Aus recycelten PET-Flaschen werden Fleecejacken, Teppiche und sogar neue Flaschen hergestellt.\"\n"
+        "- \"Recycelte Aluminiumdosen können innerhalb von 60 Tagen wieder als neue Dosen im Regal stehen.\""
     ),
 }
 
@@ -41,9 +52,55 @@ def _build_rule_context(label: str, material: str) -> str:
     return f"Gescanntes Objekt: {label} (Material: {material})"
 
 
+_DISPOSAL_INSTRUCTION = re.compile(
+    r"(gehört|gehören|sollte?|muss|müssen|darf|dürfen|werden|wird|sind)\s.{0,60}"
+    r"(entsorgt|recycelt|entsorgen|zu entsorgen"
+    r"|nicht in der .{0,20}tonne"
+    r"|in die (Bio|Papier|Restmüll|Gelbe)tonne"
+    r"|in (der|den|die) (Bio|Papier|Restmüll|Gelbe)tonne"
+    r"|im Wertstoffhof|in den Müll|in Wertstoffinseln?|an die Wertstoffinseln?)",
+    re.IGNORECASE,
+)
+
+
+def _is_valid_fact(fact: str, label: str, material: str = "") -> bool:
+    if not fact or not isinstance(fact, str):
+        return False
+    # Reject JSON fragments or curly braces leaking through
+    if re.search(r"[{}\[\]]", fact):
+        return False
+    words = fact.split()
+    if len(words) < 5 or len(words) > 30:
+        return False
+    # Reject facts starting with "Wusstest du" — that's already the card header
+    if re.match(r"^Wusstest du", fact, re.IGNORECASE):
+        return False
+    # Reject facts that are just disposal instructions (ResultCard already shows that)
+    if _DISPOSAL_INSTRUCTION.search(fact):
+        return False
+    # Myth facts that only state the false belief without a correction are incomplete
+    if re.match(r"^Viele (glauben|denken|meinen).{0,80}$", fact, re.IGNORECASE):
+        if not re.search(r"(–|aber|jedoch|doch|stimmt|tatsächlich)", fact, re.IGNORECASE):
+            return False
+    # Fact must reference the item or its material (LLMs often use synonyms/material names)
+    context_tokens = {
+        t.lower()
+        for t in re.findall(r"\w+", f"{label} {material}")
+        if len(t) > 2
+    }
+    fact_lower = fact.lower()
+    if context_tokens and not any(t in fact_lower for t in context_tokens):
+        return False
+    return True
+
+
 async def run_agent(request: InsightRequest) -> InsightResult:
     category: Literal["Myth", "Impact", "Future"] = random.choice(["Myth", "Impact", "Future"])
-    llm = LLM(model=f"ollama/{settings.ollama_model_text}", base_url=settings.ollama_host)
+    llm = LLM(
+        model=f"ollama/{settings.ollama_model_text}",
+        base_url=settings.ollama_host,
+        temperature=0.3,
+    )
 
     agent = Agent(
         role="Münchener Recycling-Experte",
@@ -55,6 +112,7 @@ async def run_agent(request: InsightRequest) -> InsightResult:
             "Du bist ein sorgfältiger Recycling-Pädagoge. Du verwendest ausschließlich die "
             "bereitgestellten Münchener Abfallregeln und die Gegenstandsdetails, um einen einzigen "
             "Satz zu formulieren, der spezifisch, faktisch und hilfreich ist. "
+            "Du erfindest keine Wörter und schreibst kein Kauderwelsch. "
             "Du antwortest IMMER auf Deutsch."
         ),
         llm=llm,
@@ -64,9 +122,12 @@ async def run_agent(request: InsightRequest) -> InsightResult:
     task = Task(
         description=(
             "WICHTIG: Antworte ausschließlich auf DEUTSCH.\n\n"
-            "Aufgabe: Schreibe genau EINEN kurzen deutschen Satz (max. 20 Wörter) über das gescannte Objekt.\n"
-            "Verwende NUR die untenstehenden Regelinformationen.\n"
-            "Der Satz muss das Objekt beim Namen nennen.\n\n"
+            "Aufgabe: Schreibe genau EINEN kurzen deutschen Satz (5–20 Wörter) über das gescannte Objekt.\n"
+            "Der Satz soll überraschend und lehrreich sein – ein echter Fakt, keine Entsorgungsanweisung.\n"
+            "VERBOTEN: Beginne den Satz NICHT mit 'Wusstest du' oder einer Frage.\n"
+            "VERBOTEN: Erkläre NICHT, wohin das Objekt entsorgt wird – das steht bereits auf der Karte darüber.\n"
+            "Der Satz MUSS das Objekt oder sein Material beim Namen nennen.\n"
+            "Erfinde keine Wörter. Schreibe grammatikalisch korrektes Deutsch.\n\n"
             "{category_instruction}\n\n"
             f"Die Kategorie im JSON muss exakt \"{category}\" sein.\n"
             "Gib NUR gültiges JSON zurück:\n"
@@ -88,6 +149,10 @@ async def run_agent(request: InsightRequest) -> InsightResult:
     )
 
     if result.pydantic is None:
+        return InsightResult(fact=FALLBACK_FACT, category=FALLBACK_CATEGORY)
+
+    fact = result.pydantic.fact
+    if not _is_valid_fact(fact, request.label, request.material):
         return InsightResult(fact=FALLBACK_FACT, category=FALLBACK_CATEGORY)
 
     return result.pydantic

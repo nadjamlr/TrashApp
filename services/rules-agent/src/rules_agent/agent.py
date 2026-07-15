@@ -14,9 +14,7 @@ logger = logging.getLogger("rules_agent")
 async def run_agent(request: RulesRequest) -> RulesResult:
     deterministic_result = _deterministic_result(request)
     if deterministic_result is not None:
-        # Rule/fallback content is authored in English; translate only for German requests.
-        if request.language == "de":
-            return await translate_result_to_german(deterministic_result)
+        # YAML notes/alternatives are now authored in German; no translation needed.
         return deterministic_result
 
     logger.info(
