@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
 import { Platform } from 'react-native';
 
 const BASE_URL = process.env.EXPO_PUBLIC_LOCATIONS_SERVICE_URL;
@@ -63,22 +64,32 @@ export async function fetchLocations({
   return (data.locations as Location[]).filter(l => l.lat != null && l.lng != null);
 }
 
+async function readCache(key: string): Promise<Location[] | null> {
+  try {
+    const raw = await AsyncStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as Location[]) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchLocationsWithCache(
   params: FetchLocationsParams
 ): Promise<{ locations: Location[]; fromCache: boolean }> {
   const key = cacheKey(params.lat, params.lng);
+
+  const net = await NetInfo.fetch();
+  if (!net.isConnected) {
+    const cached = await readCache(key);
+    return cached ? { locations: cached, fromCache: true } : { locations: [], fromCache: false };
+  }
+
   try {
     const locations = await fetchLocations(params);
     AsyncStorage.setItem(key, JSON.stringify(locations)).catch(() => {});
     return { locations, fromCache: false };
   } catch {
-    try {
-      const raw = await AsyncStorage.getItem(key);
-      if (raw) {
-        const cached = JSON.parse(raw) as Location[];
-        return { locations: cached, fromCache: true };
-      }
-    } catch {}
-    return { locations: [], fromCache: false };
+    const cached = await readCache(key);
+    return cached ? { locations: cached, fromCache: true } : { locations: [], fromCache: false };
   }
 }
