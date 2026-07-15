@@ -13,7 +13,7 @@ type Props = {
   material: string;
   rules: RulesResult;
   onClose: () => void;
-  onShowOnMap: () => void;
+  onShowOnMap?: () => void;
   onAskMore: () => void;
 };
 
@@ -51,9 +51,11 @@ export function ResultCard({ label, material, rules, onClose, onShowOnMap, onAsk
         </View>
 
         <View style={styles.buttons}>
-          <Pressable onPress={onShowOnMap} style={[styles.button, { backgroundColor: colors.text }]}>
-            <Text style={[Typography.p1, { color: colors.background }]}>Show on map</Text>
-          </Pressable>
+          {onShowOnMap && (
+            <Pressable onPress={onShowOnMap} style={[styles.button, { backgroundColor: colors.text }]}>
+              <Text style={[Typography.p1, { color: colors.background }]}>Show on map</Text>
+            </Pressable>
+          )}
           <Pressable onPress={onAskMore} style={[styles.button, { backgroundColor: colors.text }]}>
             <Text style={[Typography.p1, { color: colors.background }]}>Ask more</Text>
           </Pressable>

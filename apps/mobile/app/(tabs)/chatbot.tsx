@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -64,7 +65,16 @@ function formatNearestLocations(locations: Location[]): string {
 }
 
 export default function ChatbotScreen() {
-  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const { label, material } = useLocalSearchParams<{ label?: string; material?: string }>();
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (label && material) {
+      return [
+        ...initialMessages,
+        { id: 'scan-context', role: 'user', content: `Ich habe gerade ${label} aus ${material} gescannt.` },
+      ];
+    }
+    return initialMessages;
+  });
   const [draft, setDraft] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isFindingNearest, setIsFindingNearest] = useState(false);

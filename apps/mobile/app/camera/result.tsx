@@ -12,6 +12,23 @@ import { Typography } from '@/constants/Typography';
 import { classifyItem, type RulesResult } from '@/services/rulesService';
 import { generateInsight, type InsightResult } from '@/services/insightService';
 
+const MATERIAL_MAP_FILTER: Array<{ keywords: string[]; filter: string[] }> = [
+  { keywords: ['glas', 'glass'],                        filter: ['Glas braun', 'Glas grün', 'Glas weiß'] },
+  { keywords: ['aluminium', 'aluminum', 'metall', 'metal', 'stahl', 'eisen'], filter: ['LVP', 'Metall'] },
+  { keywords: ['kunststoff', 'plastik', 'plastic', 'pet', 'polymer'],         filter: ['LVP'] },
+  { keywords: ['papier', 'pappe', 'karton', 'paper', 'cardboard'],            filter: ['Papier'] },
+  { keywords: ['textil', 'stoff', 'baumwolle', 'wolle', 'fabric', 'cloth'],   filter: ['Altkleider'] },
+  { keywords: ['elektronik', 'elektrik', 'electric', 'electronic'],           filter: ['Elektroschrott'] },
+];
+
+function getMapFilter(material: string): string[] {
+  const m = material.toLowerCase();
+  for (const entry of MATERIAL_MAP_FILTER) {
+    if (entry.keywords.some(k => m.includes(k))) return entry.filter;
+  }
+  return [];
+}
+
 export default function ResultScreen() {
   const { label, material } = useLocalSearchParams<{
     label: string;
@@ -93,8 +110,17 @@ export default function ResultScreen() {
         material={material ?? ''}
         rules={rules}
         onClose={() => router.back()}
-        onShowOnMap={() => router.push('/(tabs)/')}
-        onAskMore={() => router.push('/(tabs)/chatbot')}
+        onShowOnMap={() => {
+          const filter = getMapFilter(material ?? '');
+          router.push({
+            pathname: '/(tabs)/',
+            params: filter.length > 0 ? { materials: filter.join(',') } : {},
+          });
+        }}
+        onAskMore={() => router.push({
+          pathname: '/(tabs)/chatbot',
+          params: { label: label ?? '', material: material ?? '' },
+        })}
       />
       <View style={styles.factWrapper}>
         <FactCard

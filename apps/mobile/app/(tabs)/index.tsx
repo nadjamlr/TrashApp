@@ -19,6 +19,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useSavedLocations } from '@/context/SavedLocationsContext';
 import { fetchLocationsWithCache, Location, LocationType } from '@/services/locationsService';
 import { WERTSTOFFHOEFE } from '@/constants/wertstoffhoefe';
+import { useLocalSearchParams } from 'expo-router';
 
 // Delayed tracksViewChanges=true on mount so iOS captures the custom view correctly.
 // After 300ms → false to avoid continuous re-renders.
@@ -44,6 +45,7 @@ export default function MapScreen() {
   const colorScheme = useColorScheme() ?? 'light';
   const theme = Colors[colorScheme];
   const { lat, lng } = useLocation();
+  const { materials: materialsParam } = useLocalSearchParams<{ materials?: string }>();
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<Set<LocationType>>(new Set());
@@ -63,6 +65,12 @@ export default function MapScreen() {
       })
       .catch(() => {});
   }, [lat, lng]);
+
+  useEffect(() => {
+    if (!materialsParam) return;
+    const list = materialsParam.split(',').filter(Boolean);
+    setSelectedMaterials(new Set(list));
+  }, [materialsParam]);
 
   // Stable marker pool: 12 static Wertstoffhöfe (always) + up to 48 nearest API locations.
   // Does NOT depend on filter state → filter changes never add/remove native views,
