@@ -20,6 +20,23 @@ import { useSavedLocations } from '@/context/SavedLocationsContext';
 import { fetchLocations, Location, LocationType } from '@/services/locationsService';
 import { WERTSTOFFHOEFE } from '@/constants/wertstoffhoefe';
 
+function SavedMarker({ loc, isSelected, onPress }: { loc: Location; isSelected: boolean; onPress: () => void }) {
+  const [captured, setCaptured] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setCaptured(true), 300);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <Marker
+      coordinate={{ latitude: loc.lat, longitude: loc.lng }}
+      tracksViewChanges={!captured || isSelected}
+      onPress={onPress}
+    >
+      <LocationMarker type={loc.type} selected={isSelected} saved />
+    </Marker>
+  );
+}
+
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme() ?? 'light';
@@ -131,19 +148,14 @@ export default function MapScreen() {
             </Marker>
           );
         })}
-        {savedLocations.map((loc) => {
-          const isSelected = selectedLocation?.id === loc.id;
-          return (
-            <Marker
-              key={`saved-${loc.id}`}
-              coordinate={{ latitude: loc.lat, longitude: loc.lng }}
-              tracksViewChanges={isSelected}
-              onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
-            >
-              <LocationMarker type={loc.type} selected={isSelected} saved />
-            </Marker>
-          );
-        })}
+        {savedLocations.map((loc) => (
+          <SavedMarker
+            key={`saved-${loc.id}`}
+            loc={loc}
+            isSelected={selectedLocation?.id === loc.id}
+            onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
+          />
+        ))}
       </MapView>
 
       <KeyboardAvoidingView // Overlay
