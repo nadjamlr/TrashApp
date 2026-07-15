@@ -12,6 +12,29 @@ import { Typography } from '@/constants/Typography';
 import { classifyItem, type RulesResult } from '@/services/rulesService';
 import { generateInsight, type InsightResult } from '@/services/insightService';
 
+const BIN_TO_MAP_FILTER: Record<string, string[] | null> = {
+  'Wertstoffhof':                    [],
+  'Papiertonne':                     ['Papier'],
+  'AWM Altkleidercontainer':         ['Altkleider'],
+  'Biotonne':                        null,
+  'Restmuelltonne':                  null,
+  'Giftmobil':                       null,
+  'Retail battery collection boxes': null,
+  'Specialist retailer take-back':   null,
+};
+
+function getMapFilter(bin: string, material: string): string[] | null {
+  if (bin === 'Wertstoffinseln') {
+    const m = material.toLowerCase();
+    if (m.includes('glas') || m.includes('glass')) {
+      return ['Glas braun', 'Glas grün', 'Glas weiß'];
+    }
+    return ['LVP'];
+  }
+  if (bin in BIN_TO_MAP_FILTER) return BIN_TO_MAP_FILTER[bin];
+  return [];
+}
+
 export default function ResultScreen() {
   const { label, material } = useLocalSearchParams<{
     label: string;
@@ -93,7 +116,14 @@ export default function ResultScreen() {
         material={material ?? ''}
         rules={rules}
         onClose={() => router.back()}
-        onShowOnMap={() => router.push('/(tabs)/')}
+        onShowOnMap={(() => {
+          const filter = getMapFilter(rules.bin, material ?? '');
+          if (filter === null) return undefined;
+          return () => router.push({
+            pathname: '/(tabs)/',
+            params: filter.length > 0 ? { materials: filter.join(',') } : {},
+          });
+        })()}
         onAskMore={() => router.push('/(tabs)/chatbot')}
       />
       <View style={styles.factWrapper}>
