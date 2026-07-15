@@ -52,9 +52,9 @@ function classifyWithLocalFallback(label: string, material: string): RulesResult
   return {
     bin: 'Restmuelltonne',
     reasoning:
-      'Der Rules Agent ist gerade nicht erreichbar und die lokale App-Fallbacklogik kennt diesen Gegenstand nicht sicher.',
+      'Keine Begründung derzeit verfügbar.',
     deposit: null,
-    alternatives: ['Rules Agent erneut versuchen', 'AWM Abfall-ABC prüfen'],
+    alternatives: ['Keine Alternativen derzeit verfügbar', 'optional AWM Abfall-ABC prüfen'],
     important_notes: ['Nicht als Pfand oder Verpackung behandeln, solange die Zuordnung unsicher ist.'],
   };
 }
