@@ -14,24 +14,28 @@ FALLBACK_CATEGORY = "Impact"
 _CATEGORY_INSTRUCTIONS: dict[str, str] = {
     "Myth": (
         "Kategorie: Myth\n"
-        "Korrigiere einen häufigen Irrtum über die Entsorgung dieses Objekts.\n"
+        "Korrigiere einen Irrtum. Format: [Falsche Annahme] – [Korrektur].\n"
+        "Der Satz MUSS ein '–' oder 'aber' enthalten, das Irrtum und Wahrheit trennt.\n"
+        "NICHT: wo es entsorgt wird – das weiß der Nutzer schon.\n"
         "Beispiele:\n"
-        "- \"Viele denken, Plastikflaschen gehören in den Müll – sie kommen in die Wertstoffinsel.\"\n"
-        "- \"Entgegen der Annahme gehören Joghurtbecher nicht in die Papiertonne, sondern in die Wertstoffinsel.\""
+        "- \"Viele waschen Gläser vor dem Recycling gründlich – ein kurzes Ausspülen reicht völlig aus.\"\n"
+        "- \"Kompostierbare Bio-Plastiktüten klingen umweltfreundlich, zersetzen sich in der Biotonne aber nicht richtig.\""
     ),
     "Impact": (
         "Kategorie: Impact\n"
-        "Erkläre die ökologische Wirkung von richtigem oder falschem Recycling dieses Objekts.\n"
+        "Nenne eine konkrete, überraschende Zahl oder Wirkung – nicht nur 'spart Energie', sondern wie viel.\n"
+        "NICHT: wo es entsorgt wird – das weiß der Nutzer schon.\n"
         "Beispiele:\n"
-        "- \"Eine recycelte Glasflasche spart bis zu 30 % Energie gegenüber neuer Produktion.\"\n"
-        "- \"Falsch entsorgter Elektroschrott kann giftige Schwermetalle ins Grundwasser abgeben.\""
+        "- \"Eine einzige Aluminiumdose neu herzustellen verbraucht 20-mal mehr Energie als sie zu recyceln.\"\n"
+        "- \"Falsch entsorgter Elektroschrott enthält oft mehr Gold pro Tonne als ein Goldminengestein.\""
     ),
     "Future": (
         "Kategorie: Future\n"
-        "Beschreibe, was nach dem Recycling aus dem Material dieses Objekts werden kann.\n"
+        "Beschreibe überraschend, was aus dem recycelten Material tatsächlich werden kann – konkret und unerwartet.\n"
+        "NICHT: wo es entsorgt wird – das weiß der Nutzer schon.\n"
         "Beispiele:\n"
-        "- \"Aus alten Zeitungen wird neues Zeitungspapier hergestellt.\"\n"
-        "- \"Recycelte Aluminiumdosen können innerhalb von 60 Tagen als neue Dosen im Regal stehen.\""
+        "- \"Aus recycelten PET-Flaschen werden Fleecejacken, Teppiche und sogar neue Flaschen hergestellt.\"\n"
+        "- \"Recycelte Aluminiumdosen können innerhalb von 60 Tagen wieder als neue Dosen im Regal stehen.\""
     ),
 }
 
@@ -48,6 +52,12 @@ def _build_rule_context(label: str, material: str) -> str:
     return f"Gescanntes Objekt: {label} (Material: {material})"
 
 
+_DISPOSAL_INSTRUCTION = re.compile(
+    r"(gehört|sollte?|muss|müssen)\s.{0,40}(entsorgt werden|in die (Bio|Papier|Restmüll|Gelbe)tonne|im Wertstoffhof|in den Müll)",
+    re.IGNORECASE,
+)
+
+
 def _is_valid_fact(fact: str, label: str, material: str = "") -> bool:
     if not fact or not isinstance(fact, str):
         return False
@@ -57,6 +67,13 @@ def _is_valid_fact(fact: str, label: str, material: str = "") -> bool:
     words = fact.split()
     if len(words) < 5 or len(words) > 30:
         return False
+    # Reject facts that are just disposal instructions (ResultCard already shows that)
+    if _DISPOSAL_INSTRUCTION.search(fact):
+        return False
+    # Myth facts that only state the false belief without a correction are incomplete
+    if re.match(r"^Viele (glauben|denken|meinen).{0,80}$", fact, re.IGNORECASE):
+        if not re.search(r"(–|aber|jedoch|doch|stimmt|tatsächlich)", fact, re.IGNORECASE):
+            return False
     # Fact must reference the item or its material (LLMs often use synonyms/material names)
     context_tokens = {
         t.lower()
@@ -98,8 +115,9 @@ async def run_agent(request: InsightRequest) -> InsightResult:
         description=(
             "WICHTIG: Antworte ausschließlich auf DEUTSCH.\n\n"
             "Aufgabe: Schreibe genau EINEN kurzen deutschen Satz (5–20 Wörter) über das gescannte Objekt.\n"
-            "Verwende NUR die untenstehenden Regelinformationen.\n"
-            "Der Satz MUSS das Objekt beim Namen nennen.\n"
+            "Der Satz erscheint unter der Überschrift \"Wusstest du?\" – er soll überraschend und lehrreich sein.\n"
+            "VERBOTEN: Erkläre NICHT, wohin das Objekt entsorgt wird – das steht bereits auf der Karte darüber.\n"
+            "Der Satz MUSS das Objekt oder sein Material beim Namen nennen.\n"
             "Erfinde keine Wörter. Schreibe grammatikalisch korrektes Deutsch.\n\n"
             "{category_instruction}\n\n"
             f"Die Kategorie im JSON muss exakt \"{category}\" sein.\n"
