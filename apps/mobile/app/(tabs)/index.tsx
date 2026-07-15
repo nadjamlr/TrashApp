@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { Marker } from 'react-native-maps';
 import { LocationDetailCard } from '@/components/LocationDetailCard';
 import { LocationMarker } from '@/components/LocationMarker';
-import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Abstände zur StatusBAr und HomeIndicator
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Searchbar from '@/components/map/Searchbar';
 import Filter from '@/components/map/Filter';
 import { Icon } from '@/components/navbar/Icon';
@@ -20,6 +20,8 @@ import { useSavedLocations } from '@/context/SavedLocationsContext';
 import { fetchLocations, Location, LocationType } from '@/services/locationsService';
 import { WERTSTOFFHOEFE } from '@/constants/wertstoffhoefe';
 
+// Delayed tracksViewChanges=true on mount so iOS captures the custom view correctly.
+// After 300ms → false to avoid continuous re-renders.
 function SavedMarker({ loc, isSelected, onPress }: { loc: Location; isSelected: boolean; onPress: () => void }) {
   const [captured, setCaptured] = useState(false);
   useEffect(() => {
@@ -58,16 +60,14 @@ export default function MapScreen() {
       .catch((e) => console.error('[Locations] Fehler:', e.message));
   }, [lat, lng]);
 
-  const savedIds = useMemo(() => new Set(savedLocations.map(l => l.id)), [savedLocations]);
-
-  // Nahe Locations + statische Wertstoffhöfe zusammenführen (dedup)
+  // Stable marker pool: 12 static Wertstoffhöfe (always) + up to 48 nearest API locations.
+  // Does NOT depend on filter state → filter changes never add/remove native views,
+  // only update the opacity prop. This prevents Fabric crashes from bulk native-view operations.
   const allLocations = useMemo(() => {
     const nearbyIds = new Set(locations.map(l => l.id));
-    const hoefe = selectedTypes.has('wertstoffhof')
-      ? WERTSTOFFHOEFE.filter(l => !nearbyIds.has(l.id))
-      : [];
-    return [...locations, ...hoefe];
-  }, [locations, selectedTypes]);
+    const staticHoefe = WERTSTOFFHOEFE.filter(l => !nearbyIds.has(l.id));
+    return [...staticHoefe, ...locations.slice(0, 48)];
+  }, [locations]);
 
   const allMaterials = useMemo(() => {
     const seen = new Set<string>();
@@ -75,15 +75,12 @@ export default function MapScreen() {
     return Array.from(seen).sort();
   }, [allLocations]);
 
-  const filteredLocations = useMemo(() => allLocations.filter(loc => {
-    if (savedIds.has(loc.id)) return false; // saved locations werden separat angezeigt
-    if (selectedTypes.size > 0 && !selectedTypes.has(loc.type)) return false;
-    if (selectedMaterials.size > 0 && !loc.materials?.some(m => selectedMaterials.has(m))) return false;
-    return true;
-  }), [allLocations, selectedTypes, selectedMaterials, savedIds]);
+  // savedIds für Opacity-Steuerung: saved locations bekommen opacity=0 (regulärer Marker
+  // bleibt im nativen Layer, wird aber ausgeblendet) → kein simultanes Entfernen+Hinzufügen.
+  const savedIds = useMemo(() => new Set(savedLocations.map(l => l.id)), [savedLocations]);
 
-  // Region der Karte: nur beim Aktivieren des Gespeichert-Filters neu berechnen,
-  // nicht bei jedem Speichern – sonst crasht MapView durch gleichzeitige Region- + Marker-Updates.
+  // Region der Karte: savedLocations über ref lesen, damit mapRegion nicht
+  // gleichzeitig mit den Marker-Updates neu berechnet wird (→ Fabric-Crash).
   const savedLocationsRef = useRef(savedLocations);
   savedLocationsRef.current = savedLocations;
 
@@ -135,19 +132,27 @@ export default function MapScreen() {
           setSelectedLocation(null);
         }}
       >
-        {!showSavedOnly && filteredLocations.map((loc) => {
+        {/* All markers always stay mounted; only opacity/onPress change on filter toggle.
+            This avoids bulk native-view add/remove operations that crash react-native-maps on Fabric. */}
+        {allLocations.map((loc) => {
+          const isVisible = !showSavedOnly &&
+            !savedIds.has(loc.id) &&
+            (selectedTypes.size === 0 || selectedTypes.has(loc.type)) &&
+            (selectedMaterials.size === 0 || loc.materials?.some(m => selectedMaterials.has(m)));
           const isSelected = selectedLocation?.id === loc.id;
           return (
             <Marker
               key={loc.id}
               coordinate={{ latitude: loc.lat, longitude: loc.lng }}
               tracksViewChanges={isSelected}
-              onPress={() => { markerTappedRef.current = true; setSelectedLocation(loc); }}
+              opacity={isVisible ? 1 : 0}
+              onPress={isVisible ? () => { markerTappedRef.current = true; setSelectedLocation(loc); } : undefined}
             >
               <LocationMarker type={loc.type} selected={isSelected} />
             </Marker>
           );
         })}
+        {/* SavedMarkers layer on top; saving adds exactly 1 view, unsaving removes 1. */}
         {savedLocations.map((loc) => (
           <SavedMarker
             key={`saved-${loc.id}`}
@@ -158,7 +163,7 @@ export default function MapScreen() {
         ))}
       </MapView>
 
-      <KeyboardAvoidingView // Overlay
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? Layout.keyboardVerticalOffset : 0}
         style={styles.overlay}
@@ -230,7 +235,6 @@ export default function MapScreen() {
   );
 }
 
-// Keep the card above the floating tab bar (bottom: Spacing.lg, height 72 in (tabs)/_layout.tsx)
 const TAB_BAR_OFFSET = Spacing.lg + 72;
 
 const styles = StyleSheet.create({
@@ -270,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   bookmarkChip: {
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.sm,
     paddingVertical: 6,
     borderRadius: Radius.sm,
     alignItems: 'center',
