@@ -1,3 +1,5 @@
+import logging
+
 from crewai import Agent, Crew, LLM, Task
 from trashapp_shared.settings import settings
 from rules_agent.rules import find_rule_item, get_rules_text
@@ -5,11 +7,18 @@ from rules_agent.schemas import RulesRequest, RulesResult
 from rules_agent.fallbacks import fallback_result
 from rules_agent.rules import rules_result_from_item, unknown_result
 
+logger = logging.getLogger("rules_agent")
+
 
 async def run_agent(request: RulesRequest) -> RulesResult:
     deterministic_result = _deterministic_result(request)
     if deterministic_result is not None:
         return deterministic_result
+
+    logger.info(
+        "No deterministic/fallback match for label=%r material=%r city=%r; falling back to LLM",
+        request.label, request.material, request.city,
+    )
 
     llm = LLM(model=f"ollama/{settings.ollama_model_text}", base_url=settings.ollama_host)
 
@@ -75,7 +84,16 @@ async def run_agent(request: RulesRequest) -> RulesResult:
     })
 
     if result.pydantic is None:
+        logger.warning(
+            "LLM returned no structured result for label=%r material=%r; returning unknown",
+            request.label, request.material,
+        )
         return unknown_result()
+
+    if result.pydantic.bin.strip().casefold() == "unknown":
+        logger.warning(
+            "LLM classified as unknown for label=%r material=%r", request.label, request.material,
+        )
 
     return result.pydantic
 

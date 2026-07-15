@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: services/vision-agent/Dockerfile
+    restart: unless-stopped
     ports:
       - "8001:8001"
     env_file:
@@ -16,6 +17,7 @@ services:
     build:
       context: .
       dockerfile: services/rules-agent/Dockerfile
+    restart: unless-stopped
     ports:
       - "8002:8002"
     env_file:
@@ -29,6 +31,7 @@ services:
     build:
       context: .
       dockerfile: services/insight-agent/Dockerfile
+    restart: unless-stopped
     ports:
       - "8003:8003"
     env_file:
@@ -42,6 +45,7 @@ services:
     build:
       context: .
       dockerfile: services/chat-agent/Dockerfile
+    restart: unless-stopped
     ports:
       - "8004:8004"
     env_file:
@@ -55,6 +59,7 @@ services:
     build:
       context: .
       dockerfile: services/locations-service/Dockerfile
+    restart: unless-stopped
     ports:
       - "8005:8005"
     env_file:
