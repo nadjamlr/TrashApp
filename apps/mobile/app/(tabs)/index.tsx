@@ -17,7 +17,8 @@ import { useColorScheme } from '@/services/useColorScheme';
 import { useLocation } from '@/context/LocationContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { useSavedLocations } from '@/context/SavedLocationsContext';
-import { fetchAllWertstoffhoefe, fetchLocations, Location, LocationType } from '@/services/locationsService';
+import { fetchLocations, Location, LocationType } from '@/services/locationsService';
+import { WERTSTOFFHOEFE } from '@/constants/wertstoffhoefe';
 
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
@@ -25,7 +26,6 @@ export default function MapScreen() {
   const theme = Colors[colorScheme];
   const { lat, lng } = useLocation();
   const [locations, setLocations] = useState<Location[]>([]);
-  const [cityHoefe, setCityHoefe] = useState<Location[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<Set<LocationType>>(new Set());
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
@@ -41,22 +41,16 @@ export default function MapScreen() {
       .catch((e) => console.error('[Locations] Fehler:', e.message));
   }, [lat, lng]);
 
-  // Wenn Wertstoffhöfe-Filter aktiv: gecachte Stadtliste laden (kein wiederholter API-Call)
-  useEffect(() => {
-    if (!selectedTypes.has('wertstoffhof')) {
-      setCityHoefe([]);
-      return;
-    }
-    fetchAllWertstoffhoefe().then(setCityHoefe).catch(() => {});
-  }, [selectedTypes]);
-
   const savedIds = useMemo(() => new Set(savedLocations.map(l => l.id)), [savedLocations]);
 
-  // Nahe Locations + stadtweite Höfe zusammenführen (dedup)
+  // Nahe Locations + statische Wertstoffhöfe zusammenführen (dedup)
   const allLocations = useMemo(() => {
     const nearbyIds = new Set(locations.map(l => l.id));
-    return [...locations, ...cityHoefe.filter(l => !nearbyIds.has(l.id))];
-  }, [locations, cityHoefe]);
+    const hoefe = selectedTypes.has('wertstoffhof')
+      ? WERTSTOFFHOEFE.filter(l => !nearbyIds.has(l.id))
+      : [];
+    return [...locations, ...hoefe];
+  }, [locations, selectedTypes]);
 
   const allMaterials = useMemo(() => {
     const seen = new Set<string>();
