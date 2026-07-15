@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -5,6 +7,7 @@ class RulesRequest(BaseModel):
     label: str
     material: str
     city: str = "munich"
+    language: Literal["de", "en"] = "en"
 
 
 class RulesResult(BaseModel):

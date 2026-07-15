@@ -3,6 +3,7 @@ import { View, StyleSheet, ActivityIndicator, ScrollView, Text, Pressable } from
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useColorScheme } from '@/services/useColorScheme';
+import { useLanguage } from '@/context/LanguageContext';
 import { ResultCard } from '@/components/camera/ResultCard';
 import { FactCard } from '@/components/camera/FactCard';
 import Colors from '@/constants/Colors';
@@ -38,6 +39,7 @@ export default function ResultScreen() {
   const router = useRouter();
   const scheme = useColorScheme() ?? 'light';
   const colors = Colors[scheme];
+  const { language } = useLanguage();
 
   const [rules, setRules] = useState<RulesResult | null>(null);
   const [insight, setInsight] = useState<InsightResult | null>(null);
@@ -53,7 +55,7 @@ export default function ResultScreen() {
       let result: RulesResult | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          result = await classifyItem(label, material);
+          result = await classifyItem(label, material, language);
           break;
         } catch {
           if (attempt === 2) {

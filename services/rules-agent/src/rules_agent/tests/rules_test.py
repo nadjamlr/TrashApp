@@ -4,8 +4,9 @@ from fastapi.testclient import TestClient
 
 from rules_agent.agent import run_agent
 from rules_agent.main import app
-from rules_agent.rules import find_rule_item
+from rules_agent.rules import MAX_IMPORTANT_NOTES, find_rule_item, rules_result_from_item
 from rules_agent.schemas import RulesRequest
+from rules_agent.translate import _correct_known_terms
 
 
 client = TestClient(app) # Test HTTP Client
@@ -180,3 +181,107 @@ def test_find_rule_item_does_not_confuse_broken_with_brokkoli() -> None:
 
     assert item is not None
     assert item["name"] != "Organic kitchen and garden waste"
+
+
+# --- important_notes cap ---
+
+def test_rules_result_from_item_caps_important_notes() -> None:
+    item = {
+        "name": "Test item",
+        "bin": "Restmuelltonne",
+        "notes": ["Note one.", "Note two.", "Note three.", "Note four."],
+    }
+
+    result = rules_result_from_item(item)
+
+    assert len(result.important_notes) == MAX_IMPORTANT_NOTES
+    assert result.important_notes == ["Note one.", "Note two."]
+
+
+def test_paper_and_cardboard_yaml_entry_is_capped_after_matching() -> None:
+    # "Paper and cardboard" has 3 notes in munich_rules.yaml - confirms the cap
+    # applies to real yaml data, not just a synthetic fixture.
+    item = find_rule_item("zeitung", "papier")
+    result = rules_result_from_item(item)
+
+    assert len(result.important_notes) <= MAX_IMPORTANT_NOTES
+
+
+# --- language handling ---
+
+def test_rules_request_defaults_to_english() -> None:
+    assert RulesRequest(label="x", material="y").language == "en"
+
+
+def test_run_agent_returns_english_untranslated_by_default(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "rules_agent.agent.find_rule_item",
+        lambda label, material: {
+            "name": "Small electronic devices",
+            "bin": "Wertstoffhof",
+            "alternatives": ["Retail take-back where legally offered"],
+            "notes": [],
+        },
+    )
+
+    result = asyncio.run(
+        run_agent(RulesRequest(label="headphones", material="", city="munich", language="en"))
+    )
+
+    assert "Retail take-back" in result.alternatives[0]
+
+
+def test_run_agent_translates_deterministic_result_for_german(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "rules_agent.agent.find_rule_item",
+        lambda label, material: {
+            "name": "Small electronic devices",
+            "bin": "Wertstoffhof",
+            "alternatives": ["Retail take-back where legally offered"],
+            "notes": [],
+        },
+    )
+
+    async def fake_translate(result):
+        return result.model_copy(update={"alternatives": ["Rücknahme im Handel, falls gesetzlich angeboten"]})
+
+    monkeypatch.setattr("rules_agent.agent.translate_result_to_german", fake_translate)
+
+    result = asyncio.run(
+        run_agent(RulesRequest(label="headphones", material="", city="munich", language="de"))
+    )
+
+    assert result.bin == "Wertstoffhof"
+    assert result.alternatives == ["Rücknahme im Handel, falls gesetzlich angeboten"]
+
+
+# --- known-term typo correction ---
+# Regression guard: the LLM occasionally generates a near-miss spelling of a known
+# German municipal term (e.g. "Restmílltonne" instead of "Restmülltonne" - one
+# wrong character, otherwise correct). This is fixed with a post-processing pass
+# rather than more prompt instructions, since prompt-based attempts to enforce
+# correct spelling made the small local model hallucinate or refuse to answer.
+
+def test_correct_known_terms_fixes_near_miss_spelling() -> None:
+    text = "Bitte nicht in die Restmílltonne werfen."
+
+    result = _correct_known_terms(text)
+
+    assert "Restmülltonne" in result
+    assert "Restmílltonne" not in result
+
+
+def test_correct_known_terms_leaves_unrelated_words_unchanged() -> None:
+    text = "Dies ist ein Test mit Pappe, Verpackung und Kartonagen."
+
+    assert _correct_known_terms(text) == text
+
+
+def test_correct_known_terms_leaves_already_correct_terms_unchanged() -> None:
+    text = "Biotonne und Papiertonne und Giftmobil bleiben unveraendert."
+
+    result = _correct_known_terms(text)
+
+    assert "Biotonne" in result
+    assert "Papiertonne" in result
+    assert "Giftmobil" in result
